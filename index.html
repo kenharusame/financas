@@ -395,6 +395,7 @@ img.foto-meta.mini{width:24px;height:24px}
 .quero{display:flex;gap:12px;align-items:center;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit} .quero .ico{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:none;background:linear-gradient(160deg,#B4545E,#7E3440);color:#FBE3E5} .quero .ico svg{width:22px;height:22px} .quero .s{color:var(--muted);font-size:13px}
 .peso{background:rgba(255,255,255,.05);border-radius:14px;padding:10px 12px;margin:10px 0;font-size:14px;line-height:1.5;display:grid;gap:4px}
 .res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px} .res-grid div{background:rgba(255,255,255,.04);border-radius:14px;padding:10px} .res-grid small{display:block;color:var(--muted);font-size:12px;font-weight:700} .res-grid b{display:block;font-family:Outfit,system-ui,sans-serif;font-size:22px;color:var(--in)} .res-grid span{font-size:12px;color:var(--muted)}
+.tipo-conta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-top:6px} .tipo-conta b{color:var(--text,#fff)} .tipo-conta .link{padding:0;margin:0}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -486,7 +487,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     </div>
 
     <div id="f-out">
-      <label for="aConta">Conta</label><select id="aConta"></select>
+      <label for="aConta">Conta</label><select id="aConta"></select><div class="tipo-conta" id="aTipoConta"></div>
       <label>Como é essa despesa</label>
       <div class="chips" id="aForma"><button class="chip" data-v="Única">Única</button><button class="chip" data-v="Parcelada">Parcelada</button><button class="chip" data-v="Fixa">Fixa (todo mês)</button></div>
       <div id="f-parc">
@@ -2001,6 +2002,9 @@ function renderForm(){
 }
 function resumo(){
   avisoLimite();
+  { const c = $('#aConta').value, box = $('#aTipoConta');
+    box.innerHTML = c && c !== '__nova' ? `<span>Tipo: <b>${esc(tipoDe(c))}</b>${superfluo(c) ? ' · supérfluo' : ''}</span><button class="link" type="button" id="aTipoMudar">Mudar</button>` : '';
+    if ($('#aTipoMudar')) $('#aTipoMudar').onclick = abrirCfg; }
   const v = num($('#aValor').value), n = Math.max(1, parseInt($('#aVezes').value) || 1);
   const c0 = ciclo($('#aData').value || hoje());
   let txt = '';
