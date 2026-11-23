@@ -440,13 +440,6 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div id="qRes"></div>
   <div class="card hide" id="qHistCard"><h2>Perguntas anteriores</h2><div id="qHist"></div></div>
   <div class="card">
-    <h2>Resumo para o NotebookLM</h2>
-    <p style="margin-top:0">1. Baixe o resumo com os números do ano. 2. Abra o caderno "Finanças da Familia" e envie o arquivo em <b>Adicionar fonte &gt; Enviar arquivo</b>. Para atualizar, apague a fonte antiga e envie a nova.</p>
-    <button class="btn ghost" id="bNotebook" style="margin-top:4px">1. Baixar resumo do ano</button>
-    <a class="btn" id="bCaderno" href="https://notebook.google.com/notebook/a0e065aa-b9fc-46b8-9098-e37d6e8d265f" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:10px">2. Abrir nosso caderno</a>
-    <div class="help">O caderno é da conta contato@kenharusame.com.br. Quem abrir com outra conta precisa ter sido convidado pelo botão Compartilhar do caderno.</div>
-  </div>
-  <div class="card">
     <h2>Análise dos gastos</h2>
     <p style="margin-top:0">A IA olha os números do ano e mostra onde dá para gastar menos. Ela não sugere investimentos: para isso, procure um profissional certificado.</p>
     <button class="btn" id="dBtn" style="margin-top:4px">Analisar nossos gastos</button>
@@ -1014,32 +1007,6 @@ function checkinInicio(){
     try { const r = await api('checkin', ant); $('#ckIA').innerHTML = '<div class="ai" style="margin-top:12px">' + mdLeve(r.texto) + '</div>'; b.classList.add('hide'); }
     catch (e) { $('#ckIA').innerHTML = '<div class="err">' + esc(e) + '</div>'; b.disabled = false; b.textContent = 'Comentário da IA'; } };
 }
-
-/* ---------- Resumo para o NotebookLM (arquivo baixado no aparelho) ---------- */
-$('#bNotebook').onclick = () => {
-  const L = ['# Finanças da Família: resumo do ano', '', `Gerado em ${new Date().toLocaleDateString('pt-BR')}. Cada mês vai do dia 15 ao dia 14 do mês seguinte. Valores em reais.`, ''];
-  let ano = { e: 0, d: 0, i: 0 };
-  for (let k = 0; k < 12; k++) {
-    const t = totais(k); if (!(t.Entrada || t.Despesa || t.Investimento)) continue;
-    ano.e += t.Entrada; ano.d += t.Despesa; ano.i += t.Investimento;
-    L.push(`## ${nomeCiclo(k)}`, `- Entradas: ${brl(t.Entrada)}`, `- Despesas: ${brl(t.Despesa)}`, `- Investido: ${brl(t.Investimento)}`, `- Saldo: ${brl(t.saldo)}`);
-    const pc = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === k) pc[r.conta] = (pc[r.conta] || 0) + r.valor; });
-    const ord = Object.entries(pc).sort((a, b) => b[1] - a[1]);
-    if (ord.length) L.push('- Despesas por conta: ' + ord.map(([c, v]) => `${c} ${brl(v)}`).join('; '));
-    const or = {}; S.regs.forEach(r => { if (r.tipo === 'Entrada' && ciclo(r.data) === k) or[r.conta] = (or[r.conta] || 0) + r.valor; });
-    if (Object.keys(or).length) L.push('- Entradas por origem: ' + Object.entries(or).map(([c, v]) => `${c} ${brl(v)}`).join('; '));
-    L.push('');
-  }
-  L.push('## Total do ano até agora', `- Entradas: ${brl(ano.e)}`, `- Despesas: ${brl(ano.d)}`, `- Investido: ${brl(ano.i)}`, `- Saldo: ${brl(ano.e - ano.d - ano.i)}`, '');
-  if (Object.keys(S.limites || {}).length) L.push('## Limites por mês', ...Object.entries(S.limites).map(([c, l]) => `- ${c}: ${brl(l)}`), '');
-  if ((S.metas || []).length) L.push('## Metas', ...S.metas.map(m => { const g = progressoMeta(m); return `- ${m.nome}: ${brl(g.guardado)} de ${brl(m.alvo)} (${Math.round(g.p * 100)}%)${m.prazo ? ', prazo ' + m.prazo.split('-').reverse().join('/') : ''}`; }), '');
-  const parc = {}; S.regs.forEach(r => { if (r.forma === 'Parcelada' && r.grupo && ciclo(r.data) >= ciclo(hoje())) (parc[r.grupo] = parc[r.grupo] || []).push(r); });
-  if (Object.keys(parc).length) L.push('## Parcelas em aberto', ...Object.values(parc).map(g => `- ${g[0].conta}: ${g.length} parcelas de ${brl(g[0].valor)}`), '');
-  const blob = new Blob([L.join('\n')], { type: 'text/markdown;charset=utf-8' }), a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = `financas-resumo-${hoje()}.md`; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  toast('Resumo baixado. Agora toque em "2. Abrir nosso caderno".');
-};
 
 /* ---------- Pergunte ---------- */
 function renderChat(){
