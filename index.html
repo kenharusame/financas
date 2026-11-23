@@ -392,6 +392,9 @@ img.foto-meta.mini{width:24px;height:24px}
 .pg-top .ico{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:none;background:linear-gradient(160deg,#34877C,#1E5C55);color:#DDF5F0;box-shadow:var(--clay-sm)} .pg-top .ico svg{width:24px;height:24px}
 .pg-linha{display:flex;gap:8px} .pg-linha input{flex:1;min-width:0;font-size:18px !important} .pg-linha .btn{flex:0 0 auto;width:auto;padding:0 18px}
 .chip-ico{width:16px;height:16px;vertical-align:-3px;margin-right:5px}
+.quero{display:flex;gap:12px;align-items:center;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit} .quero .ico{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:none;background:linear-gradient(160deg,#B4545E,#7E3440);color:#FBE3E5} .quero .ico svg{width:22px;height:22px} .quero .s{color:var(--muted);font-size:13px}
+.peso{background:rgba(255,255,255,.05);border-radius:14px;padding:10px 12px;margin:10px 0;font-size:14px;line-height:1.5;display:grid;gap:4px}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px} .res-grid div{background:rgba(255,255,255,.04);border-radius:14px;padding:10px} .res-grid small{display:block;color:var(--muted);font-size:12px;font-weight:700} .res-grid b{display:block;font-family:Outfit,system-ui,sans-serif;font-size:22px;color:var(--in)} .res-grid span{font-size:12px;color:var(--muted)}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -415,6 +418,9 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   </div>
   <div id="cPagto"></div>
   <div id="cPassos"></div>
+  <div id="cPar"></div>
+  <div id="cResiste"></div>
+  <div id="cRevisao"></div>
   <div id="cSemana"></div>
   <div id="cPague"></div>
   <div id="cAlertas"></div>
@@ -451,10 +457,11 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <div class="chat-in" style="margin-top:0"><textarea id="rTxt" rows="1" placeholder='Ex.: "gastei 45 no mercado no pix"'></textarea>
       <button class="chat-env mic hide" id="rMic" aria-label="Falar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
       <button class="chat-env" id="rOk" aria-label="Preencher o formulário"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
-    <div class="help" id="rHelp">Escreva ou fale do seu jeito. A IA preenche o formulário abaixo e você confere antes de salvar.</div>
+    <div class="help" id="rHelp">Escreva ou fale do seu jeito. A IA abre o formulário já preenchido e você confere antes de salvar.</div>
     <div class="err" id="rErro" role="alert"></div>
   </div>
-  <div class="card nota-card" id="nCard">
+  <button class="card quero" id="aQuero" type="button"><span class="ico out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg></span><div><b>Quero comprar uma coisa</b><div class="s">Antes de comprar, veja quanto ela custa de verdade.</div></div></button>
+<div class="card nota-card" id="nCard">
     <div id="nIni">
       <div class="nota-top"><span class="pz-ico nota-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h4"/></svg></span>
         <div><b>Ler nota com IA</b><div class="s">Tire foto da nota do mercado e a IA separa os itens para você conferir.</div></div></div>
@@ -547,6 +554,11 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <div id="qVezesBox" class="hide"><label for="qVezes">Em quantas vezes?</label><input id="qVezes" inputmode="numeric" value="10"></div>
     <label>É necessidade ou desejo? <span style="color:var(--muted);font-weight:600">(opcional)</span></label>
     <div class="chips" id="qTipo"><button class="chip" data-v="Necessidade">Necessidade</button><button class="chip" data-v="Desejo">Desejo</button><button class="chip" data-v="">Não sei</button></div>
+    <div id="qPeso"></div>
+    <label>Como você está agora?</label>
+    <div class="chips" id="qSente"><button class="chip" data-v="Tranquilo">Tranquilo</button><button class="chip" data-v="Triste">Triste</button><button class="chip" data-v="Entediado">Entediado</button><button class="chip" data-v="Cansado">Cansado</button><button class="chip" data-v="Ansioso">Ansioso</button></div>
+    <label>Já tem algo parecido em casa?</label>
+    <div class="chips" id="qParec"><button class="chip" data-v="Não">Não</button><button class="chip" data-v="Sim">Sim</button></div>
     <label for="qCtx">Quer contar mais alguma coisa? <span style="color:var(--muted);font-weight:600">(opcional)</span></label><input id="qCtx" placeholder="Ex.: a nossa quebrou">
     <div class="err" id="qErro" role="alert"></div>
     <button class="btn" id="qBtn">Perguntar para a IA</button>
@@ -674,12 +686,13 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   const poe = (secao, lista) => { const s = document.getElementById(secao); lista.map(card).filter(Boolean).forEach(el => s.appendChild(el)); };
   const ini = document.getElementById('inicio');
   // Início, nesta ordem
-  ['#iHero', '#cSemana', '.card.saldo', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx', '#cDica']
+  ['#iHero', '.card.rapido', '#cSemana', '.card.saldo', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx', '#cDica']
     .map(x => ['#iContas', '#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
     .filter(Boolean).forEach(el => ini.appendChild(el));
+  document.getElementById('adicionar').appendChild(document.getElementById('nCard'));
   poe('relatorios', ['#cLim', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
   poe('planejar', ['#cFuturo', '#cFase', '#cMetas', '#cMesada', '#cGuia', '#cAnual', '#iParc']);
-  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo') && !el.querySelector('#iContas')) el.classList.add('hide'); });
+  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo, .rapido') && !el.querySelector('#iContas')) el.classList.add('hide'); });
 })();
 </script>
 <script>
@@ -817,7 +830,7 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -842,7 +855,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); passosInicio(i, t); pagtoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); passosInicio(i, t); pagtoInicio(); resisteInicio(i); parInicio(); revisaoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1331,6 +1344,52 @@ function pagtoInicio(){
     $('#aValor').value = v; $('#aValor').dispatchEvent(new Event('input')); $('#aValor').focus(); toast('Confira e toque em Salvar'); });
   $$('#cPagto [data-pnao]').forEach(b => b.onclick = () => { const a = lsLe('fin_pagtoAdia', {}); a[b.dataset.pnao] = dHoje; lsGrava('fin_pagtoAdia', a); pagtoInicio(); });
 }
+const SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+function diasSemSuperfluo(){
+  const dSup = new Set(S.regs.filter(r => r.tipo === 'Despesa' && r.forma !== 'Fixa' && r.forma !== 'Parcelada' && superfluo(r.conta)).map(r => r.data));
+  const ini = S.ini ? new Date(S.ini.y, S.ini.m - 1, S.ini.d) : new Date(2026, 10, 15); let n = 0, d = new Date(); d.setHours(0, 0, 0, 0);
+  while (d >= ini && n < 400) { const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; if (dSup.has(iso)) break; n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function resisteInicio(i){
+  if (ciclo(hoje()) !== i) { $('#cResiste').innerHTML = ''; return; }
+  const linhas = [], p = periodo(i), dias = Math.max(1, Math.ceil((p.fim - new Date()) / 864e5));
+  // mesada que acabou
+  ['Mesada Ken', 'Mesada Sam'].filter(n => (S.limites || {})[n]).forEach(n => { const l = limEfetivo(n, i), g = gastoConta(n, i);
+    if (g >= l) linhas.push(`<div class="alerta alto"><b>A mesada ${n.endsWith('Ken') ? 'do Ken' : 'da Sam'} acabou${g > l ? ' (passou ' + brl0(g - l) + ')' : ''}.</b> A próxima chega em ${dias} ${dias === 1 ? 'dia' : 'dias'}. Até lá, nada de supérfluo.</div>`); });
+  // horário perigoso: dia da semana com mais supérfluo
+  const porDia = [0, 0, 0, 0, 0, 0, 0], semanas = new Set();
+  S.regs.filter(r => r.tipo === 'Despesa' && r.forma !== 'Fixa' && r.forma !== 'Parcelada' && superfluo(r.conta)).forEach(r => { const d = new Date(r.data + 'T12:00'); porDia[d.getDay()] += r.valor; semanas.add(Math.floor(d / 6048e5)); });
+  const pior = porDia.indexOf(Math.max(...porDia)), tot = porDia.reduce((a, b) => a + b, 0);
+  if (semanas.size >= 2 && tot && porDia[pior] / tot >= .25 && new Date().getDay() === pior) linhas.push(`<div class="alerta medio"><b>Hoje é ${SEMANA[pior]}</b>, o dia em que vocês mais gastam com supérfluo (${Math.round(porDia[pior] / tot * 100)}% do total). Cuidado redobrado.</div>`);
+  const seq = diasSemSuperfluo(), eco = lsLe('fin_economizado', 0);
+  const valeu = lsLe('fin_valeu', {}), arr = {}; S.regs.forEach(r => { if (valeu[r.id] === false) arr[r.conta] = (arr[r.conta] || 0) + 1; });
+  const top = Object.entries(arr).filter(x => x[1] >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  $('#cResiste').innerHTML = `<div class="card"><h2>Resistindo</h2>${linhas.join('')}
+    <div class="res-grid"><div><small>Dias sem supérfluo</small><b>${seq}</b><span>${seq >= 7 ? 'Semana inteira!' : seq >= 3 ? 'Continuem assim' : 'Cada dia conta'}</span></div>
+    <div><small>Deixaram de gastar</small><b>${brl0(eco)}</b><span>desistindo na trava de 24h</span></div></div>
+    ${top.length ? `<div class="help">Mais arrependimentos: ${top.map(([c, n]) => `${esc(c)} (${n}x)`).join(', ')}.</div>` : ''}</div>`;
+}
+// 3) aviso ao par
+function parInicio(){
+  const vistos = lsLe('fin_avisosVistos', []), l = (S.avisos || []).filter(a => !vistos.includes(a.id));
+  if (!l.length) { $('#cPar').innerHTML = ''; return; }
+  $('#cPar').innerHTML = `<div class="card"><h2>Compras grandes ${l[0].quem === 'Sam' ? 'da Sam' : 'do ' + esc(l[0].quem)}</h2>${l.map(a => { const d = Math.floor((Date.now() - a.quando) / 864e5);
+    return `<div class="row"><div class="mid"><div class="t">${esc(a.conta)}</div><div class="s">${d === 0 ? 'hoje' : d === 1 ? 'ontem' : 'há ' + d + ' dias'}${a.forma === 'Parcelada' ? ' · parcelado' : ''}</div></div><span class="num out">${brl(a.valor)}</span></div>`; }).join('')}
+    <div class="help">Não é para pedir permissão: é só para nenhum gasto grande ficar escondido.</div><button class="btn sec" id="parVisto">Visto</button></div>`;
+  $('#parVisto').onclick = () => { lsGrava('fin_avisosVistos', vistos.concat(l.map(a => a.id)).slice(-60)); parInicio(); };
+}
+// 7) revisão semanal (domingo e segunda)
+function revisaoInicio(){
+  const box = $('#cRevisao'), wd = new Date().getDay(); if (wd !== 0 && wd !== 1) { box.innerHTML = ''; return; }
+  const valeu = lsLe('fin_valeu', {}), lim = new Date(); lim.setDate(lim.getDate() - 7); const limIso = lim.toISOString().slice(0, 10);
+  const l = S.regs.filter(r => r.tipo === 'Despesa' && r.data >= limIso && r.data <= hoje() && superfluo(r.conta) && r.forma !== 'Fixa').sort((a, b) => b.valor - a.valor);
+  const falta = l.filter(r => valeu[r.id] == null);
+  if (!falta.length) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="card"><h2>Revisão da semana</h2><p class="fase-txt">Os supérfluos dos últimos 7 dias. Valeu a pena?</p>${falta.slice(0, 8).map(r => `<div class="row"><div class="mid"><div class="t">${esc(r.conta)}</div><div class="s">${ddmm(r.data)} · ${brl(r.valor)}</div></div>
+    <div style="display:flex;gap:6px"><button class="chip" data-vl="${r.id}" data-ok="1">Valeu</button><button class="chip" data-vl="${r.id}" data-ok="0">Não valeu</button></div></div>`).join('')}</div>`;
+  $$('#cRevisao [data-vl]').forEach(b => b.onclick = () => { const v = lsLe('fin_valeu', {}); v[b.dataset.vl] = b.dataset.ok === '1'; lsGrava('fin_valeu', v); revisaoInicio(); resisteInicio(S.mes); });
+}
 function passosInicio(i, t){
   if (lsLe('fin_passosOk', '')) { $('#cPassos').innerHTML = ''; return; }
   const cfg = S.cfg || {}, L = [
@@ -1420,7 +1479,7 @@ function renderPensando(){
     return `<div class="row"><div class="mid"><div class="t">${esc(x.oque)}</div><div class="s">${brl(x.valor)} · ${h ? 'falta' + (h === 1 ? ' 1 hora' : 'm ' + h + ' horas') : 'pronto para decidir'}</div></div>
       <div style="display:flex;gap:6px"><button class="chip" data-pd="${x.quando}">${h ? 'É urgente' : 'Decidir'}</button><button class="chip" data-px="${x.quando}" aria-label="Desistir de ${esc(x.oque)}">Desisti</button></div></div>`; }).join('');
   $$('#qPensa [data-pd]').forEach(b => b.onclick = () => decidirPensando(+b.dataset.pd));
-  $$('#qPensa [data-px]').forEach(b => b.onclick = () => { lsGrava('fin_pensando', lerPensando().filter(x => x.quando !== +b.dataset.px)); renderPensando(); renderMes(); toast('Boa. Esse dinheiro continua com vocês.'); });
+  $$('#qPensa [data-px]').forEach(b => b.onclick = () => { const it = lerPensando().find(x => x.quando === +b.dataset.px); if (it) lsGrava('fin_economizado', lsLe('fin_economizado', 0) + it.valor); lsGrava('fin_pensando', lerPensando().filter(x => x.quando !== +b.dataset.px)); renderPensando(); renderMes(); toast('Boa. Esse dinheiro continua com vocês.'); });
 }
 function decidirPensando(quando){
   const x = lerPensando().find(y => y.quando === quando); if (!x) return;
@@ -1592,9 +1651,9 @@ async function interpretarTexto(){
     else $('#aValor').value = v;
     if (r.tipo === 'Despesa' && r.conta) $('#aConta').value = r.conta;
     $('#aVezes').value = r.vezes || 1; $('#aData').value = r.data; $('#aObs').value = r.obs || '';
-    renderForm(); if (r.tipo === 'Despesa' && r.conta) $('#aConta').value = r.conta; resumo();
+    ir('adicionar'); renderForm(); if (r.tipo === 'Despesa' && r.conta) $('#aConta').value = r.conta; resumo();
     const falta = !r.conta && r.tipo !== 'Investimento' ? ' Escolha a conta, não achei uma parecida.' : '';
-    $('#rHelp').textContent = 'Pronto. Confira os campos abaixo e toque em Salvar.' + falta + (r.duvida ? ' Atenção: ' + r.duvida : '');
+    $('#rHelp').textContent = 'Escreva ou fale do seu jeito. A IA abre o formulário já preenchido e você confere antes de salvar.'; toast('Confira os campos e toque em Salvar.' + falta + (r.duvida ? ' Atenção: ' + r.duvida : ''));
     $('#rTxt').value = ''; $('#aSalvar').scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   } catch (e) { $('#rErro').textContent = String(e); $('#rHelp').textContent = ''; }
   b.disabled = false;
@@ -2175,15 +2234,31 @@ function renderPerg(){
   $('#qHist').innerHTML = l.map((r, k) => `<div class="row click" role="button" tabindex="0" data-q="${k}"><div class="mid"><div class="t">${esc(r.oque)}</div><div class="s">${esc(r.quando.slice(0, 10))} · ${brl(r.valor)}</div></div><span class="ver-tag ${(VERED[r.veredito] || VERED['Melhor esperar'])[0]}">${esc(r.veredito)}</span></div>`).join('');
   $$('#qHist [data-q]').forEach(el => { const f = () => { $('#qRes').innerHTML = cartaResposta(l[+el.dataset.q]); $('#qRes').scrollIntoView({ block: 'nearest' }); }; el.onclick = f; el.onkeydown = e => { if (e.key === 'Enter') f(); }; });
 }
+S.qSente = ''; S.qParec = '';
+function pesoCompra(){
+  const v = num($('#qValor').value), box = $('#qPeso'); if (!(v > 0)) { box.innerHTML = ''; return; }
+  const at = ciclo(hoje()), ks = [1, 2, 3].map(d => at - d).filter(k => k >= 0 && totais(k).Entrada > 0), base = ks.length ? ks : [at];
+  const ent = base.reduce((a, k) => a + totais(k).Entrada, 0) / base.length, dia = ent / 30, m = metaDaSemana();
+  const linhas = [];
+  if (dia > 0) { const d = v / dia; linhas.push(`Isso é <b>${d < 1 ? Math.max(1, Math.round(d * 24)) + ' horas' : d.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + (d < 2 ? ' dia' : ' dias')}</b> de tudo que entra na família.`); }
+  if (m) { const g = progressoMeta(m); if (g.falta > 0) linhas.push(`Com esse dinheiro, a meta <b>${esc(m.nome)}</b> andaria ${Math.round(Math.min(v, g.falta) / m.alvo * 100)}%.`); }
+  const sem = lsLe('fin_economizado', 0); if (sem > 0) linhas.push(`Vocês já deixaram de gastar <b>${brl0(sem)}</b> desistindo de compras.`);
+  box.innerHTML = linhas.length ? `<div class="peso">${linhas.map(l => `<div>${l}</div>`).join('')}</div>` : '';
+}
+$('#qValor').addEventListener('input', pesoCompra);
+chipGroup('#qSente', '', v => { S.qSente = v; });
+chipGroup('#qParec', '', v => { S.qParec = v; });
+$('#aQuero').onclick = () => { ir('dicas'); setTimeout(() => $('#qOque').focus(), 50); };
 $('#qBtn').onclick = async () => {
   $('#qErro').textContent = '';
-  const q = { oque: $('#qOque').value.trim(), valor: num($('#qValor').value), forma: S.qForma, vezes: parseInt($('#qVezes').value) || 1, tipo: S.qTipo, contexto: $('#qCtx').value.trim() };
+  const q = { oque: $('#qOque').value.trim(), valor: num($('#qValor').value), forma: S.qForma, vezes: parseInt($('#qVezes').value) || 1, tipo: S.qTipo, contexto: [$('#qCtx').value.trim(), S.qSente && S.qSente !== 'Tranquilo' ? 'Estou ' + S.qSente.toLowerCase() + ' agora' : '', S.qParec === 'Sim' ? 'Já tenho algo parecido' : ''].filter(Boolean).join('. '), sente: S.qSente, parec: S.qParec };
+  const emocao = (S.qSente && S.qSente !== 'Tranquilo') || S.qParec === 'Sim';
   if (!q.oque) { $('#qErro').textContent = 'Diga o que querem comprar.'; return; }
   if (!(q.valor > 0)) { $('#qErro').textContent = 'Digite o valor.'; return; }
-  if (q.valor >= TRAVA && !S.pularTrava) {
+  if ((q.valor >= TRAVA || emocao) && !S.pularTrava) {
     lsGrava('fin_pensando', lerPensando().concat([{ ...q, quando: Date.now() }])); renderPensando(); renderMes();
-    $('#qRes').innerHTML = `<div class="card resp medio"><div class="resp-ver">Espere 24h</div><p class="s" style="margin:8px 0 0">Compras acima de ${brl0(TRAVA)} ficam um dia em <b>Pensando</b>. Muita vontade passa sozinha. Amanhã ela aparece no Início para vocês decidirem.</p></div>`;
-    $('#qOque').value = ''; $('#qValor').value = ''; $('#qCtx').value = ''; return;
+    $('#qRes').innerHTML = `<div class="card resp medio"><div class="resp-ver">Espere 24h</div><p class="s" style="margin:8px 0 0">${emocao && q.valor < TRAVA ? (S.qParec === 'Sim' ? 'Vocês já têm algo parecido. ' : 'Comprar ' + S.qSente.toLowerCase().replace(/o$/, 'o(a)') + ' costuma dar arrependimento. ') + 'A compra' : 'Compras acima de ' + brl0(TRAVA)} ficam um dia em <b>Pensando</b>. Muita vontade passa sozinha. Amanhã ela aparece no Início para vocês decidirem.</p></div>`;
+    $('#qOque').value = ''; $('#qValor').value = ''; $('#qCtx').value = ''; S.qSente = S.qParec = ''; $$('#qSente .chip,#qParec .chip').forEach(c => c.classList.remove('on')); pesoCompra(); return;
   }
   S.pularTrava = false;
   const b = $('#qBtn'); b.disabled = true; b.textContent = 'Pensando...';
