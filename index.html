@@ -387,6 +387,7 @@ img.foto-meta.mini{width:24px;height:24px}
 .passo .pz{flex:0 0 26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:rgba(255,255,255,.06)} .passo.ok .pz{background:var(--in);color:#06141A} .passo.agora .pz{background:var(--accent);color:#06141A}
 .futuro{overflow:hidden;padding-top:0} .futuro img{display:block;width:calc(100% + 40px);max-width:none;height:auto;margin:0 -20px 4px;aspect-ratio:720/520;object-fit:contain;object-position:bottom;background:linear-gradient(180deg,rgba(108,195,206,.10),transparent)}
 .fu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px} .fu-grid div{background:rgba(255,255,255,.04);border-radius:14px;padding:10px} .fu-grid small{display:block;color:var(--muted);font-size:12px;font-weight:700} .fu-grid b{display:block;font-family:Outfit,system-ui,sans-serif;font-size:17px;color:var(--in);font-variant-numeric:tabular-nums} .fu-grid span{display:block;font-size:11px;color:var(--muted)}
+.saldo .dia{margin-top:6px;font-size:14px;color:var(--muted)} .saldo .dia b{color:var(--text,#fff)} .saldo .dia.ruim b{color:var(--warn)}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -402,12 +403,13 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
 <section id="inicio" class="hide">
   <header><h1>Nossas finanças</h1><div class="topo-dir"><button class="ico-topo" data-ir="historico" aria-label="Abrir o histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></div></header>
   <div class="card hero" id="iHero"><div class="hero-av" id="hAv"></div><div class="hero-txt"><div class="hero-ola" id="iOla"></div><div class="hero-hum" id="iHum"></div></div></div>
-  <div class="card saldo"><div class="lbl">Saldo do mês</div><div class="val" id="iSaldo"></div><div class="falta hide" id="iFalta"></div><div class="sub" id="iPeriodo"></div><div class="gasto" id="iGasto"></div></div>
+  <div class="card saldo"><div class="lbl">Saldo do mês</div><div class="val" id="iSaldo"></div><div class="falta hide" id="iFalta"></div><div class="sub" id="iPeriodo"></div><div class="dia" id="iDia"></div><div class="gasto" id="iGasto"></div></div>
   <div class="grid3" style="margin-bottom:12px">
     <div class="mini in"><small>Entradas</small><b id="iEnt"></b><span class="var" id="vEnt"></span></div>
     <div class="mini out"><small>Despesas</small><b id="iDes"></b><span class="var" id="vDes"></span></div>
     <div class="mini inv"><small>Investido</small><b id="iInv"></b><span class="var" id="vInv"></span><div class="inv-plan" id="iInvPlan"></div></div>
   </div>
+  <div id="cPassos"></div>
   <div id="cSemana"></div>
   <div id="cPague"></div>
   <div id="cAlertas"></div>
@@ -828,11 +830,14 @@ function renderInicio(){
   let sub = p.txt; const dias = Math.ceil((p.fim - new Date()) / 864e5);
   if (ciclo(hoje()) === i && dias >= 0) sub += ' · faltam ' + dias + (dias === 1 ? ' dia' : ' dias');
   $('#iPeriodo').textContent = sub;
+  { const el = $('#iDia'); if (ciclo(hoje()) === i && dias > 0 && t.Entrada > 0) { const pd = Math.max(0, t.saldo) / dias;
+      el.innerHTML = t.saldo > 0 ? `Dá para gastar <b>${brl(pd)} por dia</b> até o dia 14` : '<b>Sem folga:</b> qualquer gasto agora sai do vermelho'; el.className = 'dia' + (pd < 20 ? ' ruim' : ''); }
+    else el.innerHTML = ''; }
   { const g = t.Entrada ? t.Despesa / t.Entrada : null, nivel = g == null ? '' : g > 1 ? 'alto' : g >= .8 ? 'medio' : 'ok';
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); passosInicio(i, t); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -958,6 +963,7 @@ function setorRedondo(cx, cy, r0, r1, a0, a1, raio){
   return { d: `M${x0} ${y0}A${re} ${re} 0 ${big} 1 ${x1} ${y1}L${x2} ${y2}A${ri} ${ri} 0 ${big} 0 ${x3} ${y3}Z`, w: o * 2 };
 }
 let PZsel = null;
+const ROTULO = { 'Cartão/Carteira': 'Cartão (sem tipo)', 'Demais tipos': 'Vários tipos menores' }, rot = n => ROTULO[n] || n;
 function pizza(lista){
   const top = lista.slice(0, 5), restoL = lista.slice(5), resto = restoL.reduce((a, x) => a + x[1], 0);
   const fatias = resto ? top.concat([['Demais tipos', resto]]) : top;
@@ -974,7 +980,7 @@ function pizza(lista){
     const dx = Math.cos(mid) * 8, dy = Math.sin(mid) * 8, sel = PZsel === k;
     const rl = (R0 + R1) / 2 + 6, lx = C + rl * Math.cos(mid), ly = C + rl * Math.sin(mid);
     const cabe = ang > 0.42, cabePct = ang > 0.24;
-    fat += `<g class="fatia${sel ? ' sel' : ''}${PZsel != null && !sel ? ' apaga' : ''}" data-k="${k}" role="button" tabindex="0" aria-pressed="${sel}" aria-label="${esc(f[0])}: ${brl(f[1])}, ${pct(f[1])}. Ver detalhes" style="transform:translate(${sel ? dx : 0}px,${sel ? dy : 0}px)">
+    fat += `<g class="fatia${sel ? ' sel' : ''}${PZsel != null && !sel ? ' apaga' : ''}" data-k="${k}" role="button" tabindex="0" aria-pressed="${sel}" aria-label="${esc(rot(f[0]))}: ${brl(f[1])}, ${pct(f[1])}. Ver detalhes" style="transform:translate(${sel ? dx : 0}px,${sel ? dy : 0}px)">
       ${(() => { const f = setorRedondo(C, C, R0, R1, a0, a1, 7); return `<path d="${f.d}" fill="url(#g${k})" style="stroke:url(#g${k});stroke-width:${f.w}px;stroke-linejoin:round"/>`; })()}
       ${cabe ? `<g transform="translate(${lx - 11} ${ly - 22}) scale(.92)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconeDe(f[0])}</g>` : ''}
       ${cabePct ? `<text x="${lx}" y="${cabe ? ly + 20 : ly + 6}" text-anchor="middle" class="pz-pct" aria-hidden="true">${pct(f[1])}</text>` : ''}
@@ -985,7 +991,7 @@ function pizza(lista){
       <circle cx="${C}" cy="${C}" r="${R0 - 6}" fill="url(#gc)" stroke="rgba(255,255,255,.14)" stroke-width="1.5"/>
       <text x="${C}" y="${C - 6}" text-anchor="middle" class="pz-lbl">Despesas</text>
       <text x="${C}" y="${C + 16}" text-anchor="middle" class="pz-tot">${brl0(total)}</text></svg>
-    <div class="pz-leg">${fatias.map((f, k) => `<button class="leg${PZsel === k ? ' on' : ''}" data-k="${k}"><i style="background:${CORES[k]}"></i><span>${esc(f[0])}</span><span class="p">${pct(f[1])}</span><span class="num">${brl0(f[1])}</span></button>`).join('')}</div>
+    <div class="pz-leg">${fatias.map((f, k) => `<button class="leg${PZsel === k ? ' on' : ''}" data-k="${k}"><i style="background:${CORES[k]}"></i><span>${esc(rot(f[0]))}</span><span class="p">${pct(f[1])}</span><span class="num">${brl0(f[1])}</span></button>`).join('')}</div>
     <div id="pzDet"></div>`;
   const escolhe = k => { PZsel = PZsel === k ? null : k; pizza(lista); if (PZsel != null) $('#pzDet').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' }); };
   $$('#iContas [data-k]').forEach(el => { el.onclick = () => escolhe(+el.dataset.k); el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); escolhe(+el.dataset.k); } }; });
@@ -1008,6 +1014,7 @@ function detalhe(fatias, restoL, total, pct){
   const extras = [];
   if (!outras) {
     if (doMes.some(r => r.forma === 'Fixa')) extras.push('Conta fixa: entra todo mês.');
+    if (nome === 'Cartão/Carteira') extras.push('Aqui está o que foi lançado só como "cartão". Para saber em que foi gasto, lancem cada compra pelo que é (Mercado, Restaurante...) e escolham o cartão só como forma de pagar.');
     const grupos = [...new Set(doMes.filter(r => r.forma === 'Parcelada').map(r => r.grupo))];
     grupos.forEach(g => { const todas = S.regs.filter(r => r.grupo === g), faltam = todas.filter(r => ciclo(r.data) > S.mes).length, atual = doMes.find(r => r.grupo === g);
       extras.push(`Parcela ${atual.parcela.replace('/', ' de ')}${faltam ? `: faltam mais ${faltam}` : ': é a última'}.`); });
@@ -1016,7 +1023,7 @@ function detalhe(fatias, restoL, total, pct){
     ? porC.map(([c, v]) => `<div class="row"><span>${esc(c)}</span><span class="num">${brl(v)}</span></div>`).join('')
     : doMes.slice(0, 3).map(r => `<div class="row"><div><div class="t">${ddmm(r.data)}</div>${r.obs ? `<div class="s">${esc(r.obs)}</div>` : ''}</div><span class="num">${brl(r.valor)}</span></div>`).join('');
   box.innerHTML = `<div class="pz-det" style="--cor:${CORES[PZsel]}">
-    <div class="pz-tit"><span class="pz-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconeDe(nome)}</svg></span><div><b>${esc(nome)}</b><div class="s">${pct(valor)} das despesas de ${nomeCiclo(S.mes).toLowerCase()}</div></div></div>
+    <div class="pz-tit"><span class="pz-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconeDe(nome)}</svg></span><div><b>${esc(rot(nome))}</b><div class="s">${pct(valor)} das despesas de ${nomeCiclo(S.mes).toLowerCase()}</div></div></div>
     <div class="pz-val">${brl(valor)}</div>
     ${comp ? `<div class="s">${comp}</div>` : ''}
     ${extras.map(e => `<div class="note">${e}</div>`).join('')}
@@ -1087,9 +1094,15 @@ function extrasInicio(i, t){
   const falta = S.regs.filter(r => r.forma === 'Parcelada' && ciclo(r.data) >= i).reduce((a, r) => a + r.valor, 0);
   $('#iParcTot').innerHTML = falta ? `<div class="parc-tot"><span>Ainda falta pagar em parcelas</span><b>${brl(falta)}</b></div>` : '';
 
-  const prox = S.regs.filter(r => (r.forma === 'Fixa' || r.forma === 'Parcelada') && diasAte(r.data) >= 0 && diasAte(r.data) <= 30).sort((a, b) => a.data < b.data ? -1 : 1).slice(0, 5);
+  let prox = S.regs.filter(r => (r.forma === 'Fixa' || r.forma === 'Parcelada') && diasAte(r.data) >= 0 && diasAte(r.data) <= 30);
+  { // contas de custo fixo do mês passado que ainda não apareceram neste mês: prevê a mesma data + 1 mês
+    const ca = ciclo(hoje()), ja = new Set(S.regs.filter(r => ciclo(r.data) >= ca && r.tipo === 'Despesa').map(r => r.conta)), vistos = new Set(prox.map(r => r.conta));
+    S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === ca - 1 && r.forma !== 'Parcelada' && grupoDe(r.conta) === 'Custos fixos' && !ja.has(r.conta) && !vistos.has(r.conta)).forEach(r => {
+      const [y, m, d] = r.data.split('-').map(Number), nd = new Date(y, m, d), iso = `${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, '0')}-${String(nd.getDate()).padStart(2, '0')}`;
+      if (diasAte(iso) >= 0 && diasAte(iso) <= 30) { vistos.add(r.conta); prox.push(Object.assign({}, r, { data: iso, previsto: true })); } }); }
+  prox = prox.sort((a, b) => a.data < b.data ? -1 : 1).slice(0, 6);
   $('#iProx').innerHTML = prox.length ? prox.map(r => { const n = diasAte(r.data);
-    return `<div class="row click" role="button" tabindex="0" data-id="${r.id}">${icoReg(r)}<div class="mid"><div class="t">${esc(r.conta)}${r.forma === 'Parcelada' ? ` <span class="tag parc">${esc(r.parcela.replace('/', ' de '))}</span>` : ''}</div><div class="s">${ddmm(r.data)} · ${n === 0 ? '<b class="hoje">hoje</b>' : n === 1 ? 'amanhã' : `em ${n} dias`}</div></div><div class="num out">${brl(r.valor)}</div></div>`; }).join('')
+    return `<div class="row click" role="button" tabindex="0" data-id="${r.id}">${icoReg(r)}<div class="mid"><div class="t">${esc(r.conta)}${r.forma === 'Parcelada' ? ` <span class="tag parc">${esc(r.parcela.replace('/', ' de '))}</span>` : ''}</div><div class="s">${r.previsto ? 'previsto · ' : ''}${ddmm(r.data)} · ${n === 0 ? '<b class="hoje">hoje</b>' : n === 1 ? 'amanhã' : `em ${n} dias`}</div></div><div class="num out">${brl(r.valor)}</div></div>`; }).join('')
     : '<div class="empty">Nenhuma conta fixa ou parcela nos próximos 30 dias.</div>';
   ligaLinhas('#iProx');
 
@@ -1232,13 +1245,13 @@ function acaoInicio(i, t){
 
   // Planejado para guardar no mês: o que as metas pedem + 5% das entradas
   const ex = entradaExtra(i), plano = ativas().reduce((a, x) => a + mensalMeta(x), 0) + t.Entrada * .05 + ex / 2;
-  $('#iInvPlan').innerHTML = plano > 0 ? `<i style="width:${Math.min(100, t.Investimento / plano * 100)}%"></i><span>${Math.round(t.Investimento / plano * 100)}% de ${brl0(plano)}</span>` : '';
+  $('#iInvPlan').innerHTML = plano > 0 ? `<i style="width:${Math.min(100, t.Investimento / plano * 100)}%"></i><span>${Math.round(t.Investimento / plano * 100)}% do plano (${brl0(plano)})</span>` : '';
 
   // Pague-se primeiro / fim do mês
   const p = periodo(i), dias = Math.ceil((p.fim - agora) / 864e5), falta = plano - t.Investimento, nomeM = m ? m.nome : '';
   let pg = '';
   if (atual && dias <= 5 && t.saldo > 0) pg = `<div class="card pague"><div class="sem-txt">Sobram <b>${brl0(t.saldo)}</b> e o mês acaba em ${dias} ${dias === 1 ? 'dia' : 'dias'}. ${nomeM ? 'Mandar para a meta ' + esc(nomeM) + '?' : 'Guardar como investimento?'}</div>${btn('pgBtn', 'Mandar agora')}</div>`;
-  else if (atual && t.Entrada > 0 && falta > 1) pg = `<div class="card pague"><div class="sem-txt">Entrou <b>${brl0(t.Entrada)}</b>${ex > 0 ? ' (' + brl0(ex) + ' a mais que o normal: a metade disso já está na conta)' : ''}. Separar <b>${brl0(falta)}</b> para metas e investimento antes de gastar?</div>${btn('pgBtn', 'Separar agora')}</div>`;
+  else if (atual && t.Entrada > 0 && falta > 1 && t.Despesa / t.Entrada < .8 && t.saldo > falta * 2) pg = `<div class="card pague"><div class="sem-txt">Entrou <b>${brl0(t.Entrada)}</b>${ex > 0 ? ' (' + brl0(ex) + ' a mais que o normal: a metade disso já está na conta)' : ''}. Separar <b>${brl0(falta)}</b> para metas e investimento antes de gastar?</div>${btn('pgBtn', 'Separar agora')}</div>`;
   $('#cPague').innerHTML = pg;
   if ($('#pgBtn')) $('#pgBtn').onclick = () => guardarPara(nomeM, dias <= 5 && t.saldo > 0 ? t.saldo : falta);
 
@@ -1261,17 +1274,18 @@ function acaoInicio(i, t){
   const ate = k => { const i0 = inicioCiclo(k), lim = atual ? (agora - ini) : Infinity;
     return S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === k && parse(r.data) - i0 <= lim).reduce((a, r) => a + r.valor, 0); };
   const ant = [1, 2, 3].map(d => i - d).filter(k => k >= 0 && totais(k).Despesa > 0);
-  const linhas = [];
+  const linhas = []; let vPior = 0;
   if (ant.length && t.Despesa) { const med = ant.reduce((a, k) => a + ate(k), 0) / ant.length, dif = (t.Despesa - med) / med;
     if (med > 0) linhas.push(`<div class="cmp1 ${dif <= 0 ? 'bom' : 'ruim'}">${atual ? 'Até hoje, vocês' : 'Neste mês, vocês'} gastaram <b>${Math.abs(Math.round(dif * 100))}% ${dif <= 0 ? 'a menos' : 'a mais'}</b> que a média ${ant.length > 1 ? 'dos últimos ' + ant.length + ' meses' : 'do mês anterior'}${atual ? ' no mesmo ponto' : ''}.</div>`); }
   if (t.Entrada) { const { o } = porGrupo(i);
     const pior = GRUPOS.filter(g => g.t === 'max').map(g => ({ g, pct: o[g.n] / t.Entrada * 100 })).filter(x => x.pct > x.g.p).sort((a, b) => (b.pct - b.g.p) - (a.pct - a.g.p))[0];
+    vPior = pior ? o[pior.g.n] : 0;
     linhas.push(pior ? `<div class="cmp1 ruim">${pior.g.n} em <b>${Math.round(pior.pct)}%</b> da renda. O guia diz até ${pior.g.p}%.</div>` : '<div class="cmp1 bom">Todos os grupos dentro da Regra do guia.</div>'); }
   const noCartao = k => S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === k && (r.forma === 'Parcelada' || /cartao|mercado pago|credito/.test(semAcento(r.conta)))).reduce((a, r) => a + r.valor, 0);
   if (t.Despesa) { const pc = noCartao(i) / t.Despesa, pa = i > 0 && totais(i - 1).Despesa ? noCartao(i - 1) / totais(i - 1).Despesa : null;
     if (pc > 0) linhas.push(`<div class="cmp1 ${pa != null && pc > pa + .02 ? 'ruim' : 'bom'}"><b>${Math.round(pc * 100)}%</b> das despesas foram no cartão ou parceladas${pa != null ? ' (mês anterior: ' + Math.round(pa * 100) + '%)' : ''}. No cartão a gente sente menos o gasto.</div>`); }
   if (t.Despesa) { const sp = k => S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === k && superfluo(r.conta)).reduce((a, r) => a + r.valor, 0), v = sp(i);
-    if (v > 0) linhas.push(`<div class="cmp1 ${v / t.Despesa > .15 ? 'ruim' : 'bom'}"><b>${brl0(v)}</b> (${Math.round(v / t.Despesa * 100)}%) foram em coisas supérfluas.</div>`); }
+    if (v > 0 && Math.abs(v - vPior) > 1) linhas.push(`<div class="cmp1 ${v / t.Despesa > .15 ? 'ruim' : 'bom'}"><b>${brl0(v)}</b> (${Math.round(v / t.Despesa * 100)}%) foram em coisas supérfluas.</div>`); }
   $('#cResumo').innerHTML = linhas.length ? `<div class="card"><h2>Como estamos</h2>${linhas.join('')}<button class="link" data-ir="relatorios">Ver comparação completa</button></div>` : '';
 }
 
@@ -1287,6 +1301,22 @@ function assinaturaParaRever(){
     if (grupoDe(r.conta) === 'Custos fixos' || /mesada|mercado|cartao/.test(semAcento(r.conta))) return;
     const ch = r.conta + '|' + Math.round(r.valor); (cont[ch] = cont[ch] || { conta: r.conta, valor: r.valor, meses: new Set() }).meses.add(k); });
   return Object.values(cont).filter(x => x.meses.size >= 3 && !(Date.now() - (rev[x.conta] || 0) < 90 * 864e5)).sort((a, b) => b.valor - a.valor)[0] || null;
+}
+function passosInicio(i, t){
+  if (lsLe('fin_passosOk', '')) { $('#cPassos').innerHTML = ''; return; }
+  const cfg = S.cfg || {}, L = [
+    ['Registrar a entrada do mês (salário)', t.Entrada > 0, 'adicionar'],
+    ['Lançar os gastos do dia a dia (pode falar ou tirar foto da nota)', t.Despesa > 0, 'adicionar'],
+    ['Conferir o tipo de cada conta (mercado, restaurante...)', (S.contas || []).length > 0 && (S.contas || []).every(c => (cfg[c] || {}).tipo), 'planejar'],
+    ['Criar a reserva de emergência', (S.metas || []).some(ehReserva), 'planejar'],
+    ['Cadastrar os gastos do ano (IPVA, IPTU, material escolar)', (S.anuais || []).length > 0, 'planejar']];
+  const feitos = L.filter(x => x[1]).length;
+  if (feitos === L.length) { $('#cPassos').innerHTML = ''; return; }
+  $('#cPassos').innerHTML = `<div class="card"><div class="lim-top"><h2 style="margin:0">Primeiros passos</h2><span class="gasto-tag ok">${feitos} de ${L.length}</span></div>
+    <p class="fase-txt" style="margin-top:8px">Para o site funcionar bem, façam isto uma vez:</p>
+    ${L.map(([txt, ok, ir], j) => `<div class="passo ${ok ? 'ok' : ''}"><span class="pz" aria-hidden="true">${ok ? '✓' : j + 1}</span><div>${ok ? txt : `<button class="link" style="padding:0;text-align:left" data-ir="${ir}">${txt}</button>`}</div></div>`).join('')}
+    <button class="link" id="passosFechar">Já sei usar, esconder</button></div>`;
+  $('#passosFechar').onclick = () => { lsGrava('fin_passosOk', '1'); passosInicio(i, t); };
 }
 let FU_IMG = null;
 function futuroInicio(){
