@@ -407,6 +407,7 @@ img.foto-meta.mini{width:24px;height:24px}
 .sem-foto{display:block;width:100%;max-height:180px;object-fit:cover;border-radius:16px;margin-bottom:10px} .des-foto{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none}
 .rev-it{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)} .rev-txt{flex:1;min-width:0} .rev-txt b{display:block;overflow-wrap:anywhere} .rev-txt span{color:var(--muted);font-size:13px}
 .rev-bt{display:flex;flex-direction:column;gap:6px} .rev-bt button{width:44px;height:36px;border-radius:12px;border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer} .rev-bt svg{width:18px;height:18px} .rev-v{background:var(--in-soft);color:var(--in)} .rev-x{background:var(--out-soft);color:var(--out)}
+.link-box{display:flex;gap:8px;margin-top:10px;width:100%} .link-box input{flex:1;min-width:0} .link-box .chip{margin:0;min-height:44px}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -1347,7 +1348,7 @@ function acaoInicio(i, t){
   }
   $('#cSemana').innerHTML = h;
   if ($('#semGuardei')) $('#semGuardei').onclick = () => { const g = progressoMeta(m), mens = mensalMeta(m) || g.falta / 12; guardarPara(m.nome, Math.min(g.falta, mens * 7 / 30)); };
-  if ($('#semLink')) $('#semLink').onclick = async () => { const u = pedeLink(); if (!u) return; try { S.metas = await api('fotoMeta', m.nome, u); toast('Foto salva'); renderMes(); } catch (er) { toast('Não salvou: ' + er); } };
+  if ($('#semLink')) $('#semLink').onclick = () => campoLink($('#semLink').parentElement, async u => { try { S.metas = await api('fotoMeta', m.nome, u); toast('Foto salva'); renderMes(); } catch (er) { toast('Não salvou: ' + er); } });
   if ($('#semFoto')) { $('#semFoto').onclick = () => $('#semArq').click();
     $('#semArq').onchange = async e => { const f = e.target.files[0]; if (!f) return; $('#semFoto').disabled = true; $('#semFoto').textContent = 'Enviando...';
       try { S.metas = await api('fotoMeta', m.nome, await reduzFoto(f)); toast('Foto salva'); renderMes(); } catch (er) { toast('Não salvou a foto: ' + er); renderMes(); } }; }
@@ -1713,8 +1714,17 @@ function reduzFoto(arq){ return new Promise((ok, erro) => { const img = new Imag
 $('#mFoto').onchange = async e => { const f = e.target.files[0]; if (!f || !S.metaEd) return; $('#mErro').textContent = 'Enviando foto...';
   try { S.metas = await api('fotoMeta', S.metaEd, await reduzFoto(f)); fotoDlg(S.metas.find(x => x.nome === S.metaEd)); $('#mErro').textContent = ''; renderMes(); } catch (er) { $('#mErro').textContent = 'Não salvou a foto: ' + er; }
   e.target.value = ''; };
-const pedeLink = () => { const u = (prompt('Cole o link da imagem (endereço que termina em .jpg, .png, .webp...):') || '').trim(); if (!u) return null; if (!/^https?:\/\//i.test(u)) { toast('O link precisa começar com http'); return null; } return u; };
-$('#mFotoLink').onclick = async () => { const u = pedeLink(); if (!u) return; try { S.metas = await api('fotoMeta', S.metaEd, u); fotoDlg(S.metas.find(x => x.nome === S.metaEd)); renderMes(); } catch (er) { $('#mErro').textContent = 'Não salvou: ' + er; } };
+/* campo de link da foto, aberto logo abaixo do botão (sem prompt, que alguns celulares bloqueiam) */
+function campoLink(depois, salvar){
+  const ant = document.getElementById('linkBox'); if (ant) { ant.remove(); return; }
+  const b = document.createElement('div'); b.id = 'linkBox'; b.className = 'link-box';
+  b.innerHTML = '<input type="url" inputmode="url" placeholder="Cole aqui o link da imagem" autocomplete="off" aria-label="Link da imagem"><button type="button" class="chip">Salvar</button>';
+  depois.after(b); const inp = b.querySelector('input'); inp.focus();
+  const vai = async () => { const u = inp.value.trim(); if (!/^https?:\/\/\S+$/i.test(u)) { toast('O link precisa começar com http'); return; }
+    b.querySelector('button').disabled = true; b.querySelector('button').textContent = 'Salvando...'; await salvar(u); b.remove(); };
+  b.querySelector('button').onclick = vai; inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); vai(); } };
+}
+$('#mFotoLink').onclick = () => campoLink($('#mFotoLink').closest('.m-foto'), async u => { try { S.metas = await api('fotoMeta', S.metaEd, u); fotoDlg(S.metas.find(x => x.nome === S.metaEd)); renderMes(); toast('Foto salva'); } catch (er) { $('#mErro').textContent = 'Não salvou: ' + er; } });
 $('#mFotoTira').onclick = async () => { try { S.metas = await api('fotoMeta', S.metaEd, ''); fotoDlg(null); renderMes(); } catch (er) { $('#mErro').textContent = String(er); } };
 $('#mSalvar').onclick = async () => {
   const m = { nome: $('#mNome').value.trim(), alvo: num($('#mAlvo').value), prazo: $('#mPrazo').value, inicial: num($('#mIni').value), nomeAntigo: S.metaEd };
