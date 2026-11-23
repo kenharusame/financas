@@ -277,6 +277,14 @@ input,select{background:rgba(12,18,27,.5);border:1px solid rgba(255,255,255,.05)
 .login-c p{color:var(--muted);margin:0 0 6px}
 #lCod{margin-top:14px;font-size:24px;text-align:center;letter-spacing:.35em}
 #bSair{color:var(--muted);margin-top:8px}
+.lim{margin-bottom:16px}
+.lim-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}
+.lim-num{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:6px}
+.lim-num b{color:var(--text)}
+.lim-ed{display:grid;grid-template-columns:1fr 130px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.lim-ed label{margin:0;font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis}
+.lim-ed input{min-height:44px;text-align:right}
+#dlgLim{max-height:88dvh;overflow:auto}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -298,6 +306,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <div class="mini out"><small>Despesas</small><b id="iDes"></b><span class="var" id="vDes"></span></div>
     <div class="mini inv"><small>Investido</small><b id="iInv"></b><span class="var" id="vInv"></span></div>
   </div>
+  <div class="card" id="cLim"><h2>Limites do mês</h2><div id="iLim"></div></div>
   <div class="card"><h2>Para onde foi o dinheiro</h2><div id="iContas"></div></div>
   <div class="card" id="cBar"><h2>Entradas x Despesas</h2><div class="chart"><canvas id="iBar" role="img"></canvas></div><div class="leg-inline"><span><i style="background:#2FB37A"></i>Entradas</span><span><i style="background:#E5484D"></i>Despesas</span></div></div>
   <div class="card"><h2>Saldo mês a mês</h2><div class="chart"><canvas id="iChart" role="img"></canvas></div><div id="iColsWrap" class="hide"><div class="cols" id="iCols"></div><div class="cols-lbl" id="iColsLbl"></div></div></div>
@@ -360,6 +369,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <label for="aData">Data</label><input id="aData" type="date">
     <div class="help" id="aDataHelp"></div>
     <label for="aObs">Observação (opcional)</label><input id="aObs" placeholder="Ex.: comprado na loja X">
+    <div class="note aviso hide" id="aLimite" role="status"></div>
     <div class="err" id="aErro" role="alert"></div>
     <button class="btn" id="aSalvar">Salvar</button>
   </div>
@@ -410,6 +420,14 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   </div>
 </div>
 
+<dialog id="dlgLim">
+  <h2>Limites por mês</h2>
+  <p class="s" style="color:var(--muted);font-size:14px;margin:-6px 0 8px">Deixe em branco as contas que não quiserem controlar.</p>
+  <div id="limLista"></div>
+  <div class="err" id="limErro" role="alert"></div>
+  <button class="btn" id="limSalvar">Salvar limites</button>
+  <button class="link" id="limFechar">Cancelar</button>
+</dialog>
 <dialog id="dlg">
   <h2 id="eTitulo"></h2>
   <div class="s" id="eSub" style="color:var(--muted);font-size:14px"></div>
@@ -469,7 +487,7 @@ const FAKE = (() => {
   for (let k = 0; k < 12; k++) add(`20${k < 2 ? 26 : 27}-${String((10 + k) % 12 + 1).padStart(2, '0')}-15`, 'Despesa', 'Aluguel', 2200, { forma: 'Fixa', grupo: 'g1' });
   for (let k = 0; k < 12; k++) add(`20${k < 2 ? 26 : 27}-${String((10 + k) % 12 + 1).padStart(2, '0')}-18`, 'Despesa', 'iPhone', 350, { forma: 'Parcelada', parcela: (k + 1) + '/12', grupo: 'g2' });
   add('2026-11-21', 'Despesa', 'Cartão de crédito', 312, { obs: 'Mercado' }); add('2026-11-22', 'Despesa', 'Luz', 290);
-  const dados = { registros: R, contas: ['Aluguel', 'iPhone', 'Cama', 'Luz', 'Água', 'Cartão de crédito', 'Mercado Pago', 'Higiene e Alimentação - Gatas', 'Mercado', 'Limpeza', 'Higiene', 'Farmácia'], origens: ['YouTube', 'TikTok', 'Facebook', 'Publi'], inicio: '2026-11-15', temIA: true, quem: 'Sam' };
+  const dados = { registros: R, contas: ['Aluguel', 'iPhone', 'Cama', 'Luz', 'Água', 'Cartão de crédito', 'Mercado Pago', 'Higiene e Alimentação - Gatas', 'Mercado', 'Limpeza', 'Higiene', 'Farmácia'], origens: ['YouTube', 'TikTok', 'Facebook', 'Publi'], inicio: '2026-11-15', limites: { 'Aluguel': 2200, 'Luz': 250, 'Cartão de crédito': 400 }, temIA: true, quem: 'Sam' };
   return {
     getDados: () => JSON.parse(JSON.stringify(dados)),
     salvar: r => { add(r.data, r.tipo, r.conta, r.valor, { forma: r.forma, obs: r.obs, veioDe: r.veioDe, pct: r.pct }); return 1; },
@@ -482,6 +500,7 @@ const FAKE = (() => {
       { nome: 'Detergente', valor: 2.79, conta: 'Limpeza' }, { nome: 'Sabão em pó 1,6kg', valor: 24.9, conta: 'Limpeza' }, { nome: 'Pasta de dente', valor: 6.49, conta: 'Higiene' },
       { nome: 'Ração para gatos 3kg', valor: 68.9, conta: 'Higiene e Alimentação - Gatas' }, { nome: 'Banana prata', valor: 15.0, conta: 'Mercado' } ] }),
     salvarNota: n => { const g = {}; n.itens.forEach(i => g[i.conta] = (g[i.conta] || 0) + i.valor); Object.entries(g).forEach(([c, v]) => add(n.data, 'Despesa', c, Math.round(v * 100) / 100, { obs: n.loja })); return { registros: Object.keys(g).length, itens: n.itens.length }; },
+    definirLimites: m => { Object.keys(m).forEach(c => { if (Number(m[c]) > 0) dados.limites[c] = Number(m[c]); else delete dados.limites[c]; }); return JSON.parse(JSON.stringify(dados.limites)); },
     perguntar: q => ({ quando: '22/11/2026 21:40', oque: q.oque, valor: q.valor, forma: q.forma, vezes: q.forma === 'Parcelado' ? q.vezes : 1, veredito: 'Melhor esperar',
       motivos: ['O saldo do mês está positivo, mas dezembro já começa com R$ 2.550 em contas fixas e parcelas.', 'Somando com o iPhone, vocês teriam duas parcelas grandes ao mesmo tempo.'],
       sugestao: 'Guardando R$ 400 por mês, dá para comprar à vista em abril.',
@@ -546,7 +565,7 @@ async function carregar(){
   if (NO_GOOGLE && !chave()) { mostraLogin(); return; }
   try {
     const d = await api('getDados');
-    S.regs = d.registros; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.limites = d.limites || {}; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -567,7 +586,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) porConta[r.conta] = (porConta[r.conta] || 0) + r.valor; });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -819,6 +838,44 @@ function heroi(i, t){
   $('#iHero').classList.toggle('triste', !h.feliz);
   $('#iHum').textContent = h.txt;
 }
+/* ---------- Limites por conta ---------- */
+function gastoConta(conta, i){ return S.regs.filter(r => r.tipo === 'Despesa' && r.conta === conta && ciclo(r.data) === i).reduce((a, r) => a + r.valor, 0); }
+const nivelLim = p => p > 1 ? 'alto' : p >= .8 ? 'medio' : 'ok';
+function limitesInicio(i){
+  const L = Object.entries(S.limites || {}).map(([c, l]) => ({ c, l, g: gastoConta(c, i) })).sort((a, b) => b.g / b.l - a.g / a.l);
+  $('#iLim').innerHTML = !L.length
+    ? '<div class="empty">Combinem um teto por mês para as contas que querem controlar (Mercado, Diversão...).<button class="btn" id="limAbrir">Definir limites</button></div>'
+    : L.map(({ c, l, g }) => { const p = g / l, k = nivelLim(p);
+        return `<div class="lim"><div class="lim-top"><span class="t">${esc(c)}</span><span class="gasto-tag ${k}">${k === 'alto' ? 'Passou ' + brl(g - l) : k === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
+          <div class="gasto-bar" role="progressbar" aria-label="${esc(c)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p * 100)}"><i class="${k}" style="width:${Math.min(100, p * 100)}%"></i></div>
+          <div class="lim-num"><span>${brl(g)} de ${brl(l)}</span><b>${Math.round(p * 100)}%</b></div></div>`; }).join('') + '<button class="link" id="limAbrir">Editar limites</button>';
+  $('#limAbrir').onclick = abrirLimites;
+}
+function abrirLimites(){
+  $('#limErro').textContent = '';
+  $('#limLista').innerHTML = S.contas.map((c, k) => `<div class="lim-ed"><label for="lim${k}">${esc(c)}</label><input id="lim${k}" data-conta="${esc(c)}" inputmode="decimal" placeholder="Sem limite" value="${S.limites[c] ? S.limites[c].toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}"></div>`).join('');
+  $('#dlgLim').showModal();
+}
+$('#limFechar').onclick = () => $('#dlgLim').close();
+$('#limSalvar').onclick = async () => {
+  const m = {}; $$('#limLista input').forEach(i => m[i.dataset.conta] = num(i.value));
+  const b = $('#limSalvar'); b.disabled = true; b.textContent = 'Salvando...';
+  try { S.limites = await api('definirLimites', m); $('#dlgLim').close(); toast('Limites salvos'); renderMes(); resumo(); }
+  catch (e) { $('#limErro').textContent = 'Não salvou: ' + e; }
+  b.disabled = false; b.textContent = 'Salvar limites';
+};
+function avisoLimite(){
+  const el = $('#aLimite'); if (!el) return;
+  const conta = $('#aConta').value, lim = (S.limites || {})[conta];
+  let v = num($('#aValor').value);
+  if (S.tipo !== 'Despesa' || !lim || !v) { el.classList.add('hide'); return; }
+  if (S.forma === 'Parcelada' && S.ehTotal === '1') v = v / Math.max(1, parseInt($('#aVezes').value) || 1);
+  const c = ciclo($('#aData').value || hoje()), depois = gastoConta(conta, c) + v;
+  if (depois <= lim) { el.classList.add('hide'); return; }
+  el.textContent = `Com essa compra, ${conta} passa do limite de ${nomeCiclo(((c % 12) + 12) % 12).toLowerCase()} em ${brl(depois - lim)} (${brl(depois)} de ${brl(lim)}).`;
+  el.classList.remove('hide');
+}
+
 let CH = null;
 function grafico(saldos, atual){
   if (!window.Chart) { $('#iColsWrap').classList.remove('hide'); $('#iChart').parentNode.classList.add('hide'); return; }
@@ -868,6 +925,7 @@ function renderForm(){
   resumo();
 }
 function resumo(){
+  avisoLimite();
   const v = num($('#aValor').value), n = Math.max(1, parseInt($('#aVezes').value) || 1);
   const c0 = ciclo($('#aData').value || hoje());
   let txt = '';
@@ -894,7 +952,7 @@ async function novaConta(sel){
   if (!n) { sel.value = S.contas[0]; return; }
   try { const nome = await api('addLista', 'conta', n); if (!S.contas.includes(nome)) S.contas.push(nome); opcoesContas(sel, nome); } catch (e) { toast(e); }
 }
-$('#aConta').onchange = e => { if (e.target.value === '__nova') novaConta(e.target); };
+$('#aConta').onchange = e => { if (e.target.value === '__nova') novaConta(e.target); else resumo(); };
 
 $('#aSalvar').onclick = async () => {
   $('#aErro').textContent = '';
