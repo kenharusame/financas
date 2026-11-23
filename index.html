@@ -403,6 +403,7 @@ img.foto-meta.mini{width:24px;height:24px}
 .des-det{padding:8px 0 0 38px;display:grid;gap:8px} .des-p{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45} .des-p input{margin-top:3px;width:18px;height:18px;flex:none}
 .des-acoes{display:flex;gap:8px;align-items:center;flex-wrap:wrap} .des-acoes .btn{width:auto;flex:1}
 #dQuem{margin-bottom:8px} #dNovo{margin-top:10px}
+.rev-link{display:flex;justify-content:space-between;align-items:center;width:100%;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:14px 18px} .rev-link span{color:var(--muted);font-size:13px}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -431,6 +432,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div id="cPar"></div>
   <div id="cResiste"></div>
   <div id="cRevisao"></div>
+  <div id="cRevLink"></div>
   <div id="cSemana"></div>
   <div id="cPague"></div>
   <div id="cAlertas"></div>
@@ -446,6 +448,12 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <div class="seg" id="dQuem" role="tablist"></div>
     <div id="dLista"></div>
     <div id="dNovo"></div>
+  </div>
+  <div class="card" id="cZero"><h2>Começar do zero</h2>
+    <p class="fase-txt">Apaga todos os lançamentos (entradas, despesas e investimentos). Contas, tipos, limites, metas, desejos e gastos do ano continuam. Antes de apagar, uma cópia vai para uma aba "Backup" na planilha.</p>
+    <label for="zConf">Para confirmar, digite APAGAR</label><input id="zConf" autocomplete="off" autocapitalize="characters">
+    <div class="err" id="zErro" role="alert"></div>
+    <button class="btn danger" id="zBtn">Apagar todos os lançamentos</button>
   </div>
   <div class="card" id="cMesada"><h2>Mesada pessoal</h2><div id="iMesada"></div></div>
   <div id="cDica"></div>
@@ -708,7 +716,8 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     .filter(Boolean).forEach(el => ini.appendChild(el));
   document.getElementById('adicionar').appendChild(document.getElementById('nCard'));
   poe('relatorios', ['#cLim', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
-  poe('planejar', ['#cFuturo', '#cFase', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc']);
+  poe('planejar', ['#cFuturo', '#cFase', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cZero']);
+  const rel = document.getElementById('relatorios'), rv = document.getElementById('cRevisao'); rel.insertBefore(rv, rel.querySelector('header').nextSibling);
   [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo, .rapido') && !el.querySelector('#iContas')) el.classList.add('hide'); });
 })();
 </script>
@@ -1398,10 +1407,11 @@ function parInicio(){
 }
 // 7) revisão semanal (domingo e segunda)
 function revisaoInicio(){
-  const box = $('#cRevisao'), wd = new Date().getDay(); if (wd !== 0 && wd !== 1) { box.innerHTML = ''; return; }
+  const box = $('#cRevisao'), wd = new Date().getDay(); if (wd !== 0 && wd !== 1) { box.innerHTML = ''; $('#cRevLink').innerHTML = ''; return; }
   const valeu = lsLe('fin_valeu', {}), lim = new Date(); lim.setDate(lim.getDate() - 7); const limIso = lim.toISOString().slice(0, 10);
   const l = S.regs.filter(r => r.tipo === 'Despesa' && r.data >= limIso && r.data <= hoje() && superfluo(r.conta) && r.forma !== 'Fixa').sort((a, b) => b.valor - a.valor);
   const falta = l.filter(r => valeu[r.id] == null);
+  $('#cRevLink').innerHTML = falta.length ? `<button class="card rev-link" data-ir="relatorios" type="button"><b>Revisão da semana pronta</b><span>${falta.length} ${falta.length === 1 ? 'gasto' : 'gastos'} para avaliar</span></button>` : '';
   if (!falta.length) { box.innerHTML = ''; return; }
   box.innerHTML = `<div class="card"><h2>Revisão da semana</h2><p class="fase-txt">Os supérfluos dos últimos 7 dias. Valeu a pena?</p>${falta.slice(0, 8).map(r => `<div class="row"><div class="mid"><div class="t">${esc(r.conta)}</div><div class="s">${ddmm(r.data)} · ${brl(r.valor)}</div></div>
     <div style="display:flex;gap:6px"><button class="chip" data-vl="${r.id}" data-ok="1">Valeu</button><button class="chip" data-vl="${r.id}" data-ok="0">Não valeu</button></div></div>`).join('')}</div>`;
@@ -2373,6 +2383,16 @@ $('#qBtn').onclick = async () => {
 
 $('#lBtn').onclick = entrarComCodigo;
 $('#lCod').addEventListener('keydown', e => { if (e.key === 'Enter') entrarComCodigo(); });
+$('#zBtn').onclick = async () => {
+  $('#zErro').textContent = '';
+  if ($('#zConf').value.trim().toUpperCase() !== 'APAGAR') { $('#zErro').textContent = 'Digite APAGAR para confirmar.'; return; }
+  if (!confirm('Apagar TODOS os lançamentos? Uma cópia fica na aba Backup da planilha.')) return;
+  const b = $('#zBtn'); b.disabled = true; b.textContent = 'Apagando...';
+  try { const r = await api('comecarDoZero', 'APAGAR'); $('#zConf').value = ''; ['fin_pensando', 'fin_economizado', 'fin_valeu', 'fin_avisosVistos'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    toast(`${r.apagados} lançamentos apagados. Cópia na aba "${r.backup}".`); await carregar(); ir('inicio'); }
+  catch (e) { $('#zErro').textContent = 'Não apagou: ' + e; }
+  b.disabled = false; b.textContent = 'Apagar todos os lançamentos';
+};
 $('#bSair').onclick = async () => {
   if (!confirm('Sair deste aparelho? Para entrar de novo, vai precisar do código.')) return;
   try { await api('sair'); } catch (e) {}
