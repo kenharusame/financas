@@ -306,7 +306,7 @@ input,select{background:rgba(12,18,27,.5);border:1px solid rgba(255,255,255,.05)
 .msg.ia{align-self:flex-start;background:rgba(12,18,27,.45);box-shadow:var(--inset);border-bottom-left-radius:6px;width:88%}
 .msg.ia p{margin:0 0 6px} .msg.ia ul{margin:0 0 6px;padding-left:18px}
 .sug{margin:10px 0}
-.chat-in{display:flex;gap:8px;align-items:flex-end;margin-top:8px}
+.chat-in{display:flex;gap:8px;align-items:flex-end;margin-top:12px}
 .chat-in textarea{flex:1;min-height:48px;resize:none;border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:12px 14px;font:inherit;background:rgba(12,18,27,.5);color:var(--text);box-shadow:var(--inset)}
 .chat-in textarea:focus{outline:2px solid var(--accent)}
 .chat-env{width:48px;height:48px;flex:none;border:0;border-radius:50%;background:linear-gradient(160deg,#4FA6B1,#286F7B);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--clay-sm)}
@@ -422,7 +422,6 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <h2>Pergunte</h2>
     <p class="s" style="margin:-6px 0 10px;color:var(--muted);font-size:14px">A IA responde com os números de vocês e com o guia de gestão financeira que vocês escolheram.</p>
     <div class="chat" id="chat" aria-live="polite"></div>
-    <div class="chips sug" id="chatSug"><button class="chip" data-p="Como deveríamos dividir a nossa renda?">Como dividir a renda?</button><button class="chip" data-p="Onde dá para cortar gastos este mês?">Onde cortar?</button><button class="chip" data-p="Quanto falta para a reserva de emergência e como acelerar?">Reserva de emergência</button></div>
     <div class="chat-in"><textarea id="chatTxt" rows="1" placeholder="Escreva sua pergunta" aria-label="Sua pergunta"></textarea><button class="chat-env" id="chatEnv" aria-label="Enviar pergunta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
     <div class="err" id="chatErro" role="alert"></div>
   </div>
@@ -1015,7 +1014,7 @@ function checkinInicio(){
 function renderChat(){
   const todas = S.conversas || [];
   const escolher = S.sessao == null && todas.length;
-  $('#chatSug').classList.toggle('hide', !!escolher); $('.chat-in').classList.toggle('hide', !!escolher);
+  $('.chat-in').classList.toggle('hide', !!escolher);
   if (escolher) {
     const ult = todas[todas.length - 1];
     $('#chat').innerHTML = `<div class="escolha"><b>Quer continuar a última conversa ou começar uma nova?</b>
@@ -1027,7 +1026,7 @@ function renderChat(){
   }
   const L = todas.filter(c => (c.conversa || 'antiga') === S.sessao);
   $('#chat').innerHTML = L.length ? L.map(c => `<div class="msg eu"><div>${esc(c.pergunta)}</div><small>${esc(c.quem)} · ${esc(c.quando)}</small></div><div class="msg ia ai">${mdLeve(c.resposta)}</div>`).join('')
-    : '<div class="empty" style="padding:6px 0">Conversa nova. Toque numa sugestão ou escreva a sua pergunta.</div>' ;
+    : '<div class="empty" style="padding:6px 0">Conversa nova. Escreva a sua pergunta.</div>' ;
   if (L.length) $('#chat').insertAdjacentHTML('afterbegin', '<button class="link" id="chatNova2" style="align-self:flex-end;width:auto;min-height:36px">+ Começar nova conversa</button>');
   if ($('#chatNova2')) $('#chatNova2').onclick = () => { S.sessao = 'c' + Date.now(); renderChat(); };
   $('#chat').scrollTop = $('#chat').scrollHeight;
@@ -1047,7 +1046,6 @@ function ajustaTxt(){ const t = $('#chatTxt'); t.style.height = 'auto'; t.style.
 $('#chatTxt').addEventListener('input', ajustaTxt);
 $('#chatTxt').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarPergunta($('#chatTxt').value); } });
 $('#chatEnv').onclick = () => enviarPergunta($('#chatTxt').value);
-$$('#chatSug [data-p]').forEach(b => b.onclick = () => enviarPergunta(b.dataset.p));
 
 let CH = null;
 function grafico(saldos, atual){
