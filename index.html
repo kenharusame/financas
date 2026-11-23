@@ -765,7 +765,7 @@ html.pc .toast{bottom:24px}
   ini.appendChild(document.getElementById('cFatura'));
   document.getElementById('adicionar').appendChild(document.getElementById('nCard'));
   poe('relatorios', ['#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
-  poe('planejar', ['#cFuturo', '#cFase', '#cLim', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cZero']);
+  poe('planejar', ['#cFase', '#cFuturo', '#cLim', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cZero']);
   const rel = document.getElementById('relatorios'), rv = document.getElementById('cRevisao'); rel.insertBefore(rv, rel.querySelector('header').nextSibling);
   [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo') && !el.querySelector('#iContas')) el.classList.add('hide'); });
 })();
@@ -776,7 +776,7 @@ html.pc .toast{bottom:24px}
   const P = {
     inicio:     { topo: ['.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#iHero', '#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
     relatorios: { main: ['#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cPrev', '#cPat'] },
-    planejar:   { main: ['#cLim', '#cMetas', '#cFase', '#cDesejos', '#cAnual', '#iParc'], side: ['#cFuturo', '#cMesada', '#cGuia', '#cZero'] },
+    planejar:   { topo: ['#cFase'], main: ['#cLim', '#cMetas', '#cDesejos', '#cAnual', '#iParc'], side: ['#cFuturo', '#cMesada', '#cGuia', '#cZero'] },
     historico:  { main: ['#hLista'], side: ['#historico .busca', '#hModo', '#hFiltro', '#hCal'] }
   };
   const orig = {};
