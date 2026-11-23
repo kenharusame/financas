@@ -1966,14 +1966,15 @@ function comparar(){
     sa.onchange = sb.onchange = () => { S.compTodas = false; comparar(); };
   }
   const a = +sa.value, b = +sb.value, ta = totais(a), tb = totais(b);
-  const linha = (nome, va, vb, bomSubir) => { const d = vb - va, bom = d === 0 ? '' : (d > 0) === bomSubir ? 'bom' : 'ruim';
+  /* cor pelo tipo: o que entra (entradas, investido) é verde e o que sai (despesas) é vermelho; o saldo segue o sinal */
+  const linha = (nome, va, vb, cor) => { const d = vb - va, bom = d === 0 ? '' : cor === 'saldo' ? (d > 0 ? 'bom' : 'ruim') : cor;
     return `<div class="cmp-l"><span>${nome}</span><span class="num">${brl0(va)}</span><span class="num">${brl0(vb)}</span><span class="num cmp-d ${bom}">${d === 0 ? '=' : (d > 0 ? '+' : '−') + brl0(Math.abs(d))}</span></div>`; };
   const pc = i => { const o = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) o[r.conta] = (o[r.conta] || 0) + r.valor; }); return o; };
   const ca = pc(a), cb = pc(b), contas = [...new Set(Object.keys(ca).concat(Object.keys(cb)))].map(c => [c, ca[c] || 0, cb[c] || 0]).sort((x, y) => Math.abs(y[2] - y[1]) - Math.abs(x[2] - x[1]));
   const mostrar = S.compTodas ? contas : contas.slice(0, 6);
   $('#iComp').innerHTML = `<div class="cmp-l cmp-h"><span></span><span>${nomeCiclo(a).slice(0, 3)}</span><span>${nomeCiclo(b).slice(0, 3)}</span><span>Diferença</span></div>`
-    + linha('Entradas', ta.Entrada, tb.Entrada, true) + linha('Despesas', ta.Despesa, tb.Despesa, false) + linha('Investido', ta.Investimento, tb.Investimento, true) + linha('<b>Saldo</b>', ta.saldo, tb.saldo, true)
-    + (contas.length ? '<div class="cmp-sub">Despesas por conta (maiores mudanças primeiro)</div>' + mostrar.map(([c, va, vb]) => linha(esc(c), va, vb, false)).join('') : '')
+    + linha('Entradas', ta.Entrada, tb.Entrada, 'bom') + linha('Despesas', ta.Despesa, tb.Despesa, 'ruim') + linha('Investido', ta.Investimento, tb.Investimento, 'bom') + linha('<b>Saldo</b>', ta.saldo, tb.saldo, 'saldo')
+    + (contas.length ? '<div class="cmp-sub">Despesas por conta (maiores mudanças primeiro)</div>' + mostrar.map(([c, va, vb]) => linha(esc(c), va, vb, 'ruim')).join('') : '')
     + (contas.length > 6 ? `<button class="link" id="compMais">${S.compTodas ? 'Mostrar menos' : 'Ver todas as ' + contas.length + ' contas'}</button>` : '');
   if ($('#compMais')) $('#compMais').onclick = () => { S.compTodas = !S.compTodas; comparar(); };
 }
