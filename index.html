@@ -402,6 +402,7 @@ img.foto-meta.mini{width:24px;height:24px}
 .quero{display:flex;gap:12px;align-items:center;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit} .quero .ico{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:none;background:linear-gradient(160deg,#B4545E,#7E3440);color:#FBE3E5} .quero .ico svg{width:22px;height:22px} .quero .s{color:var(--muted);font-size:13px}
 .peso{background:rgba(255,255,255,.05);border-radius:14px;padding:10px 12px;margin:10px 0;font-size:14px;line-height:1.5;display:grid;gap:4px}
 .res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px} .res-grid div{background:rgba(255,255,255,.04);border-radius:14px;padding:10px} .res-grid small{display:block;color:var(--muted);font-size:12px;font-weight:700} .res-grid b{display:block;font-family:Sora,system-ui,sans-serif;font-size:22px;color:var(--in)} .res-grid span{font-size:12px;color:var(--muted)}
+#nConf .tipo-conta .link{width:auto;flex:0 0 auto} #nConf .tipo-conta span{flex:1}
 .tipo-conta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-top:6px} .tipo-conta b{color:var(--text,#fff)} .tipo-conta .link{padding:0;margin:0}
 .des{border-top:1px solid rgba(255,255,255,.06);padding:10px 0} .des:first-child{border-top:0}
 .des-top{display:flex;gap:10px;align-items:center} .des-n{flex:0 0 28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;background:rgba(255,255,255,.06)} .des:first-child .des-n{background:var(--accent);color:#06141A}
@@ -2605,7 +2606,10 @@ function abreLista(txt){
   const r = leLista(txt);
   if (!r.itens.length) return false;
   $('#nErro').textContent = '';
-  S.nota = { loja: '', data: hoje(), total: null, pagoCom: '', itens: r.itens, ruins: r.ruins };
+  let c0 = ''; try { c0 = localStorage.getItem('fin_loteConta') || ''; } catch (e) {}
+  if (S.contas.indexOf(c0) < 0) c0 = S.contas.indexOf('Mercado') >= 0 ? 'Mercado' : S.contas[0];
+  r.itens.forEach(i => { i.conta = c0; });
+  S.nota = { loja: '', data: hoje(), total: null, pagoCom: '', itens: r.itens, ruins: r.ruins, lista: true, conta: c0 };
   $('#nTexto').value = ''; $('#nColarBox').classList.add('hide');
   try { ir('adicionar'); } catch (e) {}
   $('#nIni').classList.add('hide'); $('#nConf').classList.remove('hide'); pintaNota();
@@ -2657,14 +2661,18 @@ function pintaNota(){
   const n = S.nota, dentro = n.itens.filter(i => !i.fora), soma = dentro.reduce((a, i) => a + i.valor, 0), faltam = dentro.filter(i => !i.ok).length;
   const bate = n.total == null ? null : Math.abs(soma - n.total) < 0.05;
   $('#nConf').innerHTML = `<h2>Confira os itens</h2>${n.de ? `<div class="help">Nota ${n.pos} de ${n.de} · ${esc(n.arq)}</div>` : ''}
-    <div class="two"><div><label for="nLoja">Loja</label><input id="nLoja" value="${esc(n.loja)}"></div><div><label for="nData">Data</label><input id="nData" type="date" value="${n.data}"></div></div>
-    <label>Pago com</label><div class="chips" id="nPago">${['Cartão de crédito', 'Mercado Pago', 'Pix', 'Dinheiro'].map(v => `<button class="chip" data-v="${v}">${v}</button>`).join('')}</div>
-    ${n.itens.length > 1 ? `<label for="nTodas">Mudar a conta de todos</label><select id="nTodas"><option value="">Escolha uma conta...</option>${S.contas.map(c => `<option>${esc(c)}</option>`).join('')}</select>` : ''}
+    ${n.lista ? `<div class="two"><div><label for="nData">Data</label><input id="nData" type="date" value="${n.data}"></div><div><label for="nLoja">Loja (opcional)</label><input id="nLoja" value="${esc(n.loja)}"></div></div>
+    <label for="nConta">Conta</label><select id="nConta">${S.contas.map(c => `<option ${c === n.conta ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+    <div class="tipo-conta"><span>Tipo: <b>${esc(tipoDe(n.conta))}</b>${superfluo(n.conta) ? ' · supérfluo' : ''}</span><button class="link" type="button" id="nTipoMudar">Mudar</button></div>
+    <div class="help">Despesa única, paga na hora (não entra na fatura do cartão).</div>`
+    : `<div class="two"><div><label for="nLoja">Loja</label><input id="nLoja" value="${esc(n.loja)}"></div><div><label for="nData">Data</label><input id="nData" type="date" value="${n.data}"></div></div>
+    <label>Pago com</label><div class="chips" id="nPago">${['Cartão de crédito', 'Mercado Pago', 'Pix', 'Dinheiro'].map(v => `<button class="chip" data-v="${v}">${v}</button>`).join('')}</div>`}
+    ${n.itens.length > 1 && !n.lista ? `<label for="nTodas">Mudar a conta de todos</label><select id="nTodas"><option value="">Escolha uma conta...</option>${S.contas.map(c => `<option>${esc(c)}</option>`).join('')}</select>` : ''}
     <div class="nota-lista">${n.itens.map((i, k) => `<div class="nota-it${i.fora ? ' fora' : ''}${i.ok ? ' ok' : ''}" data-k="${k}">
       <button class="nota-chk" data-ok="${k}" aria-pressed="${i.ok}" aria-label="${i.ok ? 'Conferido' : 'Marcar como certo'}: ${esc(i.nome)}" ${i.fora ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
       <div class="nota-campos"><div class="nota-l2"><input class="nota-nome" data-c="nome" value="${esc(i.nome)}" aria-label="Nome do item" ${i.fora ? 'disabled' : ''}>
         <input class="nota-val" data-c="valor" inputmode="decimal" value="${i.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}" aria-label="Valor" ${i.fora ? 'disabled' : ''}></div>
-        <select data-c="conta" aria-label="Conta" ${i.fora ? 'disabled' : ''}>${S.contas.map(c => `<option ${c === i.conta ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+        ${n.lista ? '' : `<select data-c="conta" aria-label="Conta" ${i.fora ? 'disabled' : ''}>${S.contas.map(c => `<option ${c === i.conta ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>`}</div>
       <button class="nota-x" data-fora="${k}" aria-label="${i.fora ? 'Voltar o item' : 'Tirar o item'}">${i.fora ? '↺' : '×'}</button></div>`).join('')}</div>
     <button class="link" id="nTodos">Marcar todos como certos</button>
     ${n.ruins && n.ruins.length ? `<div class="note aviso">Ficaram de fora ${n.ruins.length === 1 ? '1 linha sem valor' : n.ruins.length + ' linhas sem valor'}: ${esc(n.ruins.join(' / '))}</div>` : ''}
@@ -2673,7 +2681,9 @@ function pintaNota(){
     <div class="err" id="nErro2" role="alert"></div>
     <button class="btn" id="nSalvar" ${faltam || !dentro.length ? 'disabled' : ''}>${faltam ? `Falta conferir ${faltam} ${faltam === 1 ? 'item' : 'itens'}` : `Salvar ${dentro.length} ${dentro.length === 1 ? 'item' : 'itens'}`}</button>
     <button class="link" id="nCancela">${n.de && n.pos < n.de ? 'Pular esta nota' : 'Cancelar'}</button>${n.de && n.pos < n.de ? '<button class="link" id="nCancelaTudo">Parar o lote</button>' : ''}`;
-  chipGroup('#nPago', n.pagoCom, v => { n.pagoCom = v; pintaNota(); });
+  if ($('#nPago')) chipGroup('#nPago', n.pagoCom, v => { n.pagoCom = v; pintaNota(); });
+  if ($('#nConta')) $('#nConta').onchange = e => { n.conta = e.target.value; n.itens.forEach(i => { i.conta = n.conta; }); try { localStorage.setItem('fin_loteConta', n.conta); } catch (x) {} pintaNota(); };
+  if ($('#nTipoMudar')) $('#nTipoMudar').onclick = abrirCfg;
   $('#nLoja').oninput = e => n.loja = e.target.value; $('#nData').onchange = e => n.data = e.target.value;
   $$('#nConf .nota-it').forEach(el => { const i = n.itens[+el.dataset.k];
     el.querySelectorAll('[data-c]').forEach(f => f.onchange = () => { i[f.dataset.c] = f.dataset.c === 'valor' ? num(f.value) : f.value; i.ok = false; pintaNota(); }); });
