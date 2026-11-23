@@ -366,6 +366,14 @@ input,select{background:rgba(12,18,27,.5);border:1px solid rgba(255,255,255,.05)
 .ico-topo{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.07);background:linear-gradient(160deg,rgba(38,51,69,.78),rgba(22,30,42,.82));color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--clay-sm)}
 .ico-topo svg{width:20px;height:20px}
 #inicio header h1{font-size:26px}
+.semana .sem-txt,.pague .sem-txt{font-size:16px;line-height:1.5;margin:6px 0 10px}
+.semana .lim-top .t{font-weight:800;white-space:nowrap} .semana .lim-top .link{width:auto;flex:0 0 auto;padding:0 4px;min-height:32px}
+.semana.feito{border-color:rgba(52,211,153,.35)}
+.chip.acao{min-height:44px;margin-top:10px;background:var(--accent);color:#06141A;font-weight:800;border:0}
+.inv-plan{margin-top:6px} .inv-plan i{display:block;height:5px;border-radius:4px;background:#8A72D4;max-width:100%} .inv-plan span{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+.alerta{padding:10px 12px;border-radius:14px;margin-bottom:8px;font-size:15px;background:rgba(255,255,255,.04);border-left:4px solid var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.alerta.alto{border-left-color:var(--out)} .alerta.medio{border-left-color:#E0A84A} .alerta.pensa{border-left-color:var(--accent)} .alerta .chip.acao{margin-top:0}
+.cmp1{font-size:15px;line-height:1.5;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)} .cmp1.bom b{color:var(--in)} .cmp1.ruim b{color:var(--out)}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -385,8 +393,12 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div class="grid3" style="margin-bottom:12px">
     <div class="mini in"><small>Entradas</small><b id="iEnt"></b><span class="var" id="vEnt"></span></div>
     <div class="mini out"><small>Despesas</small><b id="iDes"></b><span class="var" id="vDes"></span></div>
-    <div class="mini inv"><small>Investido</small><b id="iInv"></b><span class="var" id="vInv"></span></div>
+    <div class="mini inv"><small>Investido</small><b id="iInv"></b><span class="var" id="vInv"></span><div class="inv-plan" id="iInvPlan"></div></div>
   </div>
+  <div id="cSemana"></div>
+  <div id="cPague"></div>
+  <div id="cAlertas"></div>
+  <div id="cResumo"></div>
   <div class="card" id="cPrev"><h2>Previsão</h2><div id="iPrev"></div></div>
   <div id="cFila"></div>
   <div id="cCheck"></div>
@@ -516,6 +528,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <button class="btn" id="qBtn">Perguntar para a IA</button>
   </div>
   <div id="qRes"></div>
+  <div class="card hide" id="qPensaCard"><h2>Pensando</h2><div id="qPensa"></div></div>
   <div class="card hide" id="qHistCard"><h2>Perguntas anteriores</h2><div id="qHist"></div></div>
   <div class="card">
     <h2>Assinaturas e cobranças repetidas</h2>
@@ -623,12 +636,12 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   const poe = (secao, lista) => { const s = document.getElementById(secao); lista.map(card).filter(Boolean).forEach(el => s.appendChild(el)); };
   const ini = document.getElementById('inicio');
   // Início, nesta ordem
-  ['#iHero', '.card.saldo', '#inicio .grid3', '#cFila', '#cCheck', '#iContas', '#cLim', '#cComp', '#cProx']
-    .map(x => x.startsWith('#c') && x !== '#cLim' && x !== '#cComp' && x !== '#cProx' ? document.querySelector(x) : (x === '#inicio .grid3' ? document.querySelector(x) : card(x)))
+  ['#iHero', '#cSemana', '.card.saldo', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx']
+    .map(x => ['#iContas', '#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
     .filter(Boolean).forEach(el => ini.appendChild(el));
-  poe('relatorios', ['#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
+  poe('relatorios', ['#cLim', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
   poe('planejar', ['#cGuia', '#cMetas', '#cAnual', '#iParc']);
-  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero'].includes(el.id) && !el.matches('.saldo') && !['cLim', 'cComp', 'cProx'].includes(el.id) && !el.querySelector('#iContas')) el.classList.add('hide'); });
+  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo') && !el.querySelector('#iContas')) el.classList.add('hide'); });
 })();
 </script>
 <script>
@@ -786,7 +799,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) porConta[r.conta] = (porConta[r.conta] || 0) + r.valor; });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1084,6 +1097,100 @@ function avisoLimite(){
   if (depois <= lim) { el.classList.add('hide'); return; }
   el.textContent = `Com essa compra, ${conta} passa do limite de ${nomeCiclo(((c % 12) + 12) % 12).toLowerCase()} em ${brl(depois - lim)} (${brl(depois)} de ${brl(lim)}).`;
   el.classList.remove('hide');
+}
+
+/* ---------- Início: o que fazer agora (meta da semana, pague-se primeiro, alertas, comparação) ---------- */
+const lsLe = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
+const lsGrava = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const inicioCiclo = k => new Date(S.ini.y, S.ini.m - 1 + k, 15);
+function guardarPara(meta, v){
+  S.tipo = 'Investimento'; ir('adicionar');
+  $('#aInvValor').value = v > 0 ? (Math.round(v * 100) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''; $('#aInvValor').dispatchEvent(new Event('input'));
+  if (meta) $('#aMeta').value = meta;
+}
+function mensalMeta(m){                       // quanto falta guardar por mês para chegar no prazo
+  const g = progressoMeta(m); if (!g.falta) return 0;
+  if (!m.prazo) return 0;
+  return g.falta / Math.max(1, ciclo(m.prazo) - ciclo(hoje()));
+}
+function metaDaSemana(){
+  const M = (S.metas || []).filter(m => progressoMeta(m).falta > 0); if (!M.length) return null;
+  const esc1 = lsLe('fin_metaSemana', ''), fixa = M.find(m => m.nome === esc1);
+  return fixa || M.slice().sort((a, b) => (a.prazo || '9999') < (b.prazo || '9999') ? -1 : 1)[0];
+}
+function acaoInicio(i, t){
+  const atual = ciclo(hoje()) === i, agora = new Date();
+  const btn = (id, txt) => `<button class="chip acao" id="${id}">${txt}</button>`;
+  // Meta da semana
+  const m = metaDaSemana(); let h = '';
+  if (m) {
+    const g = progressoMeta(m), mens = mensalMeta(m) || g.falta / 12, sem = Math.min(g.falta, mens * 7 / 30);
+    const semana = S.regs.filter(r => r.tipo === 'Investimento' && r.meta === m.nome && (agora - parse(r.data)) / 864e5 < 7).reduce((a, r) => a + r.valor, 0);
+    const feito = semana >= sem;
+    const outras = (S.metas || []).filter(x => progressoMeta(x).falta > 0);
+    h = `<div class="card semana ${feito ? 'feito' : ''}"><div class="lim-top"><span class="t">Meta da semana</span>${outras.length > 1 ? '<button class="link" id="semTroca" style="margin:0">Trocar</button>' : ''}</div>
+      <div class="sem-txt">${feito ? `Esta semana já foi: <b>${brl0(semana)}</b> para ${esc(m.nome)}.` : `Faltam <b>${brl0(g.falta)}</b> para ${esc(m.nome)}. Guarde <b>${brl0(sem - semana)}</b> esta semana.`}</div>
+      <div class="gasto-bar meta-bar" role="progressbar" aria-label="${esc(m.nome)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
+      ${feito ? '' : btn('semGuardei', 'Guardei')}</div>`;
+  }
+  $('#cSemana').innerHTML = h;
+  if ($('#semGuardei')) $('#semGuardei').onclick = () => { const g = progressoMeta(m), mens = mensalMeta(m) || g.falta / 12; guardarPara(m.nome, Math.min(g.falta, mens * 7 / 30)); };
+  if ($('#semTroca')) $('#semTroca').onclick = () => { const L = (S.metas || []).filter(x => progressoMeta(x).falta > 0), k = L.findIndex(x => x.nome === m.nome); lsGrava('fin_metaSemana', L[(k + 1) % L.length].nome); acaoInicio(i, t); };
+
+  // Planejado para guardar no mês: o que as metas pedem + 5% das entradas
+  const plano = (S.metas || []).reduce((a, x) => a + mensalMeta(x), 0) + t.Entrada * .05;
+  $('#iInvPlan').innerHTML = plano > 0 ? `<i style="width:${Math.min(100, t.Investimento / plano * 100)}%"></i><span>${Math.round(t.Investimento / plano * 100)}% de ${brl0(plano)}</span>` : '';
+
+  // Pague-se primeiro / fim do mês
+  const p = periodo(i), dias = Math.ceil((p.fim - agora) / 864e5), falta = plano - t.Investimento, nomeM = m ? m.nome : '';
+  let pg = '';
+  if (atual && dias <= 5 && t.saldo > 0) pg = `<div class="card pague"><div class="sem-txt">Sobram <b>${brl0(t.saldo)}</b> e o mês acaba em ${dias} ${dias === 1 ? 'dia' : 'dias'}. ${nomeM ? 'Mandar para a meta ' + esc(nomeM) + '?' : 'Guardar como investimento?'}</div>${btn('pgBtn', 'Mandar agora')}</div>`;
+  else if (atual && t.Entrada > 0 && falta > 1) pg = `<div class="card pague"><div class="sem-txt">Entrou <b>${brl0(t.Entrada)}</b>. Separar <b>${brl0(falta)}</b> para metas e investimento antes de gastar?</div>${btn('pgBtn', 'Separar agora')}</div>`;
+  $('#cPague').innerHTML = pg;
+  if ($('#pgBtn')) $('#pgBtn').onclick = () => guardarPara(nomeM, dias <= 5 && t.saldo > 0 ? t.saldo : falta);
+
+  // Alertas: limite andando mais rápido que o mês + compras esperando 24h
+  const ini = inicioCiclo(i), total = (p.fim - ini) / 864e5 + 1, passou = atual ? Math.min(1, Math.max(0, (agora - ini) / 864e5 / total)) : 1;
+  const al = Object.keys(S.limites || {}).map(c => { const l = limEfetivo(c, i), g = gastoConta(c, i); return { c, l, g, p: l ? g / l : 0 }; })
+    .filter(x => x.l && (x.p >= 1 || (atual && x.p >= .5 && x.p - passou >= .3))).sort((a, b) => b.p - a.p).slice(0, 3)
+    .map(x => x.p >= 1 ? `<div class="alerta alto"><b>${esc(x.c)}</b> ${x.g - x.l >= 1 ? 'passou do limite em ' + brl0(x.g - x.l) : 'chegou no limite'}.</div>`
+      : `<div class="alerta medio"><b>${esc(x.c)}</b> já em ${Math.round(x.p * 100)}% e faltam ${dias} ${dias === 1 ? 'dia' : 'dias'}.</div>`);
+  const prontas = lerPensando().filter(x => Date.now() - x.quando >= 864e5);
+  prontas.slice(0, 2).forEach(x => al.push(`<div class="alerta pensa"><span>Ainda querem <b>${esc(x.oque)}</b> (${brl0(x.valor)})? Já passaram 24h.</span><button class="chip acao" data-pensa="${x.quando}">Decidir</button></div>`));
+  $('#cAlertas').innerHTML = al.length ? `<div class="card"><h2>Atenção</h2>${al.join('')}</div>` : '';
+  $$('#cAlertas [data-pensa]').forEach(b => b.onclick = () => decidirPensando(+b.dataset.pensa));
+
+  // Comparação em uma linha: mesmo ponto do mês x média dos 3 anteriores + regra do guia
+  const ate = k => { const i0 = inicioCiclo(k), lim = atual ? (agora - ini) : Infinity;
+    return S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === k && parse(r.data) - i0 <= lim).reduce((a, r) => a + r.valor, 0); };
+  const ant = [1, 2, 3].map(d => i - d).filter(k => k >= 0 && totais(k).Despesa > 0);
+  const linhas = [];
+  if (ant.length && t.Despesa) { const med = ant.reduce((a, k) => a + ate(k), 0) / ant.length, dif = (t.Despesa - med) / med;
+    if (med > 0) linhas.push(`<div class="cmp1 ${dif <= 0 ? 'bom' : 'ruim'}">${atual ? 'Até hoje, vocês' : 'Neste mês, vocês'} gastaram <b>${Math.abs(Math.round(dif * 100))}% ${dif <= 0 ? 'a menos' : 'a mais'}</b> que a média ${ant.length > 1 ? 'dos últimos ' + ant.length + ' meses' : 'do mês anterior'}${atual ? ' no mesmo ponto' : ''}.</div>`); }
+  if (t.Entrada) { const { o } = porGrupo(i);
+    const pior = GRUPOS.filter(g => g.t === 'max').map(g => ({ g, pct: o[g.n] / t.Entrada * 100 })).filter(x => x.pct > x.g.p).sort((a, b) => (b.pct - b.g.p) - (a.pct - a.g.p))[0];
+    linhas.push(pior ? `<div class="cmp1 ruim">${pior.g.n} em <b>${Math.round(pior.pct)}%</b> da renda. O guia diz até ${pior.g.p}%.</div>` : '<div class="cmp1 bom">Todos os grupos dentro da Regra do guia.</div>'); }
+  $('#cResumo').innerHTML = linhas.length ? `<div class="card"><h2>Como estamos</h2>${linhas.join('')}<button class="link" data-ir="relatorios">Ver comparação completa</button></div>` : '';
+}
+
+/* ---------- Trava de 24h para compras grandes ---------- */
+const TRAVA = 300;
+const lerPensando = () => lsLe('fin_pensando', []);
+function renderPensando(){
+  const l = lerPensando();
+  $('#qPensaCard').classList.toggle('hide', !l.length);
+  $('#qPensa').innerHTML = l.map(x => { const h = Math.max(0, Math.ceil((864e5 - (Date.now() - x.quando)) / 36e5));
+    return `<div class="row"><div class="mid"><div class="t">${esc(x.oque)}</div><div class="s">${brl(x.valor)} · ${h ? 'falta' + (h === 1 ? ' 1 hora' : 'm ' + h + ' horas') : 'pronto para decidir'}</div></div>
+      <div style="display:flex;gap:6px"><button class="chip" data-pd="${x.quando}">${h ? 'É urgente' : 'Decidir'}</button><button class="chip" data-px="${x.quando}" aria-label="Desistir de ${esc(x.oque)}">Desisti</button></div></div>`; }).join('');
+  $$('#qPensa [data-pd]').forEach(b => b.onclick = () => decidirPensando(+b.dataset.pd));
+  $$('#qPensa [data-px]').forEach(b => b.onclick = () => { lsGrava('fin_pensando', lerPensando().filter(x => x.quando !== +b.dataset.px)); renderPensando(); renderMes(); toast('Boa. Esse dinheiro continua com vocês.'); });
+}
+function decidirPensando(quando){
+  const x = lerPensando().find(y => y.quando === quando); if (!x) return;
+  lsGrava('fin_pensando', lerPensando().filter(y => y.quando !== quando));
+  ir('dicas'); $('#qOque').value = x.oque; $('#qValor').value = x.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  S.qForma = x.forma; S.qTipo = x.tipo || ''; $('#qVezes').value = x.vezes || 1; $('#qCtx').value = x.contexto || ''; pintaQ();
+  S.pularTrava = true; renderPensando(); renderMes(); $('#qBtn').click();
 }
 
 /* ---------- Metas ---------- */
@@ -1758,7 +1865,7 @@ function mdLeve(t){
 /* ---------- Posso comprar? ---------- */
 S.qForma = 'À vista'; S.qTipo = '';
 function pintaQ(){ chipGroup('#qForma', S.qForma, v => { S.qForma = v; pintaQ(); }); chipGroup('#qTipo', S.qTipo, v => { S.qTipo = v; pintaQ(); }); $('#qVezesBox').classList.toggle('hide', S.qForma !== 'Parcelado'); }
-pintaQ();
+pintaQ(); renderPensando();
 const VERED = { 'Pode comprar': ['ok', '<path d="M20 6 9 17l-5-5"/>'], 'Melhor esperar': ['medio', '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'], 'Agora não': ['alto', '<circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/>'] };
 function cartaResposta(r){
   const [cls, ic] = VERED[r.veredito] || VERED['Melhor esperar'], n = r.numeros || {};
@@ -1790,6 +1897,12 @@ $('#qBtn').onclick = async () => {
   const q = { oque: $('#qOque').value.trim(), valor: num($('#qValor').value), forma: S.qForma, vezes: parseInt($('#qVezes').value) || 1, tipo: S.qTipo, contexto: $('#qCtx').value.trim() };
   if (!q.oque) { $('#qErro').textContent = 'Diga o que querem comprar.'; return; }
   if (!(q.valor > 0)) { $('#qErro').textContent = 'Digite o valor.'; return; }
+  if (q.valor >= TRAVA && !S.pularTrava) {
+    lsGrava('fin_pensando', lerPensando().concat([{ ...q, quando: Date.now() }])); renderPensando(); renderMes();
+    $('#qRes').innerHTML = `<div class="card resp medio"><div class="resp-ver">Espere 24h</div><p class="s" style="margin:8px 0 0">Compras acima de ${brl0(TRAVA)} ficam um dia em <b>Pensando</b>. Muita vontade passa sozinha. Amanhã ela aparece no Início para vocês decidirem.</p></div>`;
+    $('#qOque').value = ''; $('#qValor').value = ''; $('#qCtx').value = ''; return;
+  }
+  S.pularTrava = false;
   const b = $('#qBtn'); b.disabled = true; b.textContent = 'Pensando...';
   $('#qRes').innerHTML = '<div class="card"><div class="sk" style="height:28px;width:50%;margin-bottom:12px"></div><div class="sk" style="height:60px;margin-bottom:12px"></div><div class="sk" style="height:80px"></div></div>';
   try { const r = await api('perguntar', q); $('#qRes').innerHTML = cartaResposta(r); S.perguntas = [r].concat(S.perguntas || []); renderPerg(); $('#qRes').scrollIntoView({ block: 'start' }); }
