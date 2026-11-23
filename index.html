@@ -445,7 +445,7 @@ html.pc .toast{bottom:24px}
 <section id="inicio" class="hide">
   <header><h1>Nossas finanças</h1><div class="topo-dir"><button class="ico-topo modo-btn" id="modoBtn" type="button" onclick="trocaModo()"></button><button class="ico-topo" data-ir="historico" aria-label="Abrir o histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></div></header>
   <div class="card hero" id="iHero"><div class="hero-av" id="hAv"></div><div class="hero-txt"><div class="hero-ola" id="iOla"></div><div class="hero-hum" id="iHum"></div></div></div>
-  <div class="card saldo"><div class="lbl">Saldo do mês</div><div class="val" id="iSaldo"></div><div class="falta hide" id="iFalta"></div><div class="sub" id="iPeriodo"></div><div class="dia" id="iDia"></div><div class="gasto" id="iGasto"></div></div>
+  <div class="card saldo"><div class="lbl">Saldo do mês</div><div class="val" id="iSaldo"></div><div class="falta hide" id="iFalta"></div><div class="sub" id="iPeriodo"></div><div class="dia" id="iNaFatura"></div><div class="dia" id="iDia"></div><div class="gasto" id="iGasto"></div></div>
   <div class="grid3" style="margin-bottom:12px">
     <div class="mini in"><small>Entradas</small><b id="iEnt"></b><span class="var" id="vEnt"></span></div>
     <div class="mini out"><small>Despesas</small><b id="iDes"></b><span class="var" id="vDes"></span></div>
@@ -960,12 +960,17 @@ function renderMes(){ $$('.mesNome').forEach(s => s.textContent = nomeCiclo(S.me
 /* ---------- Início ---------- */
 function renderInicio(){
   const i = S.mes, t = totais(i), p = periodo(i);
-  $('#iSaldo').textContent = brl(t.saldo); $('#iSaldo').classList.toggle('neg', t.saldo < 0); $('#iFalta').textContent = 'Faltou ' + brl(-t.saldo); $('#iFalta').classList.toggle('hide', t.saldo >= 0);
+  // saldo = dinheiro na conta: compras no cartão só saem no vencimento da fatura (fecha dia 11, vence dia 16)
+  const venc = d => { const [y, m, dd] = d.split('-').map(Number); return isoD(new Date(y, dd <= FECHA ? m - 1 : m, VENCE)); };
+  const naFatura = S.regs.filter(r => r.tipo === 'Despesa' && r.cartao && ciclo(r.data) === i && venc(r.data) > hoje()).reduce((a, r) => a + r.valor, 0);
+  const saldo = t.saldo + naFatura;
+  $('#iSaldo').textContent = brl(saldo); $('#iSaldo').classList.toggle('neg', saldo < 0); $('#iFalta').textContent = 'Faltou ' + brl(-saldo); $('#iFalta').classList.toggle('hide', saldo >= 0);
+  $('#iNaFatura').innerHTML = naFatura > 0 ? `Já comprometido na fatura do cartão: <b>${brl(naFatura)}</b>` : '';
   let sub = p.txt; const dias = Math.ceil((p.fim - new Date()) / 864e5);
   if (ciclo(hoje()) === i && dias >= 0) sub += ' · faltam ' + dias + (dias === 1 ? ' dia' : ' dias');
   $('#iPeriodo').textContent = sub;
-  { const el = $('#iDia'); if (ciclo(hoje()) === i && dias > 0 && t.Entrada > 0) { const pd = Math.max(0, t.saldo) / dias;
-      el.innerHTML = t.saldo > 0 ? `Dá para gastar <b>${brl(pd)} por dia</b> até o dia 14` : '<b>Sem folga:</b> qualquer gasto agora sai do vermelho'; el.className = 'dia' + (pd < 20 ? ' ruim' : ''); }
+  { const el = $('#iDia'); if (ciclo(hoje()) === i && dias > 0 && t.Entrada > 0) { const pd = Math.max(0, saldo - naFatura) / dias;
+      el.innerHTML = saldo - naFatura > 0 ? `Dá para gastar <b>${brl(pd)} por dia</b> até o dia 14` : '<b>Sem folga:</b> qualquer gasto agora sai do vermelho'; el.className = 'dia' + (pd < 20 ? ' ruim' : ''); }
     else el.innerHTML = ''; }
   { const g = t.Entrada ? t.Despesa / t.Entrada : null, nivel = g == null ? '' : g > 1 ? 'alto' : g >= .8 ? 'medio' : 'ok';
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
