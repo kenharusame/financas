@@ -404,6 +404,7 @@ img.foto-meta.mini{width:24px;height:24px}
 .des-acoes{display:flex;gap:8px;align-items:center;flex-wrap:wrap} .des-acoes .btn{width:auto;flex:1}
 #dQuem{margin-bottom:8px} #dNovo{margin-top:10px}
 .rev-link{display:flex;justify-content:space-between;align-items:center;width:100%;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:14px 18px} .rev-link span{color:var(--muted);font-size:13px}
+.sem-foto{display:block;width:100%;max-height:180px;object-fit:cover;border-radius:16px;margin-bottom:10px} .des-foto{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -1266,8 +1267,10 @@ function mensalMeta(m){                       // quanto falta guardar por mês p
   if (!m.prazo) return 0;
   return g.falta / Math.max(1, ciclo(m.prazo) - ciclo(hoje()));
 }
+const donoMeta = m => { const d = (S.desejos || []).find(x => x.nome === m.nome); return d ? d.dono : ''; };
+const minhas = () => ativas().filter(m => !donoMeta(m) || !S.quem || donoMeta(m) === S.quem);
 function metaDaSemana(){
-  const M = ativas().filter(m => progressoMeta(m).falta > 0); if (!M.length) return null;
+  const M = minhas().filter(m => progressoMeta(m).falta > 0); if (!M.length) return null;
   const esc1 = lsLe('fin_metaSemana', ''), fixa = M.find(m => m.nome === esc1);
   const res = M.find(m => ehReserva(m) && progressoMeta(m).guardado < 10000);
   return fixa || res || M.slice().sort((a, b) => (a.prazo || '9999') < (b.prazo || '9999') ? -1 : 1)[0];
@@ -1281,15 +1284,18 @@ function acaoInicio(i, t){
     const g = progressoMeta(m), mens = mensalMeta(m) || g.falta / 12, sem = Math.min(g.falta, mens * 7 / 30);
     const semana = S.regs.filter(r => r.tipo === 'Investimento' && r.meta === m.nome && (agora - parse(r.data)) / 864e5 < 7).reduce((a, r) => a + r.valor, 0);
     const feito = semana >= sem;
-    const outras = ativas().filter(x => progressoMeta(x).falta > 0);
-    h = `<div class="card semana ${feito ? 'feito' : ''}"><div class="lim-top"><span class="t">${fotoHtml(m, 'mini')}Meta da semana</span>${outras.length > 1 ? '<button class="link" id="semTroca" style="margin:0">Trocar</button>' : ''}</div>
+    const outras = minhas().filter(x => progressoMeta(x).falta > 0);
+    h = `<div class="card semana ${feito ? 'feito' : ''}">${m.foto ? `<img class="sem-foto" src="${m.foto}" alt="${esc(m.nome)}">` : ''}<div class="lim-top"><span class="t">Meta da semana</span>${outras.length > 1 ? '<button class="link" id="semTroca" style="margin:0">Trocar</button>' : ''}</div>
       <div class="sem-txt">${feito ? `Esta semana já foi: <b>${brl0(semana)}</b> para ${esc(m.nome)}.` : `Faltam <b>${brl0(g.falta)}</b> para ${esc(m.nome)}. Guarde <b>${brl0(sem - semana)}</b> esta semana.`}</div>
       <div class="gasto-bar meta-bar" role="progressbar" aria-label="${esc(m.nome)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
-      ${feito ? '' : btn('semGuardei', 'Guardei')}</div>`;
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${feito ? '' : btn('semGuardei', 'Guardei')}<button class="chip acao" id="semFoto">${m.foto ? 'Trocar foto' : 'Pôr foto do que quer comprar'}</button><input type="file" id="semArq" accept="image/*" class="hide"></div></div>`;
   }
   $('#cSemana').innerHTML = h;
   if ($('#semGuardei')) $('#semGuardei').onclick = () => { const g = progressoMeta(m), mens = mensalMeta(m) || g.falta / 12; guardarPara(m.nome, Math.min(g.falta, mens * 7 / 30)); };
-  if ($('#semTroca')) $('#semTroca').onclick = () => { const L = ativas().filter(x => progressoMeta(x).falta > 0), k = L.findIndex(x => x.nome === m.nome); lsGrava('fin_metaSemana', L[(k + 1) % L.length].nome); acaoInicio(i, t); };
+  if ($('#semFoto')) { $('#semFoto').onclick = () => $('#semArq').click();
+    $('#semArq').onchange = async e => { const f = e.target.files[0]; if (!f) return; $('#semFoto').disabled = true; $('#semFoto').textContent = 'Enviando...';
+      try { S.metas = await api('fotoMeta', m.nome, await reduzFoto(f)); toast('Foto salva'); renderMes(); } catch (er) { toast('Não salvou a foto: ' + er); renderMes(); } }; }
+  if ($('#semTroca')) $('#semTroca').onclick = () => { const L = minhas().filter(x => progressoMeta(x).falta > 0), k = L.findIndex(x => x.nome === m.nome); lsGrava('fin_metaSemana', L[(k + 1) % L.length].nome); acaoInicio(i, t); };
 
   // Planejado para guardar no mês: o que as metas pedem + 5% das entradas
   const ex = entradaExtra(i), plano = Math.max(ativas().reduce((a, x) => a + mensalMeta(x), 0), t.Entrada * GUARDAR) + ex / 2;
@@ -1433,7 +1439,7 @@ function renderDesejos(){
     const aberto = S.dAberto === d.id, m = (S.metas || []).find(x => x.nome === d.nome), g = m ? progressoMeta(m) : null, feitos = d.pontos.filter(x => x.ok).length;
     return `<div class="des${aberto ? ' aberto' : ''}">
       <div class="des-top"><span class="des-n">${k + 1}</span>
-        <button class="des-nome" data-dab="${d.id}" aria-expanded="${aberto}"><b>${esc(d.nome)}</b>${k === 0 ? ' <span class="tag fixa">Meta</span>' : ''}<div class="s">${brl(d.preco)}${g ? ' · guardado ' + Math.round(g.p * 100) + '%' : ''}${d.pontos.length ? ` · ${feitos} de ${d.pontos.length} passos` : ''}</div></button>
+        ${m && m.foto ? `<img class="des-foto" src="${m.foto}" alt="">` : ''}<button class="des-nome" data-dab="${d.id}" aria-expanded="${aberto}"><b>${esc(d.nome)}</b>${k === 0 ? ' <span class="tag fixa">Meta</span>' : ''}<div class="s">${brl(d.preco)}${g ? ' · guardado ' + Math.round(g.p * 100) + '%' : ''}${d.pontos.length ? ` · ${feitos} de ${d.pontos.length} passos` : ''}</div></button>
         ${meu ? `<div class="des-mov"><button class="chip" data-dmv="${d.id}" data-dir="-1" aria-label="Subir ${esc(d.nome)}" ${k === 0 ? 'disabled' : ''}>${seta('M6 15l6-6 6 6')}</button><button class="chip" data-dmv="${d.id}" data-dir="1" aria-label="Descer ${esc(d.nome)}" ${k === l.length - 1 ? 'disabled' : ''}>${seta('M6 9l6 6 6-6')}</button></div>` : ''}</div>
       ${aberto ? `<div class="des-det">
         ${d.link ? `<a class="link" href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">Abrir onde comprar</a>` : ''}
