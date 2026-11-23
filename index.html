@@ -48,8 +48,9 @@ h2{font-family:Outfit,system-ui,sans-serif;font-size:19px;line-height:1.2;margin
 .saldo .sub{color:var(--muted);font-size:14px}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .mini{border-radius:16px;padding:12px 6px;text-align:center;border:1px solid var(--line)}
-.mini b{display:block;font-size:16px;font-variant-numeric:tabular-nums}
-.mini small{font-size:13px;font-weight:700}
+.mini b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+.mini small{font-size:14px;font-weight:700}
+.mini .var:empty,.mini .inv-plan:empty{display:none}
 .mini.in{background:var(--in-soft);color:var(--in)} .mini.out{background:var(--out-soft);color:var(--out)} .mini.inv{background:var(--inv-soft);color:var(--inv)}
 .bar{display:grid;grid-template-columns:110px 1fr 80px;align-items:center;gap:10px;min-height:44px;width:100%;background:none;border:0;color:inherit;font:inherit;font-size:14px;text-align:left;cursor:pointer;border-radius:10px;padding:0 4px}
 .bar:hover{background:var(--track)}
@@ -430,7 +431,9 @@ html.pc .pc-topo>*{margin:0!important}
 html.pc .pc-topo>.saldo{grid-row:span 2}
 html.pc .pc-topo>.grid3,html.pc .pc-topo>#cResumo{grid-column:2}
 html.pc .pc-topo>#cResumo .card{margin:0;height:100%}
-html.pc .pc-topo .grid3>.mini{display:flex;flex-direction:column;justify-content:center;margin:0}
+html.pc .pc-topo .grid3>.mini{display:flex;flex-direction:column;justify-content:flex-start;padding:18px 10px;margin:0}
+html.pc .pc-topo .grid3>.mini small{font-size:17px}
+html.pc .pc-topo .grid3>.mini b{font-size:26px;margin-top:4px}
 html.pc #planejar .pc-topo{grid-template-columns:1fr 1fr}
 html.pc .pc-cols{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;align-items:start}
 html.pc .pc-cols>div>*{width:100%}
@@ -873,6 +876,7 @@ const FAKE = (() => {
     fotoMeta: (n, f) => { const m = dados.metas.find(x => x.nome === n); if (m) m.foto = f; return JSON.parse(JSON.stringify(dados.metas)); },
     esperaMeta: (n, e) => { const m = dados.metas.find(x => x.nome === n); if (m) m.espera = !!e; return JSON.parse(JSON.stringify(dados.metas)); },
     apagarMeta: n => { dados.metas = dados.metas.filter(x => x.nome !== n); return JSON.parse(JSON.stringify(dados.metas)); },
+    economiaGuia: () => ({ dia: '23/11', texto: '**Prazeres está em 24%, o guia diz até 5%.** Restaurante pesou R$ 520: trocar 2 saídas por jantar em casa economiza uns R$ 200.\n**Custos fixos em 69%.** O iPhone (R$ 350) é o maior fixo que dá para rever.' }),
     checkin: c => ({ mes: 'Novembro', texto: '**Sobrou dinheiro e teve investimento.** Bom sinal.\n- O cartão ficou dentro do limite.\n\n**A luz passou do limite.** Vale olhar o chuveiro e o ar.' }),
     perguntaLivre: (q, c) => ({ quando: '22/11 22:10', quem: 'Ken', conversa: c, pergunta: q, resposta: '**Pelo guia (Investidor Sardinha), a divisão sugerida é:**\n- Custos fixos: até 40% (R$ 3.400 das entradas de novembro)\n- Liberdade financeira: 25%\n- Conforto: até 20%\n\nHoje os fixos de vocês estão em 37%, dentro do limite.' }),
     perguntar: q => ({ quando: '22/11/2026 21:40', oque: q.oque, valor: q.valor, forma: q.forma, vezes: q.forma === 'Parcelado' ? q.vezes : 1, veredito: 'Melhor esperar',
@@ -2105,8 +2109,28 @@ function guiaInicio(i){
       <div class="gasto-bar guia-bar" role="img" aria-label="${g.n}: ${Math.round(pct)}% da renda, o guia sugere ${g.t === 'max' ? 'até' : g.t === 'min' ? 'pelo menos 15 a' : ''} ${g.p}%"><i style="width:${Math.min(100, pct / 50 * 100)}%;background:${g.cor}"></i><b style="left:${g.p / 50 * 100}%"></b></div>
       <div class="lim-num"><span>${brl0(o[g.n])} · ${pct.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}% da renda</span><span>guia: ${g.t === 'max' ? 'até ' : g.t === 'min' ? '15 a ' : ''}${g.p}%</span></div></div>`; }).join('')
     + (sem ? `<div class="note aviso">${brl0(sem)} em contas sem grupo. Toque em "Tipos das contas" para escolher.</div>` : '')
-    + '<button class="link" id="cfgAbrir">Tipos das contas</button>';
+    + '<div id="guiaEcon"></div><button class="link" id="cfgAbrir">Tipos das contas</button>';
   $('#cfgAbrir').onclick = abrirCfg;
+  economiaGuia(i, t, o);
+}
+/* Onde economizar: o Gemini lê os grupos e as contas uma vez por dia (o Apps Script guarda a resposta do dia). */
+async function economiaGuia(i, t, o){
+  const box = $('#guiaEcon'); if (!box || i !== ciclo(hoje()) || S.offline) return;
+  const pinta = x => { box.innerHTML = `<div class="note" style="margin-top:12px"><b>Onde dá para economizar</b><div style="margin-top:6px">${mdLeve(x.texto)}</div><small style="color:var(--muted)">Análise do Gemini de ${esc(x.dia)}</small></div>`; };
+  if (S.econ) return pinta(S.econ);
+  box.innerHTML = '<div class="note" style="margin-top:12px;color:var(--muted)">Procurando onde dá para economizar...</div>';
+  const ks = mesesBase(), contas = {};
+  S.regs.filter(r => r.tipo === 'Despesa').forEach(r => { const k = ciclo(r.data); if (k !== i && !ks.includes(k)) return;
+    const c = contas[r.conta] = contas[r.conta] || { conta: r.conta, grupo: grupoDe(r.conta) || 'Sem grupo', tipo: tipoDe(r.conta), superfluo: superfluo(r.conta), esteMes: 0, media3m: 0 };
+    if (k === i) c.esteMes += r.valor; else c.media3m += r.valor / ks.length; });
+  const p = periodo(i), info = {
+    hoje: hoje(), mes: { periodo: p.txt, diasQueFaltam: Math.max(0, Math.ceil((p.fim - new Date()) / 864e5)) },
+    entradasDoMes: Math.round(t.Entrada), despesasDoMes: Math.round(t.Despesa), investidoNoMes: Math.round(t.Investimento), salarioDaFamilia: Math.round(salarioFamilia()),
+    grupos: GRUPOS.map(g => ({ grupo: g.n, gasto: Math.round(o[g.n]), pctDaRenda: Math.round(o[g.n] / t.Entrada * 100), guia: (g.t === 'max' ? 'até ' : g.t === 'min' ? '15 a ' : '') + g.p + '%' })),
+    contas: Object.values(contas).map(c => ({ ...c, esteMes: Math.round(c.esteMes), media3m: Math.round(c.media3m) })).sort((a, b) => b.esteMes - a.esteMes),
+    orcamentoPorTipo: orcLinhas(i).map(x => ({ tipo: x.n, orcamento: x.v, gasto: Math.round(x.g) })) };
+  try { S.econ = await api('economiaGuia', info); pinta(S.econ); }
+  catch (e) { box.innerHTML = `<div class="note aviso" style="margin-top:12px">A análise de economia não veio agora: ${esc(String(e))}</div>`; }
 }
 const opcoesTipo = (atual) => listaTipos().map(t => `<option ${t === atual ? 'selected' : ''}>${esc(t)}</option>`).join('') + '<option value="__novo">+ Novo tipo</option>';
 function novoTipo(sel, antes){ const n = (prompt('Nome do novo tipo:') || '').trim(); if (!n) { sel.value = antes; return; } sel.insertAdjacentHTML('afterbegin', `<option>${esc(n)}</option>`); sel.value = n; }
