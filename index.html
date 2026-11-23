@@ -2488,8 +2488,8 @@ $('#aSalvar').onclick = async () => {
     const c0 = ciclo(r.data), ex0 = r.tipo === 'Entrada' ? entradaExtra(c0) : 0;
     toast(n > 1 ? `Salvo em ${n} meses` : 'Salvo');
     ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); $('#aCartao').checked = false; $('#aDaMeta').checked = false; $('#aDaMetaV').value = ''; $('#aDaMetaBox').classList.add('hide');
-    await carregar(); renderForm();
-    if (r.tipo === 'Entrada') { const ex = entradaExtra(c0) - ex0; if (ex > 50) toast('Entrou ' + brl0(ex) + ' a mais que o normal. Guardar a metade?', 'Guardar ' + brl0(ex / 2), () => { const m = metaDaSemana(); guardarPara(m ? m.nome : '', ex / 2); }); }
+    carregar().then(() => { renderForm();
+    if (r.tipo === 'Entrada') { const ex = entradaExtra(c0) - ex0; if (ex > 50) toast('Entrou ' + brl0(ex) + ' a mais que o normal. Guardar a metade?', 'Guardar ' + brl0(ex / 2), () => { const m = metaDaSemana(); guardarPara(m ? m.nome : '', ex / 2); }); } });
   } catch (e) {
     if (/Sem conexão/.test(String(e)) || !navigator.onLine) {
       enfileira(r); toast('Sem internet: guardado no celular. Envia sozinho quando a conexão voltar.');
@@ -2617,13 +2617,24 @@ $('#eSalvar').onclick = async () => {
   if (r.tipo === 'Investimento') c.meta = $('#eMeta').value;
   if (r.tipo === 'Despesa' && $('#eCartao').checked !== !!r.cartao) c.cartao = $('#eCartao').checked;
   if (S.escopo === 'um') c.data = $('#eData').value;
-  try { await api('editar', S.editId, c, S.escopo); $('#dlg').close(); toast('Corrigido'); carregar(); } catch (e) { $('#eErro').textContent = 'Não salvou: ' + e; }
+  try { await api('editar', S.editId, c, S.escopo); $('#dlg').close(); toast('Corrigido'); editaLocal(r, c, S.escopo); carregar(); } catch (e) { $('#eErro').textContent = 'Não salvou: ' + e; }
 };
+/* Mostra a correção na hora; o carregar() em seguida confirma com a planilha. */
+function editaLocal(r, c, escopo){
+  const alvo = escopo === 'seguintes' && r.grupo ? S.regs.filter(x => x.grupo === r.grupo && x.data >= r.data) : [r];
+  alvo.forEach(x => { ['valor', 'obs', 'conta', 'meta', 'cartao'].forEach(k => { if (c[k] != null) x[k] = c[k]; }); });
+  if (c.data && alvo.length === 1) r.data = c.data;
+  renderMes();
+}
+function apagaLocal(linhas){
+  const ids = (linhas || []).map(l => String(l[0]));
+  S.regs = S.regs.filter(x => ids.indexOf(String(x.id)) < 0); renderMes();
+}
 $('#eApagar').onclick = async () => {
   const r = S.regs.find(x => x.id === S.editId);
   const msg = S.escopo === 'seguintes' ? (r.forma === 'Fixa' ? 'Parar esta conta fixa a partir deste mês? Os meses seguintes serão apagados.' : 'Apagar esta parcela e as próximas?') : 'Apagar este registro?';
   if (!confirm(msg)) return;
-  try { const linhas = await api('apagar', S.editId, S.escopo); $('#dlg').close(); toast(linhas.length > 1 ? `${linhas.length} registros apagados` : 'Apagado', 'Desfazer', async () => { try { await api('restaurar', linhas); toast('Voltou'); carregar(); } catch (e) { toast('Não deu para desfazer: ' + e); } }); carregar(); } catch (e) { $('#eErro').textContent = 'Não apagou: ' + e; }
+  try { const linhas = await api('apagar', S.editId, S.escopo); $('#dlg').close(); apagaLocal(linhas); toast(linhas.length > 1 ? `${linhas.length} registros apagados` : 'Apagado', 'Desfazer', async () => { try { await api('restaurar', linhas); toast('Voltou'); carregar(); } catch (e) { toast('Não deu para desfazer: ' + e); } }); carregar(); } catch (e) { $('#eErro').textContent = 'Não apagou: ' + e; }
 };
 
 /* ---------- Dicas ---------- */
