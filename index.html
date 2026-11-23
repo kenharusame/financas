@@ -346,8 +346,8 @@ input,select{background:rgba(12,18,27,.5);border:1px solid rgba(255,255,255,.05)
 .fl-topo{display:flex;justify-content:space-between;margin:-4px 0 12px}
 .fl-topo small{display:block;color:var(--muted);font-weight:700;font-size:12px}
 .fl-topo b{font-family:Outfit,system-ui,sans-serif;font-size:22px} .fl-topo b.in{color:var(--in)} .fl-topo b.out{color:var(--out)}
-.fluxo .fl-out{stroke-opacity:.5;transition:stroke-opacity .2s} .fluxo .fl-dest{cursor:pointer;outline:none}
-.fluxo.foco .fl-out{stroke-opacity:.12} .fluxo.foco .fl-out.on{stroke-opacity:.75} .fluxo.foco .fl-dest:not(.on){opacity:.45}
+.fluxo .fl-out{fill-opacity:.5;transition:fill-opacity .2s} .fluxo .fl-dest{cursor:pointer;outline:none}
+.fluxo.foco .fl-out{fill-opacity:.12} .fluxo.foco .fl-out.on{fill-opacity:.75} .fluxo.foco .fl-dest:not(.on){opacity:.45}
 .fluxo .fl-dest:focus-visible rect:first-child{stroke:#fff;stroke-width:2}
 @media (prefers-reduced-motion:reduce){.fluxo .fl-out{transition:none}}
 .seg.modo{grid-template-columns:1fr 1fr;margin-bottom:12px}
@@ -2149,17 +2149,20 @@ function fluxoInicio(i){
   const H = Math.max(220, destinos.length * 46);
   const k1 = (H - G * (Math.max(fontes.length, destinos.length) - 1)) / tot;
   // cada barra ganha um espaço de pelo menos 34px para o nome caber ao lado, sem linha puxando o texto para baixo
-  const SLOT = 34; let y = TOPO;
-  fontes.forEach(f => { f.h = Math.max(6, f.v * k1); const sl = Math.max(f.h, SLOT); f.y = y + (sl - f.h) / 2; f.saida = f.y; f.ly = f.y + f.h / 2; y += sl + G; });
-  y = TOPO; destinos.forEach(d => { d.h = Math.max(6, d.v * k1); const sl = Math.max(d.h, SLOT); d.y = y + (sl - d.h) / 2; d.chegada = d.y; d.ly = d.y + d.h / 2; y += sl + G; });
+  // as duas colunas têm a mesma altura total: cada uma ganha sua escala para começar e terminar alinhada
+  const SLOT = 34, altura = (l, k) => l.reduce((a, x) => a + Math.max(Math.max(6, x.v * k), SLOT), 0) + G * (l.length - 1);
+  const T = Math.max(H, altura(fontes, 0), altura(destinos, 0));
+  const escala = l => { let a = 0, b = 10; for (let n = 0; n < 40; n++) { const m = (a + b) / 2; if (altura(l, m) > T) b = m; else a = m; } return a; };
+  const posiciona = (l, k, campo) => { let y = TOPO; l.forEach(x => { x.h = Math.max(6, x.v * k); const sl = Math.max(x.h, SLOT); x.y = y + (sl - x.h) / 2; x[campo] = x.y; x.ly = x.y + x.h / 2; y += sl + G; }); return y; };
+  posiciona(fontes, escala(fontes), 'saida'); let y = posiciona(destinos, escala(destinos), 'chegada');
   const HL = Math.max(y, ...destinos.map(d => d.ly + 18), ...fontes.map(f => f.ly + 18));
   // cada origem se divide entre os destinos na mesma proporção; a faixa tem a cor do destino
   let links = '';
   destinos.forEach((d, k) => fontes.forEach(f => {
-    const h = f.h * d.v / totS; if (h < .4) return;
-    const y1 = f.saida + h / 2, y2 = d.chegada + h / 2, xm = (xA + NW + xB) / 2;
-    links += `<path class="fl-out" data-k="${k}" d="M${xA + NW} ${y1}C${xm} ${y1} ${xm} ${y2} ${xB} ${y2}" stroke="${d.cor}" stroke-width="${h}" fill="none"/>`;
-    f.saida += h; d.chegada += h;
+    const h1 = f.h * d.v / totS, h2 = d.h * f.v / totE; if (h1 < .4 && h2 < .4) return;
+    const x1 = xA + NW, x2 = xB, xm = (x1 + x2) / 2, a = f.saida, b = d.chegada;
+    links += `<path class="fl-out" data-k="${k}" d="M${x1} ${a}C${xm} ${a} ${xm} ${b} ${x2} ${b}L${x2} ${b + h2}C${xm} ${b + h2} ${xm} ${a + h1} ${x1} ${a + h1}Z" fill="${d.cor}"/>`;
+    f.saida += h1; d.chegada += h2;
   }));
   const pct = v => Math.round(v / t.Entrada * 100) + '%';
   const rot = (x, yc, n, v, anc, cls) => `<text x="${x}" y="${yc - 3}" text-anchor="${anc}" class="fl-n ${cls || ''}">${esc(n)}</text><text x="${x}" y="${yc + 12}" text-anchor="${anc}" class="fl-v">${v}</text>`;
