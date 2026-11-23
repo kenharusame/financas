@@ -553,7 +553,7 @@ html.pc .toast{bottom:24px}
       <label class="des-p" style="margin-top:12px"><input type="checkbox" id="aCartao"><span>Paguei no cartão de crédito</span></label>
       <label class="des-p" style="margin-top:8px"><input type="checkbox" id="aDaMeta"><span>Usei dinheiro guardado (meta ou reserva)</span></label>
       <div id="aDaMetaBox" class="hide"><div class="two"><div><label for="aDaMetaQual">De qual</label><select id="aDaMetaQual"></select></div>
-        <div><label for="aDaMetaV">Quanto saiu de lá</label><input id="aDaMetaV" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"></div></div></div>
+        <div><label for="aDaMetaV">Quanto saiu de lá</label><input id="aDaMetaV" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"></div></div><div class="alerta medio" id="aDaMetaAviso" style="margin-top:10px"></div></div>
       <div class="note" id="aResumo"></div>
     </div>
 
@@ -2406,7 +2406,12 @@ $('#ncSalvar').onclick = async () => {
 };
 $('#aDaMeta').onchange = () => { const on = $('#aDaMeta').checked; $('#aDaMetaBox').classList.toggle('hide', !on);
   if (on) { const ms = (S.metas || []).filter(m => progressoMeta(m).guardado > 0); $('#aDaMetaQual').innerHTML = ms.length ? ms.map(m => `<option value="${esc(m.nome)}">${esc(m.nome)} (${brl0(progressoMeta(m).guardado)})</option>`).join('') : '<option value="">Nenhuma meta com dinheiro</option>';
-    if (!$('#aDaMetaV').value) $('#aDaMetaV').value = $('#aValor').value; } };
+    if (!$('#aDaMetaV').value) $('#aDaMetaV').value = $('#aValor').value; avisoDaMeta(); } };
+function avisoDaMeta(){ const n = $('#aDaMetaQual').value, m = (S.metas || []).find(x => x.nome === n); if (!m) { $('#aDaMetaAviso').innerHTML = ''; return; }
+  $('#aDaMetaAviso').innerHTML = ehReserva(m)
+    ? '<b>Será que é uma boa ideia?</b> A reserva é para emergência: perder renda, saúde, conserto urgente. Se esse gasto pode esperar, melhor não mexer nela.'
+    : `<b>Será que é uma boa ideia?</b> Esse dinheiro estava guardado para <b>${esc(m.nome)}</b>. Tirar agora atrasa essa meta.`; }
+$('#aDaMetaQual').onchange = avisoDaMeta;
 $('#aConta').onchange = e => { if (e.target.value === '__nova') novaConta(e.target); else resumo(); };
 
 $('#aSalvar').onclick = async () => {
@@ -2418,6 +2423,7 @@ $('#aSalvar').onclick = async () => {
   const daMeta = tp === 'Despesa' && $('#aDaMeta').checked ? { meta: $('#aDaMetaQual').value, v: num($('#aDaMetaV').value) } : null;
   if (daMeta && (!daMeta.meta || !(daMeta.v > 0))) { $('#aErro').textContent = 'Diga de qual meta e quanto saiu de lá.'; return; }
   if (daMeta && daMeta.v > r.valor + .01) { $('#aErro').textContent = 'O valor tirado da meta não pode ser maior que a despesa.'; return; }
+  if (daMeta && !confirm(`Tirar ${brl(daMeta.v)} de ${daMeta.meta} para pagar isso? É mesmo necessário?`)) return;
   if (tp === 'Investimento') { const e = S.regs.find(x => x.id === $('#aVeio').value); r.valor = num($('#aInvValor').value); r.veioDe = e ? e.id : ''; r.conta = e ? e.conta : 'Investimento'; r.pct = e && r.valor ? Math.round(r.valor / e.valor * 1000) / 10 : ''; r.meta = $('#aMeta').value; }
   if (!(r.valor > 0)) { $('#aErro').textContent = 'Digite um valor maior que zero.'; return; }
   if (!data) { $('#aErro').textContent = 'Escolha a data.'; return; }
