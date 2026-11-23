@@ -381,6 +381,10 @@ img.foto-meta.mini{width:24px;height:24px}
 .meta.espera{opacity:.55}
 .dica{margin:4px 2px 12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.035);font-size:14px;line-height:1.55;color:var(--muted)} .dica b{display:block;color:var(--text);margin-bottom:2px}
 .tp-ed{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)} .tp-ed .t{font-weight:700;margin-bottom:6px} .tp-ed .two{gap:8px}
+.fases{display:flex;align-items:center;gap:6px;margin-bottom:10px} .fases span{font-size:13px;font-weight:700;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.05);color:var(--muted)} .fases span.on{background:var(--accent);color:#06141A} .fases i{flex:1;height:2px;background:rgba(255,255,255,.1)}
+.fase-txt{font-size:15px;line-height:1.5;margin:0 0 10px}
+.passo{display:flex;gap:10px;align-items:flex-start;padding:8px 0;opacity:.6;text-align:left;justify-content:flex-start} .passo>div{flex:1;text-align:left} .passo.ok,.passo.agora{opacity:1} .passo .s{color:var(--muted);font-size:13px}
+.passo .pz{flex:0 0 26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:rgba(255,255,255,.06)} .passo.ok .pz{background:var(--in);color:#06141A} .passo.agora .pz{background:var(--accent);color:#06141A}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -411,6 +415,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div id="cCheck"></div>
   <div class="card" id="cLim"><h2>Limites do mês</h2><div id="iLim"></div></div>
   <div class="card" id="cMetas"><h2>Metas</h2><div id="iMetas"></div></div>
+  <div class="card" id="cFase"><h2>Em que fase estamos</h2><div id="iFase"></div></div>
   <div class="card" id="cMesada"><h2>Mesada pessoal</h2><div id="iMesada"></div></div>
   <div id="cDica"></div>
   <div class="card" id="cGuia"><h2>Regra do guia</h2><div id="iGuia"></div></div>
@@ -663,7 +668,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     .map(x => ['#iContas', '#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
     .filter(Boolean).forEach(el => ini.appendChild(el));
   poe('relatorios', ['#cLim', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
-  poe('planejar', ['#cMetas', '#cMesada', '#cGuia', '#cAnual', '#iParc']);
+  poe('planejar', ['#cFase', '#cMetas', '#cMesada', '#cGuia', '#cAnual', '#iParc']);
   [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo') && !el.querySelector('#iContas')) el.classList.add('hide'); });
 })();
 </script>
@@ -824,7 +829,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) porConta[r.conta] = (porConta[r.conta] || 0) + r.valor; });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1275,6 +1280,23 @@ function assinaturaParaRever(){
     if (grupoDe(r.conta) === 'Custos fixos' || /mesada|mercado|cartao/.test(semAcento(r.conta))) return;
     const ch = r.conta + '|' + Math.round(r.valor); (cont[ch] = cont[ch] || { conta: r.conta, valor: r.valor, meses: new Set() }).meses.add(k); });
   return Object.values(cont).filter(x => x.meses.size >= 3 && !(Date.now() - (rev[x.conta] || 0) < 90 * 864e5)).sort((a, b) => b.valor - a.valor)[0] || null;
+}
+function faseInicio(){
+  const atual = ciclo(hoje()), fechados = [1, 2].map(d => atual - d).filter(k => k >= 0 && totais(k).Entrada > 0);
+  const faltou = fechados.filter(k => totais(k).saldo < 0).length, t = totais(atual);
+  const res = (S.metas || []).find(ehReserva), guard = res ? progressoMeta(res).guardado : 0, D = degraus();
+  const inv = fechados.length ? fechados.reduce((a, k) => a + totais(k).Investimento / totais(k).Entrada, 0) / fechados.length : (t.Entrada ? t.Investimento / t.Entrada : 0);
+  const passos = [
+    { f: 'Estabilizar', txt: 'Parar de gastar mais do que entra', ok: fechados.length >= 1 && !faltou,
+      det: !fechados.length ? 'Precisa de um mês fechado para avaliar.' : faltou ? `Faltou dinheiro em ${faltou} dos últimos ${fechados.length} meses.` : 'Nos últimos meses sobrou dinheiro.' },
+    { f: 'Construir', txt: 'Reserva de R$ 10 mil', ok: guard >= D[0], det: `${brl0(guard)} de ${brl0(D[0])}` },
+    { f: 'Construir', txt: 'Reserva de 6 meses de custos fixos', ok: guard >= D[2], det: `${brl0(guard)} de ${brl0(D[2])}` },
+    { f: 'Acelerar', txt: 'Investir de 15% a 25% do que entra', ok: inv >= .15, det: `Hoje: ${Math.round(inv * 100)}% em média.` }];
+  const k = passos.findIndex(p => !p.ok), fase = k < 0 ? 'Acelerar' : passos[k].f;
+  const FRASE = { Estabilizar: 'Primeiro, fazer o mês fechar no azul. Usem os limites e a trava de 24h.', Construir: 'Agora o foco é a reserva de emergência: ela vem antes das outras metas.', Acelerar: 'Reserva pronta. Hora de investir mais e ir atrás das metas grandes.' };
+  $('#iFase').innerHTML = `<div class="fases">${['Estabilizar', 'Construir', 'Acelerar'].map(f => `<span class="${f === fase ? 'on' : ''}">${f}</span>`).join('<i></i>')}</div>
+    <p class="fase-txt">${FRASE[fase]}</p>` + passos.map((p, j) => `<div class="passo ${p.ok ? 'ok' : j === k ? 'agora' : ''}"><span class="pz" aria-hidden="true">${p.ok ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : j + 1}</span><div><b>${p.txt}</b><div class="s">${p.det}</div></div></div>`).join('')
+    + '<div class="help">Investimento: o site organiza e explica. Para escolher onde investir, procurem um profissional certificado.</div>';
 }
 const MESADA = 300;
 function mesadaInicio(i){
