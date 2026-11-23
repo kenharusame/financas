@@ -551,6 +551,9 @@ html.pc .toast{bottom:24px}
         </div>
       </div>
       <label class="des-p" style="margin-top:12px"><input type="checkbox" id="aCartao"><span>Paguei no cartão de crédito</span></label>
+      <label class="des-p" style="margin-top:8px"><input type="checkbox" id="aDaMeta"><span>Usei dinheiro guardado (meta ou reserva)</span></label>
+      <div id="aDaMetaBox" class="hide"><div class="two"><div><label for="aDaMetaQual">De qual</label><select id="aDaMetaQual"></select></div>
+        <div><label for="aDaMetaV">Quanto saiu de lá</label><input id="aDaMetaV" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"></div></div></div>
       <div class="note" id="aResumo"></div>
     </div>
 
@@ -2401,6 +2404,9 @@ $('#ncSalvar').onclick = async () => {
   catch (e) { $('#ncErro').textContent = 'Não criou: ' + e; }
   b.disabled = false; b.textContent = 'Criar conta';
 };
+$('#aDaMeta').onchange = () => { const on = $('#aDaMeta').checked; $('#aDaMetaBox').classList.toggle('hide', !on);
+  if (on) { const ms = (S.metas || []).filter(m => progressoMeta(m).guardado > 0); $('#aDaMetaQual').innerHTML = ms.length ? ms.map(m => `<option value="${esc(m.nome)}">${esc(m.nome)} (${brl0(progressoMeta(m).guardado)})</option>`).join('') : '<option value="">Nenhuma meta com dinheiro</option>';
+    if (!$('#aDaMetaV').value) $('#aDaMetaV').value = $('#aValor').value; } };
 $('#aConta').onchange = e => { if (e.target.value === '__nova') novaConta(e.target); else resumo(); };
 
 $('#aSalvar').onclick = async () => {
@@ -2409,6 +2415,9 @@ $('#aSalvar').onclick = async () => {
   const r = { tipo: tp, data, obs: $('#aObs').value.trim() };
   if (tp === 'Entrada') { r.valor = num($('#aValor').value); r.conta = S.origem; }
   if (tp === 'Despesa') { r.valor = num($('#aValor').value); r.conta = $('#aConta').value; r.forma = S.forma; r.vezes = parseInt($('#aVezes').value) || 1; r.valorEhTotal = S.ehTotal === '1'; r.cartao = $('#aCartao').checked; }
+  const daMeta = tp === 'Despesa' && $('#aDaMeta').checked ? { meta: $('#aDaMetaQual').value, v: num($('#aDaMetaV').value) } : null;
+  if (daMeta && (!daMeta.meta || !(daMeta.v > 0))) { $('#aErro').textContent = 'Diga de qual meta e quanto saiu de lá.'; return; }
+  if (daMeta && daMeta.v > r.valor + .01) { $('#aErro').textContent = 'O valor tirado da meta não pode ser maior que a despesa.'; return; }
   if (tp === 'Investimento') { const e = S.regs.find(x => x.id === $('#aVeio').value); r.valor = num($('#aInvValor').value); r.veioDe = e ? e.id : ''; r.conta = e ? e.conta : 'Investimento'; r.pct = e && r.valor ? Math.round(r.valor / e.valor * 1000) / 10 : ''; r.meta = $('#aMeta').value; }
   if (!(r.valor > 0)) { $('#aErro').textContent = 'Digite um valor maior que zero.'; return; }
   if (!data) { $('#aErro').textContent = 'Escolha a data.'; return; }
@@ -2416,9 +2425,10 @@ $('#aSalvar').onclick = async () => {
   const b = $('#aSalvar'); b.disabled = true; b.textContent = 'Salvando...';
   try {
     const n = await api('salvar', r);
+    if (daMeta) await api('salvar', { tipo: 'Retirada', data, conta: daMeta.meta, valor: daMeta.v, meta: daMeta.meta, obs: 'Para: ' + r.conta + (r.obs ? ' - ' + r.obs : '') });
     const c0 = ciclo(r.data), ex0 = r.tipo === 'Entrada' ? entradaExtra(c0) : 0;
     toast(n > 1 ? `Salvo em ${n} meses` : 'Salvo');
-    ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); $('#aCartao').checked = false;
+    ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); $('#aCartao').checked = false; $('#aDaMeta').checked = false; $('#aDaMetaV').value = ''; $('#aDaMetaBox').classList.add('hide');
     await carregar(); renderForm();
     if (r.tipo === 'Entrada') { const ex = entradaExtra(c0) - ex0; if (ex > 50) toast('Entrou ' + brl0(ex) + ' a mais que o normal. Guardar a metade?', 'Guardar ' + brl0(ex / 2), () => { const m = metaDaSemana(); guardarPara(m ? m.nome : '', ex / 2); }); }
   } catch (e) {
