@@ -975,7 +975,7 @@ function renderInicio(){
   const venc = d => { const [y, m, dd] = d.split('-').map(Number); return isoD(new Date(y, dd <= FECHA ? m - 1 : m, VENCE)); };
   const naFatura = S.regs.filter(r => r.tipo === 'Despesa' && r.cartao && ciclo(r.data) === i && venc(r.data) > hoje()).reduce((a, r) => a + r.valor, 0);
   // o adiantamento da fatura já saiu da conta: sai do saldo e abate do que falta pagar na fatura
-  const adi = t.Adiantamento || 0, saldo = t.saldo + naFatura - adi, faltaFat = Math.max(0, naFatura - adi);
+  const adi = t.Adiantamento || 0, saldo = Math.round((t.saldo + naFatura - adi) * 100) / 100 || 0, faltaFat = Math.max(0, naFatura - adi);
   $('#iSaldo').textContent = brl(saldo); $('#iSaldo').classList.toggle('neg', saldo < 0); $('#iFalta').textContent = 'Faltou ' + brl(-saldo); $('#iFalta').classList.toggle('hide', saldo >= 0);
   $('#iNaFatura').innerHTML = faltaFat > 0 ? `Já comprometido na fatura do cartão: <b>${brl(faltaFat)}</b>` : '';
   let sub = p.txt; const dias = Math.ceil((p.fim - new Date()) / 864e5);
