@@ -431,6 +431,10 @@ html.pc nav button{min-height:76px}
 html.pc .pc-topo{display:grid;grid-template-columns:1fr 2fr;gap:16px;align-items:stretch;margin-bottom:16px}
 html.pc .pc-topo>*{margin:0!important}
 html.pc .pc-topo>.saldo{grid-row:span 2}
+html.pc #inicio .pc-topo>#iHero{grid-column:1;grid-row:1}
+html.pc #inicio .pc-topo>.saldo{grid-column:1;grid-row:2}
+html.pc #inicio .pc-topo>.grid3{grid-row:1}
+html.pc #inicio .pc-topo>#cResumo{grid-row:2}
 html.pc .pc-topo>.grid3,html.pc .pc-topo>#cResumo{grid-column:2}
 html.pc .pc-topo>#cResumo .card{margin:0;height:100%}
 html.pc .pc-topo .grid3>.mini{display:flex;flex-direction:column;justify-content:flex-start;padding:18px 10px;margin:0}
@@ -786,7 +790,7 @@ html.pc .toast{bottom:24px}
   const mq = matchMedia('(min-width:1024px)'); const mqPc = { get matches(){ return document.documentElement.classList.contains('pc'); } };
   const el = sel => { const e = document.querySelector(sel); return e && (e.closest('.card') || e); };
   const P = {
-    inicio:     { topo: ['.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#iHero', '#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
+    inicio:     { topo: ['#iHero', '.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
     relatorios: { main: ['#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cPrev', '#cPat'] },
     planejar:   { topo: ['#cFase', '#cFuturo'], main: ['#cLim', '#cMetas', '#cDesejos', '#cAnual', '#iParc'], side: ['#cMesada', '#cGuia', '#cZero'] },
     historico:  { main: ['#hLista'], side: ['#historico .busca', '#hModo', '#hFiltro', '#hCal'] }
