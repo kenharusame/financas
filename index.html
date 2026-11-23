@@ -747,6 +747,9 @@ html.pc .toast{bottom:24px}
     .map(x => ['#iContas', '#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
     .filter(Boolean).forEach(el => ini.appendChild(el));
   ini.insertBefore(document.getElementById('cSalario'), card('#cProx'));
+  const g3 = document.querySelector('#inicio .grid3'); g3.after(document.getElementById('cRevLink'));
+  card('#iContas').after(document.getElementById('cResiste'));
+  ini.appendChild(document.getElementById('cFatura'));
   document.getElementById('adicionar').appendChild(document.getElementById('nCard'));
   poe('relatorios', ['#cLim', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
   poe('planejar', ['#cFuturo', '#cFase', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cZero']);
