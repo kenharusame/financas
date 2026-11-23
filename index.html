@@ -683,7 +683,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div class="help">Daqui para a frente, cada investimento marcado com esta meta soma aqui sozinho.</div>
   <div id="mExtra" class="hide">
     <label>Foto da meta <span style="color:var(--muted);font-weight:600">(opcional)</span></label>
-    <div class="m-foto"><span id="mFotoVer" class="foto-meta grande"></span><label class="chip" for="mFoto" style="min-height:44px;display:inline-flex;align-items:center">Escolher foto</label><input id="mFoto" type="file" accept="image/*" class="hide"><button class="chip hide" id="mFotoTira" style="min-height:44px">Tirar</button></div>
+    <div class="m-foto"><span id="mFotoVer" class="foto-meta grande"></span><label class="chip" for="mFoto" style="min-height:44px;display:inline-flex;align-items:center">Escolher foto</label><input id="mFoto" type="file" accept="image/*" class="hide"><button class="chip" id="mFotoLink" type="button" style="min-height:44px">Colar link</button><button class="chip hide" id="mFotoTira" style="min-height:44px">Tirar</button></div>
     <label class="acum" style="margin-top:12px"><input type="checkbox" id="mEspera"> Em espera (não recebe dinheiro agora)</label>
   </div>
   <div class="err" id="mErro" role="alert"></div>
@@ -1316,7 +1316,7 @@ function fixosMes(){
   return porGrupo(atual).o['Custos fixos'] || 0;
 }
 function degraus(){ const f = fixosMes(); return [10000, Math.max(10000, Math.round(f * 3 / 100) * 100), Math.max(10000, Math.round(f * 6 / 100) * 100)]; }
-const fotoHtml = (m, cls) => m && m.foto ? '<img class="foto-meta ' + (cls || '') + '" src="' + m.foto + '" alt="">' : '';
+const fotoHtml = (m, cls) => m && m.foto ? '<img class="foto-meta ' + (cls || '') + '" loading="lazy" referrerpolicy="no-referrer" src="' + esc(m.foto) + '" alt="">' : '';
 function mensalMeta(m){                       // quanto falta guardar por mês para chegar no prazo
   const g = progressoMeta(m); if (!g.falta) return 0;
   if (!m.prazo) return 0;
@@ -1340,13 +1340,14 @@ function acaoInicio(i, t){
     const semana = S.regs.filter(r => r.tipo === 'Investimento' && r.meta === m.nome && (agora - parse(r.data)) / 864e5 < 7).reduce((a, r) => a + r.valor, 0);
     const feito = semana >= sem;
     const outras = minhas().filter(x => progressoMeta(x).falta > 0);
-    h = `<div class="card semana ${feito ? 'feito' : ''}">${m.foto ? `<img class="sem-foto" src="${m.foto}" alt="${esc(m.nome)}">` : ''}<div class="lim-top"><span class="t">Meta da semana</span>${outras.length > 1 ? '<button class="link" id="semTroca" style="margin:0">Trocar</button>' : ''}</div>
+    h = `<div class="card semana ${feito ? 'feito' : ''}">${m.foto ? `<img class="sem-foto" loading="lazy" referrerpolicy="no-referrer" src="${esc(m.foto)}" alt="${esc(m.nome)}">` : ''}<div class="lim-top"><span class="t">Meta da semana</span>${outras.length > 1 ? '<button class="link" id="semTroca" style="margin:0">Trocar</button>' : ''}</div>
       <div class="sem-txt">${feito ? `Esta semana já foi: <b>${brl0(semana)}</b> para ${esc(m.nome)}.` : `Faltam <b>${brl0(g.falta)}</b> para ${esc(m.nome)}. Guarde <b>${brl0(sem - semana)}</b> esta semana.`}</div>
       <div class="gasto-bar meta-bar" role="progressbar" aria-label="${esc(m.nome)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${feito ? '' : btn('semGuardei', 'Guardei')}<button class="chip acao" id="semFoto">${m.foto ? 'Trocar foto' : 'Pôr foto do que quer comprar'}</button><input type="file" id="semArq" accept="image/*" class="hide"></div></div>`;
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${feito ? '' : btn('semGuardei', 'Guardei')}<button class="chip acao" id="semFoto">${m.foto ? 'Trocar foto' : 'Pôr foto do que quer comprar'}</button><button class="chip acao" id="semLink">Colar link da foto</button><input type="file" id="semArq" accept="image/*" class="hide"></div></div>`;
   }
   $('#cSemana').innerHTML = h;
   if ($('#semGuardei')) $('#semGuardei').onclick = () => { const g = progressoMeta(m), mens = mensalMeta(m) || g.falta / 12; guardarPara(m.nome, Math.min(g.falta, mens * 7 / 30)); };
+  if ($('#semLink')) $('#semLink').onclick = async () => { const u = pedeLink(); if (!u) return; try { S.metas = await api('fotoMeta', m.nome, u); toast('Foto salva'); renderMes(); } catch (er) { toast('Não salvou: ' + er); } };
   if ($('#semFoto')) { $('#semFoto').onclick = () => $('#semArq').click();
     $('#semArq').onchange = async e => { const f = e.target.files[0]; if (!f) return; $('#semFoto').disabled = true; $('#semFoto').textContent = 'Enviando...';
       try { S.metas = await api('fotoMeta', m.nome, await reduzFoto(f)); toast('Foto salva'); renderMes(); } catch (er) { toast('Não salvou a foto: ' + er); renderMes(); } }; }
@@ -1494,7 +1495,7 @@ function renderDesejos(){
     const aberto = S.dAberto === d.id, m = (S.metas || []).find(x => x.nome === d.nome), g = m ? progressoMeta(m) : null, feitos = d.pontos.filter(x => x.ok).length;
     return `<div class="des${aberto ? ' aberto' : ''}">
       <div class="des-top"><span class="des-n">${k + 1}</span>
-        ${m && m.foto ? `<img class="des-foto" src="${m.foto}" alt="">` : ''}<button class="des-nome" data-dab="${d.id}" aria-expanded="${aberto}"><b>${esc(d.nome)}</b>${k === 0 ? ' <span class="tag fixa">Meta</span>' : ''}<div class="s">${brl(d.preco)}${g ? ' · guardado ' + Math.round(g.p * 100) + '%' : ''}${d.pontos.length ? ` · ${feitos} de ${d.pontos.length} passos` : ''}</div></button>
+        ${m && m.foto ? `<img class="des-foto" loading="lazy" referrerpolicy="no-referrer" src="${esc(m.foto)}" alt="">` : ''}<button class="des-nome" data-dab="${d.id}" aria-expanded="${aberto}"><b>${esc(d.nome)}</b>${k === 0 ? ' <span class="tag fixa">Meta</span>' : ''}<div class="s">${brl(d.preco)}${g ? ' · guardado ' + Math.round(g.p * 100) + '%' : ''}${d.pontos.length ? ` · ${feitos} de ${d.pontos.length} passos` : ''}</div></button>
         ${meu ? `<div class="des-mov"><button class="chip" data-dmv="${d.id}" data-dir="-1" aria-label="Subir ${esc(d.nome)}" ${k === 0 ? 'disabled' : ''}>${seta('M6 15l6-6 6 6')}</button><button class="chip" data-dmv="${d.id}" data-dir="1" aria-label="Descer ${esc(d.nome)}" ${k === l.length - 1 ? 'disabled' : ''}>${seta('M6 9l6 6 6-6')}</button></div>` : ''}</div>
       ${aberto ? `<div class="des-det">
         ${d.link ? `<a class="link" href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">Abrir onde comprar</a>` : ''}
@@ -1705,13 +1706,15 @@ function abrirMeta(m){
   $('#dlgMeta').showModal();
 }
 $('#mFechar').onclick = () => $('#dlgMeta').close();
-function fotoDlg(m){ $('#mFotoVer').innerHTML = m && m.foto ? '<img src="' + m.foto + '" alt="">' : ''; $('#mFotoTira').classList.toggle('hide', !(m && m.foto)); }
+function fotoDlg(m){ $('#mFotoVer').innerHTML = m && m.foto ? '<img referrerpolicy="no-referrer" src="' + esc(m.foto) + '" alt="">' : ''; $('#mFotoTira').classList.toggle('hide', !(m && m.foto)); }
 function reduzFoto(arq){ return new Promise((ok, erro) => { const img = new Image(); img.onload = () => { const L = 240, k = Math.min(1, L / Math.max(img.width, img.height)), c = document.createElement('canvas');
   c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); let q = .8, d; do { d = c.toDataURL('image/jpeg', q); q -= .1; } while (d.length > 45000 && q > .3); ok(d); };
   img.onerror = () => erro('Não consegui abrir essa imagem.'); img.src = URL.createObjectURL(arq); }); }
 $('#mFoto').onchange = async e => { const f = e.target.files[0]; if (!f || !S.metaEd) return; $('#mErro').textContent = 'Enviando foto...';
   try { S.metas = await api('fotoMeta', S.metaEd, await reduzFoto(f)); fotoDlg(S.metas.find(x => x.nome === S.metaEd)); $('#mErro').textContent = ''; renderMes(); } catch (er) { $('#mErro').textContent = 'Não salvou a foto: ' + er; }
   e.target.value = ''; };
+const pedeLink = () => { const u = (prompt('Cole o link da imagem (endereço que termina em .jpg, .png, .webp...):') || '').trim(); if (!u) return null; if (!/^https?:\/\//i.test(u)) { toast('O link precisa começar com http'); return null; } return u; };
+$('#mFotoLink').onclick = async () => { const u = pedeLink(); if (!u) return; try { S.metas = await api('fotoMeta', S.metaEd, u); fotoDlg(S.metas.find(x => x.nome === S.metaEd)); renderMes(); } catch (er) { $('#mErro').textContent = 'Não salvou: ' + er; } };
 $('#mFotoTira').onclick = async () => { try { S.metas = await api('fotoMeta', S.metaEd, ''); fotoDlg(null); renderMes(); } catch (er) { $('#mErro').textContent = String(er); } };
 $('#mSalvar').onclick = async () => {
   const m = { nome: $('#mNome').value.trim(), alvo: num($('#mAlvo').value), prazo: $('#mPrazo').value, inicial: num($('#mIni').value), nomeAntigo: S.metaEd };
