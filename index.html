@@ -1721,7 +1721,11 @@ function campoLink(depois, salvar){
   b.innerHTML = '<input type="url" inputmode="url" placeholder="Cole aqui o link da imagem" autocomplete="off" aria-label="Link da imagem"><button type="button" class="chip">Salvar</button>';
   depois.after(b); const inp = b.querySelector('input'); inp.focus();
   const vai = async () => { const u = inp.value.trim(); if (!/^https?:\/\/\S+$/i.test(u)) { toast('O link precisa começar com http'); return; }
-    b.querySelector('button').disabled = true; b.querySelector('button').textContent = 'Salvando...'; await salvar(u); b.remove(); };
+    const bt = b.querySelector('button'); bt.disabled = true; bt.textContent = 'Conferindo...';
+    const ehImg = await new Promise(ok => { const im = new Image(); const t = setTimeout(() => ok(false), 10000); im.onload = () => { clearTimeout(t); ok(im.naturalWidth > 1); }; im.onerror = () => { clearTimeout(t); ok(false); }; im.referrerPolicy = 'no-referrer'; im.src = u; });
+    if (!ehImg) { bt.disabled = false; bt.textContent = 'Salvar'; let av = b.nextElementSibling; if (!av || !av.classList.contains('link-av')) { av = document.createElement('div'); av.className = 'err link-av'; av.setAttribute('role', 'alert'); b.after(av); }
+      av.textContent = 'Esse link não é de uma imagem. Toque e segure na foto e escolha "Copiar endereço da imagem".'; return; }
+    bt.textContent = 'Salvando...'; await salvar(u); const av = b.nextElementSibling; if (av && av.classList.contains('link-av')) av.remove(); b.remove(); };
   b.querySelector('button').onclick = vai; inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); vai(); } };
 }
 $('#mFotoLink').onclick = () => campoLink($('#mFotoLink').closest('.m-foto'), async u => { try { S.metas = await api('fotoMeta', S.metaEd, u); fotoDlg(S.metas.find(x => x.nome === S.metaEd)); renderMes(); toast('Foto salva'); } catch (er) { $('#mErro').textContent = 'Não salvou: ' + er; } });
