@@ -696,6 +696,9 @@ html.pc .toast{bottom:24px}
     <div class="m-foto"><span id="mFotoVer" class="foto-meta grande"></span><label class="chip" for="mFoto" style="min-height:44px;display:inline-flex;align-items:center">Escolher foto</label><input id="mFoto" type="file" accept="image/*" class="hide"><button class="chip" id="mFotoLink" type="button" style="min-height:44px">Colar link</button><button class="chip hide" id="mFotoTira" style="min-height:44px">Tirar</button></div>
     <label class="acum" style="margin-top:12px"><input type="checkbox" id="mEspera"> Em espera (não recebe dinheiro agora)</label>
   </div>
+  <div id="mTiraBox" class="hide"><label for="mTiraV">Tirar dinheiro desta meta</label>
+    <div class="link-box" style="margin-top:0"><input id="mTiraV" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"><button type="button" class="chip" id="mTira">Tirar</button></div>
+    <div class="help">O valor volta para o saldo do mês e sai do guardado na meta.</div></div>
   <div class="err" id="mErro" role="alert"></div>
   <button class="btn" id="mSalvar">Salvar meta</button>
   <button class="btn danger hide" id="mApagar">Apagar meta</button>
@@ -913,7 +916,7 @@ function toast(t, acao, fn){
   document.body.appendChild(el); setTimeout(() => el.remove(), acao ? 6000 : 3000);
 }
 function chipGroup(sel, val, onPick){ $$(sel + ' .chip').forEach(c => { c.classList.toggle('on', c.dataset.v === val); if (!c.classList.contains('add')) c.onclick = () => onPick(c.dataset.v); }); }
-function totais(i){ const t = { Entrada: 0, Despesa: 0, Investimento: 0 }; S.regs.forEach(r => { if (ciclo(r.data) === i) t[r.tipo] = (t[r.tipo] || 0) + r.valor; }); t.saldo = t.Entrada - t.Despesa - t.Investimento; return t; }
+function totais(i){ const t = { Entrada: 0, Despesa: 0, Investimento: 0 }; S.regs.forEach(r => { if (ciclo(r.data) === i) t[r.tipo] = (t[r.tipo] || 0) + r.valor; }); t.saldo = t.Entrada - t.Despesa - t.Investimento + (t.Retirada || 0); return t; }
 
 /* ---------- Navegação ---------- */
 function ir(sec, doVoltar){ if (!doVoltar) historico('push', sec); $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.s === sec)); $$('section').forEach(s => s.classList.toggle('hide', s.id !== sec)); scrollTo(0, 0); if (sec === 'adicionar') renderForm(); }
@@ -1220,7 +1223,7 @@ function icoReg(r){ const k = r.tipo === 'Entrada' ? 'in' : r.tipo === 'Despesa'
 function linhaReg(r, comTag){
   const tag = !comTag ? '' : r.forma === 'Fixa' ? '<span class="tag fixa">Fixa</span>' : r.forma === 'Parcelada' ? `<span class="tag parc">${esc(r.parcela.replace('/', ' de '))}</span>` : '';
   const cls = r.tipo === 'Entrada' ? 'in' : r.tipo === 'Despesa' ? 'out' : 'inv';
-  const sinal = r.tipo === 'Entrada' ? '+ ' : r.tipo === 'Despesa' ? '- ' : '';
+  const sinal = r.tipo === 'Entrada' || r.tipo === 'Retirada' ? '+ ' : r.tipo === 'Despesa' ? '- ' : '';
   if (r.tipo === 'Adiantamento') return `<div class="row click" role="button" tabindex="0" data-id="${r.id}">${icoReg(r)}<div class="mid"><div class="t">Adiantamento do cartão</div><div class="s">${ddmm(r.data)} · ${r.obs ? esc(r.obs) : 'não conta como gasto'}</div></div><div class="num inv">${brl(r.valor)}</div></div>`;
   const sub = r.tipo === 'Investimento' ? (r.pct !== '' ? `${String(r.pct).replace('.', ',')}% de ${esc(r.conta)}` : 'de ' + esc(r.conta)) : r.obs ? esc(r.obs) : r.tipo;
   const titulo = r.tipo === 'Investimento' ? 'Investimento' : esc(r.conta);
@@ -1801,7 +1804,7 @@ let buscaT; $('#hBusca').addEventListener('input', () => { clearTimeout(buscaT);
 function opcoesMetas(sel, atual){ sel.innerHTML = '<option value="">Nenhuma</option>' + (S.metas || []).map(m => `<option ${m.nome === atual ? 'selected' : ''}>${esc(m.nome)}</option>`).join(''); }
 function progressoMeta(m){
   const inv = S.regs.filter(r => r.tipo === 'Investimento' && r.meta === m.nome);
-  const guardado = m.inicial + inv.reduce((a, r) => a + r.valor, 0);
+  const guardado = m.inicial + inv.reduce((a, r) => a + r.valor, 0) - S.regs.filter(r => r.tipo === 'Retirada' && r.meta === m.nome).reduce((a, r) => a + r.valor, 0);
   const atual = ciclo(hoje()), meses = [0, 1, 2].map(k => inv.filter(r => ciclo(r.data) === atual - k).reduce((a, r) => a + r.valor, 0));
   const comAporte = meses.filter(v => v > 0), ritmo = comAporte.length ? comAporte.reduce((a, v) => a + v, 0) / comAporte.length : 0;
   const falta = Math.max(0, m.alvo - guardado);
@@ -1837,10 +1840,18 @@ function abrirMeta(m){
   $('#mNome').value = m ? m.nome : ''; $('#mAlvo').value = m ? m.alvo.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
   $('#mPrazo').value = m ? m.prazo : ''; $('#mIni').value = m && m.inicial ? m.inicial.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
   $('#mApagar').classList.toggle('hide', !m); $('#mErro').textContent = '';
-  $('#mExtra').classList.toggle('hide', !m); $('#mEspera').checked = !!(m && m.espera); fotoDlg(m);
+  $('#mExtra').classList.toggle('hide', !m); $('#mTiraBox').classList.toggle('hide', !m); $('#mTiraV').value = ''; $('#mEspera').checked = !!(m && m.espera); fotoDlg(m);
   $('#dlgMeta').showModal();
 }
 $('#mFechar').onclick = () => $('#dlgMeta').close();
+$('#mTira').onclick = async () => { const v = num($('#mTiraV').value), m = (S.metas || []).find(x => x.nome === S.metaEd); if (!m) return;
+  const g = progressoMeta(m).guardado; if (!(v > 0)) { $('#mErro').textContent = 'Digite quanto vai tirar.'; return; }
+  if (v > g + .01) { $('#mErro').textContent = 'A meta só tem ' + brl(g) + ' guardados.'; return; }
+  if (!confirm(`Tirar ${brl(v)} de ${m.nome}?`)) return;
+  const b = $('#mTira'); b.disabled = true; b.textContent = 'Tirando...';
+  try { await api('salvar', { tipo: 'Retirada', data: hoje(), conta: m.nome, valor: v, meta: m.nome, obs: 'Retirada da meta' }); $('#dlgMeta').close(); toast(brl(v) + ' tirados de ' + m.nome); await carregar(); }
+  catch (e) { $('#mErro').textContent = 'Não tirou: ' + e; }
+  b.disabled = false; b.textContent = 'Tirar'; };
 function fotoDlg(m){ $('#mFotoVer').innerHTML = m && m.foto ? '<img referrerpolicy="no-referrer" src="' + esc(m.foto) + '" alt="">' : ''; $('#mFotoTira').classList.toggle('hide', !(m && m.foto)); }
 function reduzFoto(arq){ return new Promise((ok, erro) => { const img = new Image(); img.onload = () => { const L = 240, k = Math.min(1, L / Math.max(img.width, img.height)), c = document.createElement('canvas');
   c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); let q = .8, d; do { d = c.toDataURL('image/jpeg', q); q -= .1; } while (d.length > 45000 && q > .3); ok(d); };
