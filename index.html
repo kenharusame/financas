@@ -405,6 +405,7 @@ img.foto-meta.mini{width:24px;height:24px}
 #dQuem{margin-bottom:8px} #dNovo{margin-top:10px}
 .rev-link{display:flex;justify-content:space-between;align-items:center;width:100%;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:14px 18px} .rev-link span{color:var(--muted);font-size:13px}
 .sem-foto{display:block;width:100%;max-height:180px;object-fit:cover;border-radius:16px;margin-bottom:10px} .des-foto{width:40px;height:40px;border-radius:10px;object-fit:cover;flex:none}
+.rev-it{padding:10px 0;border-top:1px solid rgba(255,255,255,.06)} .rev-txt{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px} .rev-txt b{overflow-wrap:anywhere} .rev-txt span{color:var(--muted);font-size:13px;white-space:nowrap} .rev-bt{display:flex;gap:8px} .rev-bt .chip{flex:1}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -1471,8 +1472,8 @@ function revisaoInicio(){
   const falta = l.filter(r => valeu[r.id] == null);
   $('#cRevLink').innerHTML = falta.length ? `<button class="card rev-link" data-ir="relatorios" type="button"><b>Revisão da semana pronta</b><span>${falta.length} ${falta.length === 1 ? 'gasto' : 'gastos'} para avaliar</span></button>` : '';
   if (!falta.length) { box.innerHTML = ''; return; }
-  box.innerHTML = `<div class="card"><h2>Revisão da semana</h2><p class="fase-txt">Os supérfluos dos últimos 7 dias. Valeu a pena?</p>${falta.slice(0, 8).map(r => `<div class="row"><div class="mid"><div class="t">${esc(r.conta)}</div><div class="s">${ddmm(r.data)} · ${brl(r.valor)}</div></div>
-    <div style="display:flex;gap:6px"><button class="chip" data-vl="${r.id}" data-ok="1">Valeu</button><button class="chip" data-vl="${r.id}" data-ok="0">Não valeu</button></div></div>`).join('')}</div>`;
+  box.innerHTML = `<div class="card"><h2>Revisão da semana</h2><p class="fase-txt">Os supérfluos dos últimos 7 dias. Valeu a pena?</p>${falta.slice(0, 8).map(r => `<div class="rev-it"><div class="rev-txt"><b>${esc(r.conta)}</b><span>${ddmm(r.data)} · ${brl(r.valor)}</span></div>
+    <div class="rev-bt"><button class="chip" data-vl="${r.id}" data-ok="1">Valeu</button><button class="chip" data-vl="${r.id}" data-ok="0">Não valeu</button></div></div>`).join('')}</div>`;
   $$('#cRevisao [data-vl]').forEach(b => b.onclick = () => { const v = lsLe('fin_valeu', {}); v[b.dataset.vl] = b.dataset.ok === '1'; lsGrava('fin_valeu', v); revisaoInicio(); resisteInicio(S.mes); });
 }
 /* ---------- Lista de desejos ---------- */
