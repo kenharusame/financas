@@ -2148,10 +2148,10 @@ function fluxoInicio(i){
   const W = 340, G = 12, NW = 14, xA = 92, xB = 212, TOPO = 22;   // colunas: origens | destinos
   const H = Math.max(220, destinos.length * 46);
   const k1 = (H - G * (Math.max(fontes.length, destinos.length) - 1)) / tot;
-  let y = TOPO; fontes.forEach(f => { f.h = Math.max(4, f.v * k1); f.y = y; f.saida = f.y; y += f.h + G; });
-  y = TOPO; destinos.forEach(d => { d.h = Math.max(4, d.v * k1); d.y = y; d.chegada = d.y; y += d.h + G; });
-  const afasta = lista => { let ult = -99; lista.forEach(x => { x.ly = Math.max(x.y + x.h / 2, ult + 34); ult = x.ly; }); };
-  afasta(fontes); afasta(destinos);
+  // cada barra ganha um espaço de pelo menos 34px para o nome caber ao lado, sem linha puxando o texto para baixo
+  const SLOT = 34; let y = TOPO;
+  fontes.forEach(f => { f.h = Math.max(6, f.v * k1); const sl = Math.max(f.h, SLOT); f.y = y + (sl - f.h) / 2; f.saida = f.y; f.ly = f.y + f.h / 2; y += sl + G; });
+  y = TOPO; destinos.forEach(d => { d.h = Math.max(6, d.v * k1); const sl = Math.max(d.h, SLOT); d.y = y + (sl - d.h) / 2; d.chegada = d.y; d.ly = d.y + d.h / 2; y += sl + G; });
   const HL = Math.max(y, ...destinos.map(d => d.ly + 18), ...fontes.map(f => f.ly + 18));
   // cada origem se divide entre os destinos na mesma proporção; a faixa tem a cor do destino
   let links = '';
