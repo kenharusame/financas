@@ -420,8 +420,10 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div class="card hide" id="qHistCard"><h2>Perguntas anteriores</h2><div id="qHist"></div></div>
   <div class="card">
     <h2>Resumo para o NotebookLM</h2>
-    <p style="margin-top:0">Baixa um arquivo com os números do ano para vocês colocarem como fonte no NotebookLM e conversarem sobre ele.</p>
-    <button class="btn ghost" id="bNotebook" style="margin-top:4px">Baixar resumo do ano</button>
+    <p style="margin-top:0">1. Baixe o resumo com os números do ano. 2. Abra o caderno "Finanças da Familia" e envie o arquivo em <b>Adicionar fonte &gt; Enviar arquivo</b>. Para atualizar, apague a fonte antiga e envie a nova.</p>
+    <button class="btn ghost" id="bNotebook" style="margin-top:4px">1. Baixar resumo do ano</button>
+    <a class="btn" id="bCaderno" href="https://notebook.google.com/notebook/a0e065aa-b9fc-46b8-9098-e37d6e8d265f" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:10px">2. Abrir nosso caderno</a>
+    <div class="help">O caderno é da conta contato@kenharusame.com.br. Quem abrir com outra conta precisa ter sido convidado pelo botão Compartilhar do caderno.</div>
   </div>
   <div class="card">
     <h2>Análise dos gastos</h2>
@@ -1014,7 +1016,7 @@ $('#bNotebook').onclick = () => {
   const blob = new Blob([L.join('\n')], { type: 'text/markdown;charset=utf-8' }), a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = `financas-resumo-${hoje()}.md`; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  toast('Resumo baixado. No NotebookLM: Adicionar fonte > Enviar arquivo.');
+  toast('Resumo baixado. Agora toque em "2. Abrir nosso caderno".');
 };
 
 let CH = null;
