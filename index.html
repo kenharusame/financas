@@ -315,6 +315,17 @@ input,select{background:rgba(12,18,27,.5);border:1px solid rgba(255,255,255,.05)
 .escolha{padding:14px;border-radius:16px;background:rgba(12,18,27,.4);box-shadow:var(--inset)}
 .escolha .s{color:var(--muted);font-size:14px;margin:6px 0 4px}
 .escolha .btn{margin-top:10px;min-height:48px;font-size:15px}
+.rapido .chat-in textarea{min-height:48px}
+.mic.on{background:linear-gradient(160deg,#E0707A,#B02A37);animation:pulsa 1.2s infinite}
+@keyframes pulsa{50%{box-shadow:0 0 0 8px rgba(224,112,122,.25)}}
+@media (prefers-reduced-motion:reduce){.mic.on{animation:none}}
+.cmp-l{display:grid;grid-template-columns:1fr 74px 74px 86px;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.cmp-l .num{text-align:right;font-weight:600}
+.cmp-h{font-size:12px;color:var(--muted);font-weight:700;text-align:right}
+.cmp-h span:first-child{text-align:left}
+.cmp-d.bom{color:var(--in)} .cmp-d.ruim{color:var(--out)}
+.cmp-sub{font-size:13px;color:var(--muted);font-weight:700;margin:14px 0 2px}
+#cComp .two{margin-bottom:8px}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -339,8 +350,12 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div id="cCheck"></div>
   <div class="card" id="cLim"><h2>Limites do mês</h2><div id="iLim"></div></div>
   <div class="card" id="cMetas"><h2>Metas</h2><div id="iMetas"></div></div>
+  <div class="card" id="cAnual"><h2>Gastos do ano</h2><div id="iAnual"></div></div>
   <div class="card"><h2>Para onde foi o dinheiro</h2><div id="iContas"></div></div>
   <div class="card" id="cBar"><h2>Entradas x Despesas</h2><div class="chart"><canvas id="iBar" role="img"></canvas></div><div class="leg-inline"><span><i style="background:#2FB37A"></i>Entradas</span><span><i style="background:#E5484D"></i>Despesas</span></div></div>
+  <div class="card" id="cComp"><h2>Comparar meses</h2>
+    <div class="two"><select id="compA" aria-label="Primeiro mês"></select><select id="compB" aria-label="Segundo mês"></select></div>
+    <div id="iComp"></div></div>
   <div class="card"><h2>Saldo mês a mês</h2><div class="chart"><canvas id="iChart" role="img"></canvas></div><div id="iColsWrap" class="hide"><div class="cols" id="iCols"></div><div class="cols-lbl" id="iColsLbl"></div></div></div>
   <div class="card"><h2>Parcelas que faltam</h2><div id="iParcTot"></div><div id="iParc"></div></div>
   <div class="card"><h2>Próximas contas</h2><div id="iProx"></div></div>
@@ -350,6 +365,14 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
 
 <section id="adicionar" class="hide">
   <header><h1>Adicionar</h1></header>
+  <div class="card rapido">
+    <label for="rTxt" style="margin-top:0">Registro rápido</label>
+    <div class="chat-in" style="margin-top:0"><textarea id="rTxt" rows="1" placeholder='Ex.: "gastei 45 no mercado no pix"'></textarea>
+      <button class="chat-env mic hide" id="rMic" aria-label="Falar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+      <button class="chat-env" id="rOk" aria-label="Preencher o formulário"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+    <div class="help" id="rHelp">Escreva ou fale do seu jeito. A IA preenche o formulário abaixo e você confere antes de salvar.</div>
+    <div class="err" id="rErro" role="alert"></div>
+  </div>
   <div class="card nota-card" id="nCard">
     <div id="nIni">
       <div class="nota-top"><span class="pz-ico nota-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h4"/></svg></span>
@@ -461,6 +484,17 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   </div>
 </div>
 
+<dialog id="dlgAnual">
+  <h2 id="anTit">Novo gasto do ano</h2>
+  <label for="anNome">Nome</label><input id="anNome" placeholder="Ex.: IPVA">
+  <label for="anValor">Valor</label><input id="anValor" inputmode="decimal" placeholder="R$ 0,00">
+  <div class="two"><div><label for="anMes">Mês</label><select id="anMes"></select></div><div><label for="anDia">Dia</label><input id="anDia" inputmode="numeric" value="10"></div></div>
+  <div class="help">O site avisa quando estiver chegando e mostra quanto guardar por mês até lá.</div>
+  <div class="err" id="anErro" role="alert"></div>
+  <button class="btn" id="anSalvar">Salvar</button>
+  <button class="btn danger hide" id="anApagar">Apagar</button>
+  <button class="link" id="anFechar">Cancelar</button>
+</dialog>
 <dialog id="dlgMeta">
   <h2 id="mTit">Nova meta</h2>
   <label for="mNome">Nome</label><input id="mNome" placeholder="Ex.: Reserva de emergência">
@@ -555,6 +589,9 @@ const FAKE = (() => {
       { nome: 'Ração para gatos 3kg', valor: 68.9, conta: 'Higiene e Alimentação - Gatas' }, { nome: 'Banana prata', valor: 15.0, conta: 'Mercado' } ] }),
     salvarNota: n => { const g = {}; n.itens.forEach(i => g[i.conta] = (g[i.conta] || 0) + i.valor); Object.entries(g).forEach(([c, v]) => add(n.data, 'Despesa', c, Math.round(v * 100) / 100, { obs: n.loja })); return { registros: Object.keys(g).length, itens: n.itens.length }; },
     definirLimites: m => { Object.keys(m).forEach(c => { if (Number(m[c]) > 0) dados.limites[c] = Number(m[c]); else delete dados.limites[c]; }); return JSON.parse(JSON.stringify(dados.limites)); },
+    interpretar: x => ({ tipo: 'Despesa', valor: 45, conta: 'Cartão de crédito', forma: 'Única', vezes: 1, valorEhTotal: true, data: '2026-11-22', obs: 'pix', meta: '', duvida: '' }),
+    salvarAnual: a => { dados.anuais = (dados.anuais || []).filter(x => x.nome !== (a.nomeAntigo || a.nome)).concat([{ nome: a.nome, valor: Number(a.valor), mes: Number(a.mes), dia: Number(a.dia) || 1 }]); return JSON.parse(JSON.stringify(dados.anuais)); },
+    apagarAnual: n => { dados.anuais = dados.anuais.filter(x => x.nome !== n); return JSON.parse(JSON.stringify(dados.anuais)); },
     salvarMeta: m => { const i = dados.metas.findIndex(x => x.nome === (m.nomeAntigo || m.nome)); const n = { nome: m.nome, alvo: Number(m.alvo), prazo: m.prazo || '', inicial: Number(m.inicial) || 0 }; if (i < 0) dados.metas.push(n); else dados.metas[i] = n; return JSON.parse(JSON.stringify(dados.metas)); },
     apagarMeta: n => { dados.metas = dados.metas.filter(x => x.nome !== n); return JSON.parse(JSON.stringify(dados.metas)); },
     checkin: c => ({ mes: 'Novembro', texto: '**Sobrou dinheiro e teve investimento.** Bom sinal.\n- O cartão ficou dentro do limite.\n\n**A luz passou do limite.** Vale olhar o chuveiro e o ar.' }),
@@ -623,7 +660,7 @@ async function carregar(){
   if (NO_GOOGLE && !chave()) { mostraLogin(); return; }
   try {
     const d = await api('getDados');
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -644,7 +681,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio();
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar();
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) porConta[r.conta] = (porConta[r.conta] || 0) + r.valor; });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1046,6 +1083,104 @@ function ajustaTxt(){ const t = $('#chatTxt'); t.style.height = 'auto'; t.style.
 $('#chatTxt').addEventListener('input', ajustaTxt);
 $('#chatTxt').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarPergunta($('#chatTxt').value); } });
 $('#chatEnv').onclick = () => enviarPergunta($('#chatTxt').value);
+
+/* ---------- Registro rápido (texto ou voz -> formulário) ---------- */
+const Fala = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (Fala) $('#rMic').classList.remove('hide');
+let ouvindo = null;
+$('#rMic').onclick = () => {
+  if (ouvindo) { ouvindo.stop(); return; }
+  const r = new Fala(); r.lang = 'pt-BR'; r.interimResults = true; ouvindo = r;
+  $('#rMic').classList.add('on'); $('#rHelp').textContent = 'Ouvindo... fale e espere um instante.';
+  r.onresult = e => { $('#rTxt').value = [...e.results].map(x => x[0].transcript).join(' '); };
+  r.onerror = () => { $('#rErro').textContent = 'Não consegui ouvir. Confira se o site pode usar o microfone.'; };
+  r.onend = () => { ouvindo = null; $('#rMic').classList.remove('on'); $('#rHelp').textContent = 'Escreva ou fale do seu jeito. A IA preenche o formulário abaixo e você confere antes de salvar.'; if ($('#rTxt').value.trim()) interpretarTexto(); };
+  r.start();
+};
+async function interpretarTexto(){
+  const txt = $('#rTxt').value.trim(); if (!txt) return;
+  const b = $('#rOk'); b.disabled = true; $('#rErro').textContent = ''; $('#rHelp').textContent = 'Entendendo...';
+  try {
+    const r = await api('interpretar', txt);
+    S.tipo = r.tipo; S.forma = r.forma; S.ehTotal = r.valorEhTotal === false ? '0' : '1';
+    if (r.tipo === 'Entrada' && r.conta) S.origem = r.conta;
+    renderForm();
+    const v = r.valor ? r.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
+    if (r.tipo === 'Investimento') { $('#aInvValor').value = v; $('#aInvValor').dispatchEvent(new Event('input')); if (r.meta) $('#aMeta').value = r.meta; }
+    else $('#aValor').value = v;
+    if (r.tipo === 'Despesa' && r.conta) $('#aConta').value = r.conta;
+    $('#aVezes').value = r.vezes || 1; $('#aData').value = r.data; $('#aObs').value = r.obs || '';
+    renderForm(); if (r.tipo === 'Despesa' && r.conta) $('#aConta').value = r.conta; resumo();
+    const falta = !r.conta && r.tipo !== 'Investimento' ? ' Escolha a conta, não achei uma parecida.' : '';
+    $('#rHelp').textContent = 'Pronto. Confira os campos abaixo e toque em Salvar.' + falta + (r.duvida ? ' Atenção: ' + r.duvida : '');
+    $('#rTxt').value = ''; $('#aSalvar').scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  } catch (e) { $('#rErro').textContent = String(e); $('#rHelp').textContent = ''; }
+  b.disabled = false;
+}
+$('#rOk').onclick = interpretarTexto;
+$('#rTxt').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); interpretarTexto(); } });
+
+/* ---------- Gastos do ano ---------- */
+function proximo(a){
+  const t = new Date(), h = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  let d = new Date(h.getFullYear(), a.mes - 1, a.dia); if (d < h) d = new Date(h.getFullYear() + 1, a.mes - 1, a.dia);
+  const dias = Math.round((d - h) / 864e5), meses = Math.max(1, Math.ceil(dias / 30.4));
+  return { d, dias, meses, porMes: a.valor / meses };
+}
+function anuaisInicio(){
+  const L = (S.anuais || []).map(a => Object.assign({ a }, proximo(a))).sort((x, y) => x.dias - y.dias);
+  const total = L.reduce((s, x) => s + x.porMes, 0);
+  $('#iAnual').innerHTML = (L.length ? `<div class="note" style="margin:0 0 10px">Guardando <b>${brl0(total)} por mês</b>, todos os gastos do ano ficam cobertos.</div>` + L.map(({ a, d, dias, porMes }, k) => {
+      const k2 = dias <= 30 ? 'alto' : dias <= 60 ? 'medio' : 'ok';
+      return `<button class="meta anual" data-n="${esc(a.nome)}"><div class="lim-top"><span class="t">${esc(a.nome)}</span><span class="gasto-tag ${k2}">${dias === 0 ? 'Hoje' : dias === 1 ? 'Amanhã' : 'em ' + dias + ' dias'}</span></div>
+        <div class="lim-num"><span>${brl(a.valor)} · ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}</span><b>${brl0(porMes)}/mês</b></div></button>`; }).join('')
+    : '<div class="empty" style="padding-top:0">Cadastre IPVA, IPTU, material escolar, presentes de Natal... O site avisa antes e mostra quanto guardar.</div>')
+    + '<button class="link" id="anNovo">+ Novo gasto do ano</button>';
+  $$('#iAnual .anual').forEach(b => b.onclick = () => abrirAnual(S.anuais.find(a => a.nome === b.dataset.n)));
+  $('#anNovo').onclick = () => abrirAnual(null);
+}
+$('#anMes').innerHTML = MESES.map((m, k) => `<option value="${k + 1}">${m}</option>`).join('');
+function abrirAnual(a){
+  S.anualEd = a ? a.nome : null;
+  $('#anTit').textContent = a ? 'Editar gasto do ano' : 'Novo gasto do ano';
+  $('#anNome').value = a ? a.nome : ''; $('#anValor').value = a ? a.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
+  $('#anMes').value = a ? a.mes : 1; $('#anDia').value = a ? a.dia : 10;
+  $('#anApagar').classList.toggle('hide', !a); $('#anErro').textContent = ''; $('#dlgAnual').showModal();
+}
+$('#anFechar').onclick = () => $('#dlgAnual').close();
+$('#anSalvar').onclick = async () => {
+  const a = { nome: $('#anNome').value.trim(), valor: num($('#anValor').value), mes: Number($('#anMes').value), dia: parseInt($('#anDia').value) || 1, nomeAntigo: S.anualEd };
+  if (!a.nome || !(a.valor > 0)) { $('#anErro').textContent = 'Preencha o nome e o valor.'; return; }
+  const b = $('#anSalvar'); b.disabled = true;
+  try { S.anuais = await api('salvarAnual', a); $('#dlgAnual').close(); toast('Salvo'); anuaisInicio(); } catch (e) { $('#anErro').textContent = 'Não salvou: ' + e; }
+  b.disabled = false;
+};
+$('#anApagar').onclick = async () => {
+  if (!confirm('Apagar "' + S.anualEd + '"?')) return;
+  try { S.anuais = await api('apagarAnual', S.anualEd); $('#dlgAnual').close(); toast('Apagado'); anuaisInicio(); } catch (e) { $('#anErro').textContent = String(e); }
+};
+
+/* ---------- Comparar meses ---------- */
+function comparar(){
+  const sa = $('#compA'), sb = $('#compB');
+  if (!sa.options.length) {
+    const op = [...Array(12)].map((_, k) => `<option value="${k}">${nomeCiclo(k)}</option>`).join('');
+    sa.innerHTML = op; sb.innerHTML = op;
+    sa.value = S.mes > 0 ? S.mes - 1 : 0; sb.value = S.mes > 0 ? S.mes : 1;
+    sa.onchange = sb.onchange = () => { S.compTodas = false; comparar(); };
+  }
+  const a = +sa.value, b = +sb.value, ta = totais(a), tb = totais(b);
+  const linha = (nome, va, vb, bomSubir) => { const d = vb - va, bom = d === 0 ? '' : (d > 0) === bomSubir ? 'bom' : 'ruim';
+    return `<div class="cmp-l"><span>${nome}</span><span class="num">${brl0(va)}</span><span class="num">${brl0(vb)}</span><span class="num cmp-d ${bom}">${d === 0 ? '=' : (d > 0 ? '+' : '−') + brl0(Math.abs(d))}</span></div>`; };
+  const pc = i => { const o = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) o[r.conta] = (o[r.conta] || 0) + r.valor; }); return o; };
+  const ca = pc(a), cb = pc(b), contas = [...new Set(Object.keys(ca).concat(Object.keys(cb)))].map(c => [c, ca[c] || 0, cb[c] || 0]).sort((x, y) => Math.abs(y[2] - y[1]) - Math.abs(x[2] - x[1]));
+  const mostrar = S.compTodas ? contas : contas.slice(0, 6);
+  $('#iComp').innerHTML = `<div class="cmp-l cmp-h"><span></span><span>${nomeCiclo(a).slice(0, 3)}</span><span>${nomeCiclo(b).slice(0, 3)}</span><span>Diferença</span></div>`
+    + linha('Entradas', ta.Entrada, tb.Entrada, true) + linha('Despesas', ta.Despesa, tb.Despesa, false) + linha('Investido', ta.Investimento, tb.Investimento, true) + linha('<b>Saldo</b>', ta.saldo, tb.saldo, true)
+    + (contas.length ? '<div class="cmp-sub">Despesas por conta (maiores mudanças primeiro)</div>' + mostrar.map(([c, va, vb]) => linha(esc(c), va, vb, false)).join('') : '')
+    + (contas.length > 6 ? `<button class="link" id="compMais">${S.compTodas ? 'Mostrar menos' : 'Ver todas as ' + contas.length + ' contas'}</button>` : '');
+  if ($('#compMais')) $('#compMais').onclick = () => { S.compTodas = !S.compTodas; comparar(); };
+}
 
 let CH = null;
 function grafico(saldos, atual){
