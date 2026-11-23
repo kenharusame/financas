@@ -385,6 +385,8 @@ img.foto-meta.mini{width:24px;height:24px}
 .fase-txt{font-size:15px;line-height:1.5;margin:0 0 10px}
 .passo{display:flex;gap:10px;align-items:flex-start;padding:8px 0;opacity:.6;text-align:left;justify-content:flex-start} .passo>div{flex:1;text-align:left} .passo.ok,.passo.agora{opacity:1} .passo .s{color:var(--muted);font-size:13px}
 .passo .pz{flex:0 0 26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:rgba(255,255,255,.06)} .passo.ok .pz{background:var(--in);color:#06141A} .passo.agora .pz{background:var(--accent);color:#06141A}
+.futuro{overflow:hidden;padding-top:0} .futuro img{display:block;width:calc(100% + 40px);max-width:none;height:auto;margin:0 -20px 4px;aspect-ratio:720/520;object-fit:contain;object-position:bottom;background:linear-gradient(180deg,rgba(108,195,206,.10),transparent)}
+.fu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px} .fu-grid div{background:rgba(255,255,255,.04);border-radius:14px;padding:10px} .fu-grid small{display:block;color:var(--muted);font-size:12px;font-weight:700} .fu-grid b{display:block;font-family:Outfit,system-ui,sans-serif;font-size:17px;color:var(--in);font-variant-numeric:tabular-nums} .fu-grid span{display:block;font-size:11px;color:var(--muted)}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -415,6 +417,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div id="cCheck"></div>
   <div class="card" id="cLim"><h2>Limites do mês</h2><div id="iLim"></div></div>
   <div class="card" id="cMetas"><h2>Metas</h2><div id="iMetas"></div></div>
+  <div class="card futuro" id="cFuturo"><img id="fuImg" alt="Ken e Sam idosos com o filho" width="720" height="520"><h2>Eu do futuro</h2><div id="iFuturo"></div></div>
   <div class="card" id="cFase"><h2>Em que fase estamos</h2><div id="iFase"></div></div>
   <div class="card" id="cMesada"><h2>Mesada pessoal</h2><div id="iMesada"></div></div>
   <div id="cDica"></div>
@@ -668,7 +671,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     .map(x => ['#iContas', '#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
     .filter(Boolean).forEach(el => ini.appendChild(el));
   poe('relatorios', ['#cLim', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
-  poe('planejar', ['#cFase', '#cMetas', '#cMesada', '#cGuia', '#cAnual', '#iParc']);
+  poe('planejar', ['#cFuturo', '#cFase', '#cMetas', '#cMesada', '#cGuia', '#cAnual', '#iParc']);
   [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo') && !el.querySelector('#iContas')) el.classList.add('hide'); });
 })();
 </script>
@@ -829,7 +832,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) porConta[r.conta] = (porConta[r.conta] || 0) + r.valor; });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1280,6 +1283,18 @@ function assinaturaParaRever(){
     if (grupoDe(r.conta) === 'Custos fixos' || /mesada|mercado|cartao/.test(semAcento(r.conta))) return;
     const ch = r.conta + '|' + Math.round(r.valor); (cont[ch] = cont[ch] || { conta: r.conta, valor: r.valor, meses: new Set() }).meses.add(k); });
   return Object.values(cont).filter(x => x.meses.size >= 3 && !(Date.now() - (rev[x.conta] || 0) < 90 * 864e5)).sort((a, b) => b.valor - a.valor)[0] || null;
+}
+let FU_IMG = null;
+function futuroInicio(){
+  if (FU_IMG == null) { FU_IMG = 1 + Math.floor(Math.random() * 9); $('#fuImg').src = 'bonecos/familia/f' + FU_IMG + '.webp'; }
+  const atual = ciclo(hoje()), ant = [0, 1, 2].map(d => atual - d).filter(k => k >= 0);
+  const ritmo = ant.reduce((a, k) => a + totais(k).Investimento, 0) / Math.max(1, ant.length);
+  const hoje0 = S.regs.filter(r => r.tipo === 'Investimento').reduce((a, r) => a + r.valor, 0) + (S.metas || []).reduce((a, m) => a + (m.inicial || 0), 0);
+  const proj = (anos, j) => { let v = hoje0; for (let m = 0; m < anos * 12; m++) v = v * (1 + j) + ritmo; return v; };
+  $('#iFuturo').innerHTML = !ritmo && !hoje0 ? '<div class="empty" style="padding-top:0">Registrem investimentos para ver quanto vocês teriam no futuro.</div>'
+    : `<p class="fase-txt">Guardando <b>${brl0(ritmo)} por mês</b> (média dos últimos meses), a família teria:</p>
+      <div class="fu-grid">${[10, 20, 30].map(a => `<div><small>Em ${a} anos</small><b>${brl0(proj(a, .004))}</b><span>${brl0(proj(a, 0))} só guardando</span></div>`).join('')}</div>
+      <div class="help">Conta de exemplo, com rendimento de 0,4% ao mês acima da inflação. Não é promessa nem recomendação de investimento.</div>`;
 }
 function faseInicio(){
   const atual = ciclo(hoje()), fechados = [1, 2].map(d => atual - d).filter(k => k >= 0 && totais(k).Entrada > 0);
