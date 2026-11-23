@@ -389,7 +389,8 @@ img.foto-meta.mini{width:24px;height:24px}
 .fu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px} .fu-grid div{background:rgba(255,255,255,.04);border-radius:14px;padding:10px} .fu-grid small{display:block;color:var(--muted);font-size:12px;font-weight:700} .fu-grid b{display:block;font-family:Outfit,system-ui,sans-serif;font-size:17px;color:var(--in);font-variant-numeric:tabular-nums} .fu-grid span{display:block;font-size:11px;color:var(--muted)}
 .saldo .dia{margin-top:6px;font-size:14px;color:var(--muted)} .saldo .dia b{color:var(--text,#fff)} .saldo .dia.ruim b{color:var(--warn)}
 .pagto{border:1px solid rgba(108,195,206,.35)} .pg-top{display:flex;gap:12px;align-items:center;margin-bottom:10px} .pg-top b{font-size:16px} .pg-top .s{color:var(--muted);font-size:13px}
-.pg-linha{display:flex;gap:8px} .pg-linha input{flex:1;min-width:0} .pg-linha .btn{flex:0 0 auto;width:auto;padding:0 18px}
+.pg-top .ico{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:none;background:linear-gradient(160deg,#34877C,#1E5C55);color:#DDF5F0;box-shadow:var(--clay-sm)} .pg-top .ico svg{width:24px;height:24px}
+.pg-linha{display:flex;gap:8px} .pg-linha input{flex:1;min-width:0;font-size:18px !important} .pg-linha .btn{flex:0 0 auto;width:auto;padding:0 18px}
 .chip-ico{width:16px;height:16px;vertical-align:-3px;margin-right:5px}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
@@ -1322,7 +1323,7 @@ function pagtoInicio(){
   if (!pend.length) { box.innerHTML = ''; return; }
   box.innerHTML = pend.map(x => `<div class="card pagto"><div class="pg-top"><span class="ico in" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icoRede(x.nome)}</svg></span>
       <div><b>O pagamento do ${esc(x.nome)} caiu?</b><div class="s">${x.atraso === 0 ? 'Hoje é dia ' + x.dia : 'Era para o dia ' + x.dia}</div></div></div>
-      <div class="pg-linha"><input class="money" inputmode="decimal" placeholder="Quanto caiu? R$ 0,00" aria-label="Quanto caiu do ${esc(x.nome)}" data-pv="${esc(x.nome)}">
+      <div class="pg-linha"><input class="money" inputmode="decimal" placeholder="R$ 0,00" aria-label="Quanto caiu do ${esc(x.nome)}" data-pv="${esc(x.nome)}">
       <button class="btn" data-pok="${esc(x.nome)}">Caiu</button></div>
       <button class="link" data-pnao="${esc(x.nome)}">Ainda não caiu</button></div>`).join('');
   $$('#cPagto [data-pok]').forEach(b => b.onclick = () => { const n = b.dataset.pok, v = $(`#cPagto [data-pv="${n}"]`).value;
