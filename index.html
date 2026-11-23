@@ -864,13 +864,27 @@ const ICONES = {
   cartao: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/>',
   mais: '<circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/>',
   etiqueta: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.3"/>',
+  carteira: '<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><rect x="3.5" y="8" width="17" height="11" rx="2.5"/><path d="M16 13.5h.01"/>',
+  van: '<path d="M3 16V8a2 2 0 0 1 2-2h10l5 5v5h-2M3 16h2M9 16h6"/><circle cx="7" cy="16.5" r="1.8"/><circle cx="17" cy="16.5" r="1.8"/><path d="M3 11h17"/>',
+  garfo: '<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2 1.5-3 4-3 7h3"/>',
+  camiseta: '<path d="M8 4 3.5 6.5 5 10.5l2-1V20h10V9.5l2 1 1.5-4L16 4a4 4 0 0 1-8 0z"/>',
+  play: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/>',
+  presente: '<rect x="3.5" y="9" width="17" height="11" rx="1.5"/><path d="M3 9h18M12 9v11M12 9c-1.5-3-5-3.5-5-1.5S10 9 12 9zM12 9c1.5-3 5-3.5 5-1.5S14 9 12 9z"/>',
+  pilula: '<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9.2 9.2l5.6 5.6"/>',
+  cruz: '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/>',
+  bomba: '<path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M4 10h10M14 8l3 2v7a1.5 1.5 0 0 0 3 0V9l-3-3"/>',
+  pilha: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
 };
 function iconeDe(nome){
   const n = nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const regras = [['aluguel|condominio|casa', 'casa'], ['iphone|telefone|celular', 'celular'], ['cama|movel', 'cama'], ['livro|escola|curso', 'livro'],
-    ['viagem|passagem', 'aviao'], ['gata|gato|pet|racao|veterin', 'pata'], ['adobe|software|assinatura', 'paleta'], ['luz|energia', 'raio'],
-    ['agua', 'gota'], ['internet|wifi', 'wifi'], ['saude|medic|farmacia', 'coracao'], ['fono|terapia|psico', 'fala'], ['van|onibus|transporte|uber|carro', 'onibus'],
-    ['mercado', 'carrinho'], ['cartao', 'cartao'], ['outras contas', 'mais']];
+  const regras = [['outras contas', 'pilha'], ['mesada|carteira|pix|mercado pago|picpay|nubank', 'carteira'], ['cartao|credito|fatura', 'cartao'],
+    ['van|escolar', 'van'], ['aluguel|condominio|casa|iptu', 'casa'], ['iphone|telefone|celular|claro|vivo|tim', 'celular'], ['cama|movel|sofa', 'cama'],
+    ['livro|escola|curso|faculdade|material', 'livro'], ['viagem|passagem|hotel', 'aviao'], ['gata|gato|pet|racao|veterin', 'pata'], ['plano de saude|saude|medic|consulta|dentista', 'cruz'],
+    ['adobe|software|assinatura|canva', 'paleta'], ['netflix|spotify|streaming|youtube|disney|prime|max', 'play'],
+    ['luz|energia', 'raio'], ['agua|sabesp', 'gota'], ['internet|wifi', 'wifi'], ['farmacia|remedio|drogaria', 'pilula'], ['fono|terapia|psico', 'fala'],
+    ['combustivel|gasolina|posto|etanol', 'bomba'], ['onibus|transporte|uber|metro|carro|estacionamento', 'onibus'], ['mercado|feira|supermercado|padaria|acougue', 'carrinho'],
+    ['restaurante|ifood|lanche|comida|delivery|almoco|jantar', 'garfo'], ['roupa|calcado|sapato|tenis', 'camiseta'], ['presente|natal|aniversario', 'presente'],
+    ['lazer|cinema|show|passeio|diversao', 'play']];
   const r = regras.find(([re]) => new RegExp(re).test(n));
   return ICONES[r ? r[1] : 'etiqueta'];
 }
