@@ -95,8 +95,8 @@ button:focus-visible,.row.click:focus-visible{outline:2px solid var(--accent);ou
 .tag.fixa{background:var(--primary-soft);color:#BFDBFE} .tag.parc{background:var(--warn-soft);color:var(--warn)}
 .ai p{margin:0 0 12px} .ai ul{margin:0 0 12px;padding-left:20px}
 nav{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));border-radius:24px;max-width:536px;margin:0 auto;z-index:20}
-nav .in{display:grid;grid-template-columns:repeat(4,1fr)}
-nav button{border:0;background:none;font:inherit;font-size:13px;font-weight:700;color:#B4C0D3;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border-radius:20px;margin:4px}
+nav .in{display:grid;grid-template-columns:repeat(5,1fr)}
+nav button{border:0;background:none;font:inherit;font-size:12px;font-weight:700;color:#B4C0D3;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border-radius:20px;margin:4px}
 nav button.on{color:var(--text);background:var(--primary-soft)}
 nav svg{width:24px;height:24px}
 .plus{background:var(--primary);color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
@@ -341,7 +341,15 @@ input,select{background:rgba(12,18,27,.5);border:1px solid rgba(255,255,255,.05)
 .pat-ed input,.pat-ed select{min-height:44px;font-size:15px;padding:8px 10px}
 .prev-l{grid-template-columns:1fr 100px 110px}
 .fluxo{display:block;width:100%;overflow:visible;margin-top:6px}
-.fl-n{font-size:11px;font-weight:700;fill:var(--text)} .fl-v{font-size:10px;fill:var(--muted)}
+.fl-n{font-size:12px;font-weight:700;fill:var(--text)} .fl-n.forte{fill:var(--in)} .fl-n.falta{fill:var(--out)} .fl-v{font-size:10.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.fl-cab{font-size:9px;font-weight:700;letter-spacing:.08em;fill:var(--muted)}
+.fl-topo{display:flex;justify-content:space-between;margin:-4px 0 12px}
+.fl-topo small{display:block;color:var(--muted);font-weight:700;font-size:12px}
+.fl-topo b{font-family:Outfit,system-ui,sans-serif;font-size:22px} .fl-topo b.in{color:var(--in)} .fl-topo b.out{color:var(--out)}
+.fluxo .fl-out{stroke-opacity:.5;transition:stroke-opacity .2s} .fluxo .fl-dest{cursor:pointer;outline:none}
+.fluxo.foco .fl-out{stroke-opacity:.12} .fluxo.foco .fl-out.on{stroke-opacity:.75} .fluxo.foco .fl-dest:not(.on){opacity:.45}
+.fluxo .fl-dest:focus-visible rect:first-child{stroke:#fff;stroke-width:2}
+@media (prefers-reduced-motion:reduce){.fluxo .fl-out{transition:none}}
 .seg.modo{grid-template-columns:1fr 1fr;margin-bottom:12px}
 .cal{padding:14px}
 .cal-sem,.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
@@ -354,6 +362,10 @@ input,select{background:rgba(12,18,27,.5);border:1px solid rgba(255,255,255,.05)
 .cal-d.sel{background:linear-gradient(160deg,#4FA6B1,#286F7B)} .cal-d.sel small{color:#fff}
 .cal-d .dot{position:absolute;bottom:4px;width:6px;height:6px;border-radius:50%}
 .cal-d .dot.in{left:calc(50% - 8px);background:var(--in)} .cal-d .dot.inv{left:calc(50% + 2px);background:var(--inv)}
+.topo-dir{display:flex;align-items:center;gap:8px}
+.ico-topo{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.07);background:linear-gradient(160deg,rgba(38,51,69,.78),rgba(22,30,42,.82));color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--clay-sm)}
+.ico-topo svg{width:20px;height:20px}
+#inicio header h1{font-size:26px}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -367,7 +379,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
 <div id="carregando" aria-busy="true" aria-label="Carregando"><div class="sk" style="height:40px;width:60%;margin:8px 0 24px"></div><div class="sk" style="height:140px;margin-bottom:16px"></div><div class="sk" style="height:72px;margin-bottom:16px"></div><div class="sk" style="height:240px"></div></div>
 
 <section id="inicio" class="hide">
-  <header><h1>Nossas finanças</h1><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></header>
+  <header><h1>Nossas finanças</h1><div class="topo-dir"><button class="ico-topo" data-ir="historico" aria-label="Abrir o histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></div></header>
   <div class="card hero" id="iHero"><div class="hero-av" id="hAv"></div><div class="hero-txt"><div class="hero-ola" id="iOla"></div><div class="hero-hum" id="iHum"></div></div></div>
   <div class="card saldo"><div class="lbl">Saldo do mês</div><div class="val" id="iSaldo"></div><div class="falta hide" id="iFalta"></div><div class="sub" id="iPeriodo"></div><div class="gasto" id="iGasto"></div></div>
   <div class="grid3" style="margin-bottom:12px">
@@ -391,8 +403,8 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <div id="iComp"></div></div>
   <div class="card"><h2>Saldo mês a mês</h2><div class="chart"><canvas id="iChart" role="img"></canvas></div><div id="iColsWrap" class="hide"><div class="cols" id="iCols"></div><div class="cols-lbl" id="iColsLbl"></div></div></div>
   <div class="card"><h2>Parcelas que faltam</h2><div id="iParcTot"></div><div id="iParc"></div></div>
-  <div class="card"><h2>Próximas contas</h2><div id="iProx"></div></div>
-  <div class="card"><h2>Últimos registros</h2><div id="iUlt"></div><button class="link" data-ir="historico">Ver tudo no Histórico</button></div>
+  <div class="card" id="cProx"><h2>Próximas contas</h2><div id="iProx"></div><button class="link" data-ir="historico">Ver histórico</button></div>
+  <div class="card hide"><h2>Últimos registros</h2><div id="iUlt"></div></div>
   <div class="card"><h2>Como foi o ano</h2><div id="iAno"></div></div>
 </section>
 
@@ -464,6 +476,12 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   </div>
 </section>
 
+<section id="relatorios" class="hide">
+  <header><h1>Relatórios</h1><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></header>
+</section>
+<section id="planejar" class="hide">
+  <header><h1>Planejar</h1><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></header>
+</section>
 <section id="historico" class="hide">
   <header><h1>Histórico</h1><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></header>
   <div class="busca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hBusca" type="search" placeholder="Buscar em todos os meses (ex.: farmácia)" aria-label="Buscar no histórico"></div>
@@ -475,7 +493,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
 </section>
 
 <section id="dicas" class="hide">
-  <header><h1>Dicas</h1></header>
+  <header><h1>IA</h1></header>
   <div class="card chat-card">
     <h2>Pergunte</h2>
     <p class="s" style="margin:-6px 0 10px;color:var(--muted);font-size:14px">A IA responde com os números de vocês e com o guia de gestão financeira que vocês escolheram.</p>
@@ -591,12 +609,28 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
 
 <nav><div class="in">
   <button data-s="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+  <button data-s="relatorios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Relatórios</button>
   <button data-s="adicionar"><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg></span>Adicionar</button>
-  <button data-s="historico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Histórico</button>
-  <button data-s="dicas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Dicas</button>
+  <button data-s="planejar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Planejar</button>
+  <button data-s="dicas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>IA</button>
 </div></nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+/* ---------- Organização das telas ---------- */
+(function(){
+  const card = sel => { const el = document.querySelector(sel); return el && (el.closest('.card') || el); };
+  const poe = (secao, lista) => { const s = document.getElementById(secao); lista.map(card).filter(Boolean).forEach(el => s.appendChild(el)); };
+  const ini = document.getElementById('inicio');
+  // Início, nesta ordem
+  ['#iHero', '.card.saldo', '#inicio .grid3', '#cFila', '#cCheck', '#iContas', '#cLim', '#cComp', '#cProx']
+    .map(x => x.startsWith('#c') && x !== '#cLim' && x !== '#cComp' && x !== '#cProx' ? document.querySelector(x) : (x === '#inicio .grid3' ? document.querySelector(x) : card(x)))
+    .filter(Boolean).forEach(el => ini.appendChild(el));
+  poe('relatorios', ['#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
+  poe('planejar', ['#cGuia', '#cMetas', '#cAnual', '#iParc']);
+  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero'].includes(el.id) && !el.matches('.saldo') && !['cLim', 'cComp', 'cProx'].includes(el.id) && !el.querySelector('#iContas')) el.classList.add('hide'); });
+})();
+</script>
 <script>
 /* ---------- Ligação com o servidor (com dados falsos fora do Google, para testar) ---------- */
 /* Chave de acesso deste navegador (recebida ao digitar o código). */
@@ -1411,26 +1445,50 @@ function previsaoInicio(i){
 }
 
 /* ---------- Para onde vai a renda (diagrama de fluxo) ---------- */
+const COR_ORIGEM = ['#6CC3CE', '#9FB4D8', '#D9B26A', '#B7A6E8', '#E39AAE', '#8FD3A8'];
 function fluxoInicio(i){
   const t = totais(i), { o, sem } = porGrupo(i);
-  const destinos = GRUPOS.map(g => ({ n: g.n, v: o[g.n], cor: g.cor })).concat(sem ? [{ n: 'Sem grupo', v: sem, cor: '#5B6474' }] : []).filter(d => d.v > 0);
-  const sobra = t.Entrada - t.Despesa - t.Investimento; if (sobra > 0) destinos.push({ n: 'Sobrou', v: sobra, cor: '#34D399' });
+  const curto = { 'Liberdade financeira': 'Investido', 'Custos fixos': 'Custos fixos' };
+  const destinos = GRUPOS.map(g => ({ n: curto[g.n] || g.n, v: o[g.n], cor: g.cor })).concat(sem ? [{ n: 'Sem grupo', v: sem, cor: '#5B6474' }] : []).filter(d => d.v > 0).sort((x, y) => y.v - x.v);
+  const sobra = t.Entrada - t.Despesa - t.Investimento; if (sobra > 0) destinos.push({ n: 'Sobrou', v: sobra, cor: '#34D399', sobra: true });
   if (!t.Entrada || !destinos.length) { $('#iFluxo').innerHTML = '<div class="empty" style="padding-top:0">Aparece quando o mês tiver entradas e despesas.</div>'; return; }
   const origens = {}; S.regs.forEach(r => { if (r.tipo === 'Entrada' && ciclo(r.data) === i) origens[r.conta] = (origens[r.conta] || 0) + r.valor; });
-  const fontes = Object.entries(origens).map(([n, v]) => ({ n, v })); if (sobra < 0) fontes.push({ n: 'Faltou', v: -sobra, falta: true });
-  const totE = fontes.reduce((a, f) => a + f.v, 0), totS = destinos.reduce((a, d) => a + d.v, 0), W = 360, gap = 6, H = Math.max(220, destinos.length * 34);
-  const escala = (H - gap * (Math.max(fontes.length, destinos.length) - 1)) / Math.max(totE, totS);
-  let y = 0; fontes.forEach(f => { f.y = y; f.h = Math.max(2, f.v * escala); y += f.h + gap; });
-  y = 0; destinos.forEach(d => { d.y = y; d.h = Math.max(2, d.v * escala); y += d.h + gap; d.usado = 0; });
-  const x0 = 92, x1 = 214; let links = '';
-  fontes.forEach(f => { let fy = f.y; destinos.forEach(d => { const h = f.h * d.v / totS; if (h < .3) return; const dy = d.y + d.usado; d.usado += h;
-    links += `<path d="M${x0} ${fy + h / 2}C${(x0 + x1) / 2} ${fy + h / 2} ${(x0 + x1) / 2} ${dy + h / 2} ${x1} ${dy + h / 2}" stroke="${d.cor}" stroke-opacity=".38" stroke-width="${h}" fill="none"/>`; fy += h; }); });
-  const pctR = v => Math.round(v / t.Entrada * 100);
-  $('#iFluxo').innerHTML = `<svg class="fluxo" viewBox="0 0 ${W} ${y}" role="img" aria-label="Entradas: ${fontes.map(f => f.n + ' ' + brl0(f.v)).join(', ')}. Destinos: ${destinos.map(d => d.n + ' ' + brl0(d.v)).join(', ')}">
-    ${links}
-    ${fontes.map(f => `<rect x="${x0 - 8}" y="${f.y}" width="8" height="${f.h}" rx="3" fill="${f.falta ? '#F87171' : '#A3B1C6'}"/><text x="${x0 - 12}" y="${f.y + f.h / 2 - 2}" text-anchor="end" class="fl-n">${esc(f.n)}</text><text x="${x0 - 12}" y="${f.y + f.h / 2 + 11}" text-anchor="end" class="fl-v">${brl0(f.v)}</text>`).join('')}
-    ${destinos.map(d => `<rect x="${x1}" y="${d.y}" width="8" height="${d.h}" rx="3" fill="${d.cor}"/><text x="${x1 + 13}" y="${d.y + d.h / 2 - 2}" class="fl-n">${esc(d.n)}</text><text x="${x1 + 13}" y="${d.y + d.h / 2 + 11}" class="fl-v">${brl0(d.v)} · ${pctR(d.v)}%</text>`).join('')}
-  </svg>`;
+  const fontes = Object.entries(origens).sort((x, y) => y[1] - x[1]).map(([n, v], k) => ({ n, v, cor: COR_ORIGEM[k % COR_ORIGEM.length] }));
+  if (sobra < 0) fontes.push({ n: 'Faltou', v: -sobra, cor: '#F87171', falta: true });
+  const totE = fontes.reduce((a, f) => a + f.v, 0), totS = destinos.reduce((a, d) => a + d.v, 0), tot = Math.max(totE, totS);
+  const W = 340, G = 12, NW = 14, xA = 92, xB = 212, TOPO = 22;   // colunas: origens | destinos
+  const H = Math.max(220, destinos.length * 46);
+  const k1 = (H - G * (Math.max(fontes.length, destinos.length) - 1)) / tot;
+  let y = TOPO; fontes.forEach(f => { f.h = Math.max(4, f.v * k1); f.y = y; f.saida = f.y; y += f.h + G; });
+  y = TOPO; destinos.forEach(d => { d.h = Math.max(4, d.v * k1); d.y = y; d.chegada = d.y; y += d.h + G; });
+  const afasta = lista => { let ult = -99; lista.forEach(x => { x.ly = Math.max(x.y + x.h / 2, ult + 34); ult = x.ly; }); };
+  afasta(fontes); afasta(destinos);
+  const HL = Math.max(y, ...destinos.map(d => d.ly + 18), ...fontes.map(f => f.ly + 18));
+  // cada origem se divide entre os destinos na mesma proporção; a faixa tem a cor do destino
+  let links = '';
+  destinos.forEach((d, k) => fontes.forEach(f => {
+    const h = f.h * d.v / totS; if (h < .4) return;
+    const y1 = f.saida + h / 2, y2 = d.chegada + h / 2, xm = (xA + NW + xB) / 2;
+    links += `<path class="fl-out" data-k="${k}" d="M${xA + NW} ${y1}C${xm} ${y1} ${xm} ${y2} ${xB} ${y2}" stroke="${d.cor}" stroke-width="${h}" fill="none"/>`;
+    f.saida += h; d.chegada += h;
+  }));
+  const pct = v => Math.round(v / t.Entrada * 100) + '%';
+  const rot = (x, yc, n, v, anc, cls) => `<text x="${x}" y="${yc - 3}" text-anchor="${anc}" class="fl-n ${cls || ''}">${esc(n)}</text><text x="${x}" y="${yc + 12}" text-anchor="${anc}" class="fl-v">${v}</text>`;
+  const ligacao = (x1, yNo, x2, yRot, cor) => Math.abs(yNo - yRot) > 2 ? `<path d="M${x1} ${yNo}L${x2} ${yRot - 4}" stroke="${cor}" stroke-width="1.2" stroke-opacity=".7" fill="none"/>` : '';
+  $('#iFluxo').innerHTML = `<div class="fl-topo"><div><small>Entrou no mês</small><b>${brl0(t.Entrada)}</b></div><div style="text-align:right"><small>${sobra >= 0 ? 'Sobrou' : 'Faltou'}</small><b class="${sobra >= 0 ? 'in' : 'out'}">${brl0(Math.abs(sobra))}</b></div></div>
+    <svg class="fluxo" viewBox="0 0 ${W} ${HL}" role="img" aria-label="Entrou: ${fontes.map(f => f.n + ' ' + brl0(f.v)).join(', ')}. Foi para: ${destinos.map(d => d.n + ' ' + brl0(d.v) + ' (' + pct(d.v) + ')').join(', ')}">
+      <text x="${xA + NW}" y="11" text-anchor="end" class="fl-cab">DE ONDE VEIO</text><text x="${xB}" y="11" class="fl-cab">PARA ONDE FOI</text>
+      ${links}
+      ${fontes.map(f => `<rect x="${xA}" y="${f.y}" width="${NW}" height="${f.h}" rx="5" fill="${f.cor}"/>` + ligacao(xA - 1, f.y + f.h / 2, xA - 6, f.ly, f.cor) + rot(xA - 8, f.ly, f.n, brl0(f.v), 'end', f.falta ? 'falta' : '')).join('')}
+      ${destinos.map((d, k) => `<g class="fl-dest" data-k="${k}" tabindex="0" role="button" aria-label="${esc(d.n)}: ${brl(d.v)}, ${pct(d.v)} do que entrou"><rect x="${xB}" y="${d.y}" width="${NW}" height="${d.h}" rx="5" fill="${d.cor}"/><rect x="${xB - 4}" y="${Math.min(d.y, d.ly - 14) - 2}" width="${W - xB + 4}" height="${Math.max(d.h, 30) + 6}" fill="transparent"/>`
+        + ligacao(xB + NW + 1, d.y + d.h / 2, xB + NW + 6, d.ly, d.cor) + rot(xB + NW + 8, d.ly, d.n, brl0(d.v) + ' · ' + pct(d.v), 'start', d.sobra ? 'forte' : '') + '</g>').join('')}
+    </svg>
+    <div class="help" id="flInfo">Cada faixa mostra quanto da renda foi para cada destino. Toque num destino para destacar.</div>`;
+  const svg = $('#iFluxo svg');
+  $$('#iFluxo .fl-dest').forEach(g => { const f = () => { const k = g.dataset.k, sel = svg.dataset.sel === k ? null : k; svg.dataset.sel = sel || '';
+      svg.classList.toggle('foco', !!sel); $$('#iFluxo .fl-out, #iFluxo .fl-dest').forEach(x => x.classList.toggle('on', x.dataset.k === sel));
+      const d = destinos[k]; $('#flInfo').textContent = sel ? `${d.n}: ${brl(d.v)}, ${pct(d.v)} do que entrou.` : 'Cada faixa mostra quanto da renda foi para cada destino. Toque num destino para destacar.'; };
+    g.onclick = f; g.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f(); } }; });
 }
 
 /* ---------- Assinaturas ---------- */
