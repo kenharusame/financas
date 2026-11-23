@@ -834,7 +834,7 @@ function renderInicio(){
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
   $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
-  const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) porConta[r.conta] = (porConta[r.conta] || 0) + r.valor; });
+  const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
   const max = lista.length ? lista[0][1] : 1;
   const mostrar = S.todasContas ? lista : lista.slice(0, 5);
@@ -925,6 +925,8 @@ async function preencheTipos(){            // contas sem tipo ganham o palpite p
   preenchendo = true; try { S.cfg = await api('salvarConfigContas', m); renderMes(); } catch (e) {} preenchendo = false;
 }
 function iconeDe(nome){
+  const tpN = TIPOS.find(x => x.n === nome); if (tpN) return ICONES[tpN.ic];
+  if (nome === 'Demais tipos') return ICONES.pilha;
   if (nome !== 'Outras contas' && ((S.cfg || {})[nome] || {}).tipo) { const t = TIPOS.find(x => x.n === S.cfg[nome].tipo); if (t && t.n !== 'Outros' && t.n !== 'Cartão/Carteira') return ICONES[t.ic]; }
   const n = nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const regras = [['outras contas', 'pilha'], ['mesada|carteira|pix|mercado pago|picpay|nubank', 'carteira'], ['cartao|credito|fatura', 'cartao'],
@@ -958,7 +960,7 @@ function setorRedondo(cx, cy, r0, r1, a0, a1, raio){
 let PZsel = null;
 function pizza(lista){
   const top = lista.slice(0, 5), restoL = lista.slice(5), resto = restoL.reduce((a, x) => a + x[1], 0);
-  const fatias = resto ? top.concat([['Outras contas', resto]]) : top;
+  const fatias = resto ? top.concat([['Demais tipos', resto]]) : top;
   const total = lista.reduce((a, x) => a + x[1], 0), max = Math.max(...fatias.map(f => f[1]));
   const pct = v => (v / total * 100).toLocaleString('pt-BR', { maximumFractionDigits: v / total < .1 ? 1 : 0 }) + '%';
   if (PZsel != null && !fatias[PZsel]) PZsel = null;
@@ -978,7 +980,7 @@ function pizza(lista){
       ${cabePct ? `<text x="${lx}" y="${cabe ? ly + 20 : ly + 6}" text-anchor="middle" class="pz-pct" aria-hidden="true">${pct(f[1])}</text>` : ''}
     </g>`;
   });
-  $('#iContas').innerHTML = `<svg class="pz" viewBox="0 0 320 320" role="group" aria-label="Despesas por conta"><defs>${defs}<radialGradient id="gc" cx=".35" cy=".3"><stop offset="0" stop-color="#2A3550"/><stop offset="1" stop-color="#161D2E"/></radialGradient></defs>
+  $('#iContas').innerHTML = `<svg class="pz" viewBox="0 0 320 320" role="group" aria-label="Despesas por tipo"><defs>${defs}<radialGradient id="gc" cx=".35" cy=".3"><stop offset="0" stop-color="#2A3550"/><stop offset="1" stop-color="#161D2E"/></radialGradient></defs>
       ${fat}
       <circle cx="${C}" cy="${C}" r="${R0 - 6}" fill="url(#gc)" stroke="rgba(255,255,255,.14)" stroke-width="1.5"/>
       <text x="${C}" y="${C - 6}" text-anchor="middle" class="pz-lbl">Despesas</text>
@@ -992,10 +994,12 @@ function pizza(lista){
 function detalhe(fatias, restoL, total, pct){
   const box = $('#pzDet');
   if (PZsel == null) { box.innerHTML = '<div class="badge">Toque numa parte do gráfico para ver os detalhes</div>'; return; }
-  const [nome, valor] = fatias[PZsel], outras = nome === 'Outras contas' && restoL.length;
-  const contas = outras ? restoL.map(x => x[0]) : [nome];
-  const doMes = S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === S.mes && contas.includes(r.conta)).sort((a, b) => b.valor - a.valor);
-  const antes = S.mes > 0 ? S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === S.mes - 1 && contas.includes(r.conta)).reduce((a, r) => a + r.valor, 0) : null;
+  const [nome, valor] = fatias[PZsel];
+  const tiposSel = nome === 'Demais tipos' ? restoL.map(x => x[0]) : [nome], noTipo = r => tiposSel.includes(tipoDe(r.conta));
+  const doMes = S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === S.mes && noTipo(r)).sort((a, b) => b.valor - a.valor);
+  const somaC = {}; doMes.forEach(r => somaC[r.conta] = (somaC[r.conta] || 0) + r.valor);
+  const porC = Object.entries(somaC).sort((a, b) => b[1] - a[1]), outras = porC.length > 1;
+  const antes = S.mes > 0 ? S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === S.mes - 1 && noTipo(r)).reduce((a, r) => a + r.valor, 0) : null;
   let comp = '';
   if (antes != null) {
     const d = valor - antes, mesAnt = nomeCiclo(S.mes - 1).toLowerCase();
@@ -1009,18 +1013,18 @@ function detalhe(fatias, restoL, total, pct){
       extras.push(`Parcela ${atual.parcela.replace('/', ' de ')}${faltam ? `: faltam mais ${faltam}` : ': é a última'}.`); });
   }
   const linhas = outras
-    ? restoL.map(([c, v]) => `<div class="row"><span>${esc(c)}</span><span class="num">${brl(v)}</span></div>`).join('')
+    ? porC.map(([c, v]) => `<div class="row"><span>${esc(c)}</span><span class="num">${brl(v)}</span></div>`).join('')
     : doMes.slice(0, 3).map(r => `<div class="row"><div><div class="t">${ddmm(r.data)}</div>${r.obs ? `<div class="s">${esc(r.obs)}</div>` : ''}</div><span class="num">${brl(r.valor)}</span></div>`).join('');
   box.innerHTML = `<div class="pz-det" style="--cor:${CORES[PZsel]}">
     <div class="pz-tit"><span class="pz-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconeDe(nome)}</svg></span><div><b>${esc(nome)}</b><div class="s">${pct(valor)} das despesas de ${nomeCiclo(S.mes).toLowerCase()}</div></div></div>
     <div class="pz-val">${brl(valor)}</div>
     ${comp ? `<div class="s">${comp}</div>` : ''}
     ${extras.map(e => `<div class="note">${e}</div>`).join('')}
-    <h3>${outras ? 'Contas incluídas' : doMes.length > 3 ? `Maiores registros (${doMes.length} no mês)` : doMes.length > 1 ? `${doMes.length} registros no mês` : 'Registro do mês'}</h3>
+    <h3>${outras ? 'Contas deste tipo' : doMes.length > 3 ? `Maiores registros (${doMes.length} no mês)` : doMes.length > 1 ? `${doMes.length} registros no mês` : 'Registro do mês'}</h3>
     ${linhas}
-    ${mini(contas)}
+    ${mini(porC.map(x => x[0]))}
     <button class="btn" id="pzHist">Ver no Histórico</button></div>`;
-  $('#pzHist').onclick = () => { S.conta = outras ? null : nome; S.filtro = 'Despesa'; ir('historico'); renderHist(); };
+  $('#pzHist').onclick = () => { S.conta = outras ? null : porC[0][0]; S.filtro = 'Despesa'; ir('historico'); renderHist(); };
 }
 function calor(){
   const tab = {};
