@@ -1456,11 +1456,11 @@ function resisteInicio(i){
 }
 // 3) aviso ao par
 function parInicio(){
-  const vistos = lsLe('fin_avisosVistos', []), l = (S.avisos || []).filter(a => !vistos.includes(a.id));
+  const vistos = lsLe('fin_avisosVistos', []), l = (S.avisos || []).filter(a => !vistos.includes(a.id) && superfluo(a.conta));
   if (!l.length) { $('#cPar').innerHTML = ''; return; }
-  $('#cPar').innerHTML = `<div class="card"><h2>Compras grandes ${l[0].quem === 'Sam' ? 'da Sam' : 'do ' + esc(l[0].quem)}</h2>${l.map(a => { const d = Math.floor((Date.now() - a.quando) / 864e5);
+  $('#cPar').innerHTML = `<div class="card"><h2>Compras supérfluas ${l[0].quem === 'Sam' ? 'da Sam' : 'do ' + esc(l[0].quem)}</h2>${l.map(a => { const d = Math.floor((Date.now() - a.quando) / 864e5);
     return `<div class="row"><div class="mid"><div class="t">${esc(a.conta)}</div><div class="s">${d === 0 ? 'hoje' : d === 1 ? 'ontem' : 'há ' + d + ' dias'}${a.forma === 'Parcelada' ? ' · parcelado' : ''}</div></div><span class="num out">${brl(a.valor)}</span></div>`; }).join('')}
-    <div class="help">Não é para pedir permissão: é só para nenhum gasto grande ficar escondido.</div><button class="btn sec" id="parVisto">Visto</button></div>`;
+    <div class="help">Gastos supérfluos a partir de R$ 200. Não é para pedir permissão: é só para nada ficar escondido.</div><button class="btn sec" id="parVisto">Visto</button></div>`;
   $('#parVisto').onclick = () => { lsGrava('fin_avisosVistos', vistos.concat(l.map(a => a.id)).slice(-60)); parInicio(); };
 }
 // 7) revisão semanal (domingo e segunda)
