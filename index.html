@@ -247,6 +247,7 @@ html.pc .pc-topo .hero-txt{flex:0 1 auto;margin:0 auto;text-align:left;padding:1
 .nota-fotos:empty{display:none}
 .nota-th{position:relative;width:72px;height:96px;border-radius:12px;overflow:hidden;box-shadow:var(--clay-sm)}
 .nota-th img{width:100%;height:100%;object-fit:cover}
+.nota-pdf{display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:#c0392b;color:#fff;font-weight:700;font-size:16px}
 .nota-th button{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:18px;cursor:pointer}
 .nota-lista{margin-top:16px;display:flex;flex-direction:column;gap:10px}
 .nota-it{display:grid;grid-template-columns:44px 1fr 32px;gap:8px;align-items:center;padding:10px 8px;border-radius:16px;background:rgba(12,18,27,.35);box-shadow:var(--inset);border:1px solid transparent}
@@ -524,10 +525,12 @@ html.pc .toast{bottom:24px}
 <div class="card nota-card" id="nCard">
     <div id="nIni">
       <div class="nota-top"><span class="pz-ico nota-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h4"/></svg></span>
-        <div><b>Ler nota com IA</b><div class="s">Tire foto da nota do mercado e a IA separa os itens para você conferir.</div></div></div>
+        <div><b>Ler nota com IA</b><div class="s">Tire foto ou envie a foto/PDF da nota e a IA separa os itens para você conferir.</div></div></div>
       <div class="nota-fotos" id="nFotos"></div>
       <input type="file" id="nArq" accept="image/*" capture="environment" multiple class="hide">
+      <input type="file" id="nArq2" accept="image/*,application/pdf" multiple class="hide">
       <button class="btn ghost" id="nFoto">Tirar foto da nota</button>
+      <button class="btn ghost" id="nEnviar">Enviar foto ou PDF</button>
       <button class="btn hide" id="nLer">Ler nota</button>
       <div class="err" id="nErro" role="alert"></div>
     </div>
@@ -2514,15 +2517,28 @@ function reduzFoto(arq){
   });
 }
 function pintaFotos(){
-  $('#nFotos').innerHTML = S.nFotos.map((f, k) => `<span class="nota-th"><img src="${f.url}" alt="Foto ${k + 1} da nota"><button aria-label="Tirar foto ${k + 1}" data-tira="${k}">×</button></span>`).join('');
+  $('#nFotos').innerHTML = S.nFotos.map((f, k) => `<span class="nota-th">${f.pdf ? `<span class="nota-pdf">PDF</span>` : `<img src="${f.url}" alt="Foto ${k + 1} da nota">`}<button aria-label="Tirar parte ${k + 1}" data-tira="${k}">×</button></span>`).join('');
   $$('#nFotos [data-tira]').forEach(b => b.onclick = () => { S.nFotos.splice(+b.dataset.tira, 1); pintaFotos(); });
-  $('#nFoto').textContent = S.nFotos.length ? 'Adicionar outra parte da nota' : 'Tirar foto da nota';
+  $('#nFoto').textContent = S.nFotos.length ? 'Tirar foto de outra parte' : 'Tirar foto da nota';
   $('#nLer').classList.toggle('hide', !S.nFotos.length);
 }
+function lePdf(arq){
+  return new Promise((ok, falha) => {
+    if (arq.size > 8 * 1024 * 1024) return falha('PDF grande demais (máx. 8 MB).');
+    const fr = new FileReader();
+    fr.onerror = () => falha('Não consegui abrir o PDF.');
+    fr.onload = () => ok({ pdf: true, mime: 'application/pdf', b64: String(fr.result).split(',')[1] });
+    fr.readAsDataURL(arq);
+  });
+}
 $('#nFoto').onclick = () => $('#nArq').click();
-$('#nArq').onchange = async e => {
+$('#nEnviar').onclick = () => $('#nArq2').click();
+$('#nArq').onchange = $('#nArq2').onchange = async e => {
   $('#nErro').textContent = '';
-  for (const f of e.target.files) { try { S.nFotos.push(await reduzFoto(f)); } catch (er) { $('#nErro').textContent = er; } }
+  for (const f of e.target.files) {
+    if (S.nFotos.length >= 6) { $('#nErro').textContent = 'No máximo 6 partes por nota.'; break; }
+    try { S.nFotos.push(f.type === 'application/pdf' || /\.pdf$/i.test(f.name) ? await lePdf(f) : await reduzFoto(f)); } catch (er) { $('#nErro').textContent = er; }
+  }
   e.target.value = ''; pintaFotos();
 };
 $('#nLer').onclick = async () => {
