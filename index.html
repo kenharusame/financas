@@ -990,7 +990,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); faturaInicio(); salarioInicio(i, t); resisteInicio(i); revisaoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl(t.Investimento - (t.Retirada || 0)); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); faturaInicio(); salarioInicio(i, t); resisteInicio(i); revisaoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1697,7 +1697,7 @@ function salarioInicio(i, t){
     <p class="fase-txt">Vocês podem gastar até <b>${brl0(sal)} por mês</b> (80% da média do que entra${ks.length ? '' : ', só este mês por enquanto'}). Os outros 20% vão para investir.</p>
     <div class="gasto-bar" role="progressbar" aria-label="Quanto do salário já foi gasto" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pg * 100)}"><i class="${pg >= 1 ? 'alto' : pg >= .8 ? 'medio' : 'ok'}" style="width:${pg * 100}%"></i></div>
     <div class="res-grid" style="margin-top:10px"><div><small>${sobra >= 0 ? 'Ainda dá para gastar' : 'Passou do salário'}</small><b style="${sobra < 0 ? 'color:var(--out)' : ''}">${brl0(Math.abs(sobra))}</b><span>gasto até agora: ${brl0(t.Despesa)}</span></div>
-    <div><small>Investir este mês (20%)</small><b style="color:var(--inv)">${brl0(guardar)}</b><span>já foi ${brl0(t.Investimento)}</span></div></div>
+    <div><small>Investir este mês (20%)</small><b style="color:var(--inv)">${brl0(guardar)}</b><span>já foi ${brl(t.Investimento - (t.Retirada || 0))}</span></div></div>
     ${inv}
     ${gastoMed > sal ? `<div class="alerta medio" style="margin-top:10px">Na média, vocês gastam ${brl0(gastoMed)} por mês, mais que o salário. Para guardar os 20%, precisam cortar ${brl0(gastoMed - sal)}.</div>` : ''}</div>`;
   if ($('#salSepara')) $('#salSepara').onclick = () => guardarPara(destino ? destino.nome : '', mandar);
