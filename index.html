@@ -262,6 +262,8 @@ html.pc .pc-topo .hero-txt{flex:0 1 auto;margin:0 auto;text-align:left;padding:1
 .nota-l2{display:grid;grid-template-columns:1fr 84px;gap:6px}
 .nota-val{text-align:right;font-variant-numeric:tabular-nums}
 .nota-x{width:32px;height:32px;border-radius:50%;border:0;background:var(--out-soft);color:var(--out);font-size:20px;cursor:pointer}
+.nota-txt{width:100%;min-height:160px;resize:vertical;border:1px solid rgba(255,255,255,.05);border-radius:16px;padding:12px 14px;font:inherit;background:rgba(12,18,27,.5);color:var(--text);box-shadow:var(--inset);margin:6px 0 10px}
+.nota-txt:focus{outline:2px solid var(--accent)}
 .nota-tot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-weight:700}
 .nota-tot b{font-family:Sora,system-ui,sans-serif;font-size:22px}
 .note.aviso{background:var(--warn-soft);color:var(--warn)}
@@ -533,6 +535,10 @@ html.pc .toast{bottom:24px}
       <button class="btn ghost" id="nEnviar">Enviar foto ou PDF</button>
       <input type="file" id="nArq3" accept="application/pdf" multiple class="hide">
       <button class="btn ghost" id="nLote">Várias notas em PDF (uma por arquivo)</button>
+      <button class="btn ghost" id="nColar">Colar lista de itens (sem IA)</button>
+      <div id="nColarBox" class="hide"><label for="nTexto">Cole a lista: um item por linha, com o valor no fim</label>
+        <textarea id="nTexto" class="nota-txt" rows="8" placeholder="Leite 1L R$ 5,99&#10;Pano de copa R$ 4,90"></textarea>
+        <button class="btn" id="nColarOk">Separar os itens</button></div>
       <button class="btn hide" id="nLer">Ler nota</button>
       <div class="err" id="nErro" role="alert"></div>
     </div>
@@ -2578,6 +2584,31 @@ $('#nLer').onclick = async () => {
   } catch (e) { $('#nErro').textContent = String(e); }
   b.disabled = false; b.textContent = 'Ler nota';
 };
+/* Colar lista: separa "nome ... R$ 12,34" por linha, sem IA. A conta vem da última vez que o item foi salvo (guardada no aparelho). */
+function contasDosItens(){ try { return JSON.parse(localStorage.getItem('fin_itemConta') || '{}'); } catch (e) { return {}; } }
+function lembraContas(itens){ try { const m = contasDosItens(); itens.forEach(i => { m[semAcento(i.nome).trim()] = i.conta; }); localStorage.setItem('fin_itemConta', JSON.stringify(m)); } catch (e) {} }
+function leLista(txt){
+  const itens = [], ruins = [], mem = contasDosItens(), padrao = S.contas.indexOf('Mercado') >= 0 ? 'Mercado' : S.contas[0];
+  String(txt || '').split(/\n/).forEach(l => {
+    l = l.trim(); if (!l) return;
+    const m = l.match(/^(.*?)[\s:;|–]*(?:R\$\s*)?(-?\d{1,3}(?:\.\d{3})+,\d{1,2}|-?\d+(?:[.,]\d{1,2})?)\s*$/);
+    const nome = m ? m[1].replace(/[\s:;|\-–]+$/, '').trim() : '';
+    if (!m || !nome) { if (!/^(item|produto)s?(\s|$)/i.test(l)) ruins.push(l); return; }
+    const valor = Math.round(num(m[2]) * 100) / 100; if (!valor) { ruins.push(l); return; }
+    const c = mem[semAcento(nome).trim()];
+    itens.push({ nome: nome.slice(0, 80), valor, conta: S.contas.indexOf(c) >= 0 ? c : padrao, ok: false, fora: false });
+  });
+  return { itens, ruins };
+}
+$('#nColar').onclick = () => { const b = $('#nColarBox'); b.classList.toggle('hide'); if (!b.classList.contains('hide')) $('#nTexto').focus(); };
+$('#nColarOk').onclick = () => {
+  const r = leLista($('#nTexto').value);
+  if (!r.itens.length) { $('#nErro').textContent = 'Não achei nenhum item com valor. Cada linha precisa terminar com o valor (ex.: Leite R$ 5,99).'; return; }
+  $('#nErro').textContent = '';
+  S.nota = { loja: '', data: hoje(), total: null, pagoCom: '', itens: r.itens, ruins: r.ruins };
+  $('#nTexto').value = ''; $('#nColarBox').classList.add('hide');
+  $('#nIni').classList.add('hide'); $('#nConf').classList.remove('hide'); pintaNota(); $('#nConf').scrollIntoView({ block: 'start' });
+};
 /* Lote: cada PDF é uma nota diferente. Lê todos (um por vez) e depois mostra para conferir na sequência. */
 S.lote = []; S.loteErros = [];
 $('#nLote').onclick = () => $('#nArq3').click();
@@ -2609,6 +2640,7 @@ function pintaNota(){
   $('#nConf').innerHTML = `<h2>Confira os itens</h2>${n.de ? `<div class="help">Nota ${n.pos} de ${n.de} · ${esc(n.arq)}</div>` : ''}
     <div class="two"><div><label for="nLoja">Loja</label><input id="nLoja" value="${esc(n.loja)}"></div><div><label for="nData">Data</label><input id="nData" type="date" value="${n.data}"></div></div>
     <label>Pago com</label><div class="chips" id="nPago">${['Cartão de crédito', 'Mercado Pago', 'Pix', 'Dinheiro'].map(v => `<button class="chip" data-v="${v}">${v}</button>`).join('')}</div>
+    ${n.itens.length > 1 ? `<label for="nTodas">Mudar a conta de todos</label><select id="nTodas"><option value="">Escolha uma conta...</option>${S.contas.map(c => `<option>${esc(c)}</option>`).join('')}</select>` : ''}
     <div class="nota-lista">${n.itens.map((i, k) => `<div class="nota-it${i.fora ? ' fora' : ''}${i.ok ? ' ok' : ''}" data-k="${k}">
       <button class="nota-chk" data-ok="${k}" aria-pressed="${i.ok}" aria-label="${i.ok ? 'Conferido' : 'Marcar como certo'}: ${esc(i.nome)}" ${i.fora ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></button>
       <div class="nota-campos"><div class="nota-l2"><input class="nota-nome" data-c="nome" value="${esc(i.nome)}" aria-label="Nome do item" ${i.fora ? 'disabled' : ''}>
@@ -2616,6 +2648,7 @@ function pintaNota(){
         <select data-c="conta" aria-label="Conta" ${i.fora ? 'disabled' : ''}>${S.contas.map(c => `<option ${c === i.conta ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
       <button class="nota-x" data-fora="${k}" aria-label="${i.fora ? 'Voltar o item' : 'Tirar o item'}">${i.fora ? '↺' : '×'}</button></div>`).join('')}</div>
     <button class="link" id="nTodos">Marcar todos como certos</button>
+    ${n.ruins && n.ruins.length ? `<div class="note aviso">Ficaram de fora ${n.ruins.length === 1 ? '1 linha sem valor' : n.ruins.length + ' linhas sem valor'}: ${esc(n.ruins.join(' / '))}</div>` : ''}
     <div class="nota-tot"><span>Total dos itens</span><b>${brl(soma)}</b></div>
     ${bate == null ? '' : `<div class="note ${bate ? '' : 'aviso'}">${bate ? 'Bate com o total da nota.' : `A nota diz ${brl(n.total)}. Confira se faltou ou sobrou algum item.`}</div>`}
     <div class="err" id="nErro2" role="alert"></div>
@@ -2627,6 +2660,7 @@ function pintaNota(){
     el.querySelectorAll('[data-c]').forEach(f => f.onchange = () => { i[f.dataset.c] = f.dataset.c === 'valor' ? num(f.value) : f.value; i.ok = false; pintaNota(); }); });
   $$('#nConf [data-ok]').forEach(b => b.onclick = () => { const i = n.itens[+b.dataset.ok]; i.ok = !i.ok; pintaNota(); });
   $$('#nConf [data-fora]').forEach(b => b.onclick = () => { const i = n.itens[+b.dataset.fora]; i.fora = !i.fora; i.ok = false; pintaNota(); });
+  if ($('#nTodas')) $('#nTodas').onchange = e => { const c = e.target.value; if (!c) return; n.itens.forEach(i => { if (!i.fora) { i.conta = c; i.ok = false; } }); pintaNota(); };
   $('#nTodos').onclick = () => { n.itens.forEach(i => { if (!i.fora) i.ok = true; }); pintaNota(); };
   $('#nCancela').onclick = () => { if (confirm('Descartar a leitura desta nota?')) fechaNota(); };
   if ($('#nCancelaTudo')) $('#nCancelaTudo').onclick = () => { if (confirm(`Descartar esta e as outras ${S.lote.length} notas que faltam?`)) { S.lote = []; fechaNota(); } };
@@ -2634,6 +2668,7 @@ function pintaNota(){
     const b = $('#nSalvar'); b.disabled = true; b.textContent = 'Salvando...';
     try {
       const r = await api('salvarNota', { loja: n.loja, data: n.data, pagoCom: n.pagoCom, itens: n.itens.filter(i => !i.fora).map(i => ({ nome: i.nome, valor: i.valor, conta: i.conta })) });
+      lembraContas(n.itens.filter(i => !i.fora));
       toast(`Salvo: ${r.itens} itens em ${r.registros} ${r.registros === 1 ? 'conta' : 'contas'}`); fechaNota(); await carregar();
     } catch (e) { $('#nErro2').textContent = 'Não salvou: ' + e; b.disabled = false; b.textContent = 'Tentar de novo'; }
   };
