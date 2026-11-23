@@ -700,6 +700,16 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <button class="btn" id="limSalvar">Salvar limites</button>
   <button class="link" id="limFechar">Cancelar</button>
 </dialog>
+<dialog id="dlgAdi">
+  <h2 id="adTit">Adiantei a fatura</h2>
+  <div id="adBox"><label for="adValor">Quanto pagou</label><input id="adValor" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off">
+  <label for="adData">Quando</label><input id="adData" type="date"></div>
+  <div id="adLimBox" class="hide"><label for="adLim">Limite total do cartão</label><input id="adLim" class="money" inputmode="decimal" autocomplete="off"></div>
+  <div class="help" id="adHelp"></div>
+  <div class="err" id="adErro" role="alert"></div>
+  <button class="btn" id="adSalvar">Salvar</button>
+  <button class="link" id="adFechar">Cancelar</button>
+</dialog>
 <dialog id="dlg">
   <h2 id="eTitulo"></h2>
   <div class="s" id="eSub" style="color:var(--muted);font-size:14px"></div>
@@ -813,7 +823,7 @@ const FAKE = (() => {
   add('2026-11-16', 'Investimento', 'YouTube', 600, { veioDe: 'f1', pct: 10, meta: 'Reserva de emergência' });
   for (let k = 0; k < 12; k++) add(`20${k < 2 ? 26 : 27}-${String((10 + k) % 12 + 1).padStart(2, '0')}-15`, 'Despesa', 'Aluguel', 2200, { forma: 'Fixa', grupo: 'g1' });
   for (let k = 0; k < 12; k++) add(`20${k < 2 ? 26 : 27}-${String((10 + k) % 12 + 1).padStart(2, '0')}-18`, 'Despesa', 'iPhone', 350, { forma: 'Parcelada', parcela: (k + 1) + '/12', grupo: 'g2' });
-  add('2026-11-21', 'Despesa', 'Cartão de crédito', 312, { obs: 'Mercado' }); add('2026-11-22', 'Despesa', 'Luz', 290);
+  add('2026-11-21', 'Despesa', 'Cartão de crédito', 312, { obs: 'Mercado', cartao: true }); add('2026-11-10', 'Despesa', 'Farmácia', 80, { cartao: true }); add('2026-11-13', 'Adiantamento', 'Cartão de crédito', 50); ['2026-11-20', '2026-12-20', '2027-01-20'].forEach((d, k) => add(d, 'Despesa', 'Cama', 100, { forma: 'Parcelada', parcela: (k + 1) + '/3', grupo: 'g3', cartao: true })); add('2026-11-22', 'Despesa', 'Luz', 290);
   const dados = { registros: R, contas: ['Aluguel', 'iPhone', 'Cama', 'Luz', 'Água', 'Cartão de crédito', 'Mercado Pago', 'Higiene e Alimentação - Gatas', 'Mercado', 'Limpeza', 'Higiene', 'Farmácia'], origens: ['YouTube', 'TikTok', 'Facebook', 'Publi'], inicio: '2026-11-15', patrimonio: [{ ciclo: 0, item: 'Conta corrente', tipo: 'Tenho', valor: 2300 }, { ciclo: 0, item: 'Reserva', tipo: 'Tenho', valor: 1500 }, { ciclo: 0, item: 'Fatura do cartão', tipo: 'Devo', valor: 800 }], configContas: { 'Cartão de crédito': { grupo: 'Conforto', acumula: false } }, anuais: [{ nome: 'IPVA', valor: 1800, mes: 2, dia: 10 }], limites: { 'Aluguel': 2200, 'Luz': 250, 'Cartão de crédito': 400 }, metas: [{ nome: 'Reserva de emergência', alvo: 6000, prazo: '2027-06-15', inicial: 1500 }, { nome: 'Carro', alvo: 10000, prazo: '', inicial: 0 }], temIA: true, quem: 'Sam' };
   return {
     getDados: () => JSON.parse(JSON.stringify(dados)),
@@ -827,6 +837,7 @@ const FAKE = (() => {
       { nome: 'Detergente', valor: 2.79, conta: 'Limpeza' }, { nome: 'Sabão em pó 1,6kg', valor: 24.9, conta: 'Limpeza' }, { nome: 'Pasta de dente', valor: 6.49, conta: 'Higiene' },
       { nome: 'Ração para gatos 3kg', valor: 68.9, conta: 'Higiene e Alimentação - Gatas' }, { nome: 'Banana prata', valor: 15.0, conta: 'Mercado' } ] }),
     salvarNota: n => { const g = {}; n.itens.forEach(i => g[i.conta] = (g[i.conta] || 0) + i.valor); Object.entries(g).forEach(([c, v]) => add(n.data, 'Despesa', c, Math.round(v * 100) / 100, { obs: n.loja })); return { registros: Object.keys(g).length, itens: n.itens.length }; },
+    limiteCartao: v => (dados.limiteCartao = Number(v)),
     definirLimites: m => { Object.keys(m).forEach(c => { if (Number(m[c]) > 0) dados.limites[c] = Number(m[c]); else delete dados.limites[c]; }); return JSON.parse(JSON.stringify(dados.limites)); },
     interpretar: x => ({ tipo: 'Despesa', valor: 45, conta: 'Cartão de crédito', forma: 'Única', vezes: 1, valorEhTotal: true, data: '2026-11-22', obs: 'pix', meta: '', duvida: '' }),
     salvarAnual: a => { dados.anuais = (dados.anuais || []).filter(x => x.nome !== (a.nomeAntigo || a.nome)).concat([{ nome: a.nome, valor: Number(a.valor), mes: Number(a.mes), dia: Number(a.dia) || 1 }]); return JSON.parse(JSON.stringify(dados.anuais)); },
@@ -912,7 +923,7 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.limiteCartao = d.limiteCartao || 500; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -937,7 +948,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); faturaInicio(); salarioInicio(i, t); resisteInicio(i); parInicio(); revisaoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); faturaInicio(); salarioInicio(i, t); resisteInicio(i); revisaoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1176,6 +1187,7 @@ function linhaReg(r, comTag){
   const tag = !comTag ? '' : r.forma === 'Fixa' ? '<span class="tag fixa">Fixa</span>' : r.forma === 'Parcelada' ? `<span class="tag parc">${esc(r.parcela.replace('/', ' de '))}</span>` : '';
   const cls = r.tipo === 'Entrada' ? 'in' : r.tipo === 'Despesa' ? 'out' : 'inv';
   const sinal = r.tipo === 'Entrada' ? '+ ' : r.tipo === 'Despesa' ? '- ' : '';
+  if (r.tipo === 'Adiantamento') return `<div class="row click" role="button" tabindex="0" data-id="${r.id}">${icoReg(r)}<div class="mid"><div class="t">Adiantamento do cartão</div><div class="s">${ddmm(r.data)} · ${r.obs ? esc(r.obs) : 'não conta como gasto'}</div></div><div class="num inv">${brl(r.valor)}</div></div>`;
   const sub = r.tipo === 'Investimento' ? (r.pct !== '' ? `${String(r.pct).replace('.', ',')}% de ${esc(r.conta)}` : 'de ' + esc(r.conta)) : r.obs ? esc(r.obs) : r.tipo;
   const titulo = r.tipo === 'Investimento' ? 'Investimento' : esc(r.conta);
   return `<div class="row click" role="button" tabindex="0" data-id="${r.id}">${icoReg(r)}<div class="mid"><div class="t">${titulo} ${tag}</div><div class="s">${ddmm(r.data)} · ${sub}</div></div><div class="num ${cls}">${sinal}${brl(r.valor)}</div></div>`;
@@ -1533,20 +1545,63 @@ function formDesejo(d, fechado){
 }
 const GUARDAR = .2, FECHA = 11, VENCE = 16;
 const isoD = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-function faturaInicio(){
-  const h = new Date(), y = h.getFullYear(), m = h.getMonth(), dia = h.getDate();
-  const soma = (a, b) => S.regs.filter(r => r.tipo === 'Despesa' && r.cartao && r.data >= isoD(a) && r.data <= isoD(b)).reduce((s, r) => s + r.valor, 0);
-  // fatura aberta: do dia 12 até o dia 11; vence dia 16 do mês em que fecha
-  const fimAb = dia <= FECHA ? new Date(y, m, FECHA) : new Date(y, m + 1, FECHA), iniAb = new Date(fimAb.getFullYear(), fimAb.getMonth() - 1, FECHA + 1);
-  const aberta = soma(iniAb, fimAb), venceAb = new Date(fimAb.getFullYear(), fimAb.getMonth(), VENCE);
-  const fechada = dia > FECHA && dia <= VENCE ? soma(new Date(y, m - 1, FECHA + 1), new Date(y, m, FECHA)) : 0;
-  if (!aberta && !fechada) { $('#cFatura').innerHTML = ''; return; }
-  const dv = VENCE - dia;
-  $('#cFatura').innerHTML = `<div class="card"><h2>Fatura do cartão</h2>
-    ${fechada ? `<div class="alerta ${dv <= 1 ? 'alto' : 'medio'}"><b>Fatura fechada: ${brl(fechada)}</b>. Vence ${dv === 0 ? 'hoje' : dv === 1 ? 'amanhã' : 'dia ' + VENCE + ' (em ' + dv + ' dias)'}.</div>` : ''}
-    <div class="row"><div class="mid"><div class="t">${fechada ? 'Próxima fatura' : 'Fatura aberta'}</div><div class="s">fecha ${ddmm(isoD(fimAb))} · vence ${ddmm(isoD(venceAb))}</div></div><span class="num out">${brl(aberta)}</span></div>
-    <div class="help">Soma as despesas marcadas como "Paguei no cartão".</div></div>`;
+/* Cartão: cada compra cai na fatura que vence dia 16 (fecha dia 11). O que sobra da fatura é pago no vencimento.
+   Adiantamentos abatem as faturas mais antigas primeiro; o que passar fica de crédito. */
+function venceDe(iso){ const [y, m, d] = iso.split('-').map(Number); return isoD(new Date(y, d <= FECHA ? m - 1 : m, VENCE)); }
+function contaCartao(){
+  const h = hoje(), fat = {};
+  S.regs.forEach(r => { if (r.tipo === 'Despesa' && r.cartao) { const v = venceDe(r.data); fat[v] = (fat[v] || 0) + r.valor; } });
+  const adi = S.regs.filter(r => r.tipo === 'Adiantamento').sort((a, b) => a.data < b.data ? -1 : 1);
+  let k = 0, cred = 0; const abertas = [];
+  Object.keys(fat).sort().forEach(v => {
+    while (k < adi.length && adi[k].data <= v) cred += adi[k++].valor;
+    const usa = Math.min(cred, fat[v]); cred -= usa;
+    if (v >= h) abertas.push({ vence: v, total: fat[v], adiantado: usa, falta: fat[v] - usa });
+  });
+  while (k < adi.length) cred += adi[k++].valor;
+  const usado = Math.max(0, abertas.reduce((a, f) => a + f.falta, 0) - cred), lim = S.limiteCartao || 500;
+  return { abertas, cred, usado, lim, livre: lim - usado };
 }
+function faturaInicio(){
+  const c = contaCartao(), h = hoje();
+  const fecha = v => v.slice(0, 8) + String(FECHA).padStart(2, '0');
+  const fechada = c.abertas.find(f => fecha(f.vence) < h), aberta = c.abertas.find(f => fecha(f.vence) >= h);
+  const futuras = c.abertas.filter(f => f !== fechada && f !== aberta).reduce((a, f) => a + f.falta, 0);
+  const det = f => f.adiantado ? ` · já adiantou ${brl(f.adiantado)}` : '';
+  const dv = fechada ? diasAte(fechada.vence) : 0, paga = fechada && fechada.falta < .01;
+  const p = Math.max(0, Math.min(1, c.usado / c.lim));
+  $('#cFatura').innerHTML = `<div class="card"><h2>Fatura do cartão</h2>
+    ${fechada ? `<div class="alerta ${paga ? '' : dv <= 1 ? 'alto' : 'medio'}"><span><b>Fatura fechada: ${paga ? 'paga' : 'falta ' + brl(fechada.falta)}</b>${paga ? '' : '. Vence ' + (dv === 0 ? 'hoje' : dv === 1 ? 'amanhã' : 'dia ' + VENCE + ' (em ' + dv + ' dias)')}.<div class="s">Total ${brl(fechada.total)}${det(fechada)}</div></span></div>` : ''}
+    <div class="row"><div class="mid"><div class="t">${fechada ? 'Próxima fatura' : 'Fatura aberta'}</div><div class="s">${aberta ? `fecha ${ddmm(fecha(aberta.vence))} · vence ${ddmm(aberta.vence)}${det(aberta)}` : 'nenhuma compra ainda'}</div></div><span class="num out">${brl(aberta ? aberta.falta : 0)}</span></div>
+    ${futuras ? `<div class="row"><div class="mid"><div class="t">Parcelas das próximas faturas</div><div class="s">também ocupam o limite</div></div><span class="num out">${brl(futuras)}</span></div>` : ''}
+    ${c.cred >= .01 ? `<div class="row"><div class="mid"><div class="t">Crédito adiantado</div><div class="s">abate as próximas compras</div></div><span class="num in">${brl(c.cred)}</span></div>` : ''}
+    <div style="margin-top:10px"><div class="tipo-conta"><span>Limite livre: <b>${c.livre < 0 ? 'passou ' + brl(-c.livre) : brl(c.livre)}</b> de ${brl(c.lim)}</span><button class="link" id="fatLim">Mudar limite</button></div>
+      <div style="background:var(--track);border-radius:6px;height:10px;overflow:hidden;margin-top:6px" role="img" aria-label="Usado ${Math.round(p * 100)}% do limite"><div style="height:100%;width:${p * 100}%;background:var(--out);border-radius:6px"></div></div></div>
+    <button class="btn ghost" id="fatAdi" style="margin-top:12px">Adiantei a fatura</button>
+    <div class="help">Soma as despesas marcadas como "Paguei no cartão". O que sobrar da fatura, o site considera pago no vencimento.</div></div>`;
+  $('#fatAdi').onclick = () => abrirAdi(false); $('#fatLim').onclick = () => abrirAdi(true);
+}
+function abrirAdi(lim){
+  S.adiLim = lim; $('#adErro').textContent = '';
+  $('#adTit').textContent = lim ? 'Limite do cartão' : 'Adiantei a fatura';
+  $('#adBox').classList.toggle('hide', lim); $('#adLimBox').classList.toggle('hide', !lim);
+  $('#adHelp').textContent = lim ? 'O limite total que o banco dá para o cartão.' : 'Não conta como gasto (as compras já foram lançadas). Só libera o limite e diminui o que falta pagar.';
+  $('#adValor').value = ''; $('#adData').value = hoje();
+  $('#adLim').value = (S.limiteCartao || 500).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  $('#adSalvar').disabled = false; $('#adSalvar').textContent = 'Salvar';
+  $('#dlgAdi').showModal(); (lim ? $('#adLim') : $('#adValor')).focus();
+}
+$('#adFechar').onclick = () => $('#dlgAdi').close();
+$('#adSalvar').onclick = async () => {
+  const v = num((S.adiLim ? $('#adLim') : $('#adValor')).value), data = $('#adData').value;
+  if (!(v > 0)) { $('#adErro').textContent = 'Digite um valor maior que zero.'; return; }
+  if (!S.adiLim && !data) { $('#adErro').textContent = 'Escolha a data.'; return; }
+  const b = $('#adSalvar'); b.disabled = true; b.textContent = 'Salvando...';
+  try {
+    if (S.adiLim) { S.limiteCartao = await api('limiteCartao', v); $('#dlgAdi').close(); toast('Limite salvo'); renderMes(); }
+    else { await api('salvar', { tipo: 'Adiantamento', conta: 'Cartão de crédito', valor: v, data, obs: '' }); $('#dlgAdi').close(); toast('Adiantamento salvo'); await carregar(); }
+  } catch (e) { $('#adErro').textContent = 'Não salvou: ' + e; b.disabled = false; b.textContent = 'Salvar'; }
+};
 /* Salário da família: 80% da média do que entra. Os outros 20% vão para investimento. */
 function salarioInicio(i, t){
   const at = ciclo(hoje()); if (i !== at) { $('#cSalario').innerHTML = ''; return; }
@@ -2355,7 +2410,7 @@ function abrir(id){
   if (String(id).startsWith('fila-')) { toast('Esse registro ainda está esperando internet. Dá para corrigir depois que ele for enviado.'); return; }
   const r = S.regs.find(x => x.id === id); if (!r) return;
   S.editId = id; S.escopo = 'um';
-  $('#eTitulo').textContent = r.tipo === 'Investimento' ? 'Investimento' : r.conta;
+  $('#eTitulo').textContent = r.tipo === 'Investimento' ? 'Investimento' : r.tipo === 'Adiantamento' ? 'Adiantamento do cartão' : r.conta;
   $('#eSub').textContent = `${r.tipo} · ${ddmm(r.data)}${r.forma === 'Fixa' ? ' · Fixa' : r.forma === 'Parcelada' ? ' · parcela ' + r.parcela : ''}`;
   $('#eValor').value = r.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
   $('#eContaBox').classList.toggle('hide', r.tipo !== 'Despesa');
