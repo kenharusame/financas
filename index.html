@@ -347,6 +347,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <div class="mini out"><small>Despesas</small><b id="iDes"></b><span class="var" id="vDes"></span></div>
     <div class="mini inv"><small>Investido</small><b id="iInv"></b><span class="var" id="vInv"></span></div>
   </div>
+  <div id="cFila"></div>
   <div id="cCheck"></div>
   <div class="card" id="cLim"><h2>Limites do mês</h2><div id="iLim"></div></div>
   <div class="card" id="cMetas"><h2>Metas</h2><div id="iMetas"></div></div>
@@ -658,13 +659,22 @@ async function entrarComCodigo(){
 }
 async function carregar(){
   if (NO_GOOGLE && !chave()) { mostraLogin(); return; }
+  let d;
   try {
-    const d = await api('getDados');
+    try { d = await api('getDados'); try { localStorage.setItem('fin_dados', JSON.stringify(d)); } catch (e) {} S.offline = false; }
+    catch (e) {
+      const semRede = /Sem conexão/.test(String(e)) || !navigator.onLine;
+      let c = null; try { c = JSON.parse(localStorage.getItem('fin_dados') || 'null'); } catch (x) {}
+      if (!semRede || !c) throw e;
+      d = c; S.offline = true;
+    }
+    d.registros = d.registros.concat(filaComoRegistros());
     S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
-    renderMes();
+    renderMes(); avisoFila();
+    if (!S.offline) enviaFila();
   } catch (e) { $('#carregando').removeAttribute('aria-busy'); $('#carregando').innerHTML = '<div class="card err">Não deu para carregar: ' + esc(e) + '</div>'; }
 }
 
@@ -1183,6 +1193,40 @@ function comparar(){
   if ($('#compMais')) $('#compMais').onclick = () => { S.compTodas = !S.compTodas; comparar(); };
 }
 
+/* ---------- Sem internet: fila de registros guardada no celular ---------- */
+function lerFila(){ try { return JSON.parse(localStorage.getItem('fin_fila') || '[]'); } catch (e) { return S.filaMem || []; } }
+function gravaFila(f){ S.filaMem = f; try { localStorage.setItem('fin_fila', JSON.stringify(f)); } catch (e) {} }
+function filaComoRegistros(){
+  return lerFila().map((x, k) => ({ id: 'fila-' + k, data: x.r.data, tipo: x.r.tipo, conta: x.r.conta, valor: Number(x.r.valor) || 0,
+    forma: x.r.tipo === 'Despesa' ? (x.r.forma || 'Única') : '', parcela: '', grupo: '', veioDe: x.r.veioDe || '', pct: '', meta: x.r.meta || '',
+    obs: (x.r.obs ? x.r.obs + ' · ' : '') + 'esperando internet' }));
+}
+function enfileira(r){
+  const f = lerFila(); f.push({ r, quando: Date.now() }); gravaFila(f);
+  S.regs = S.regs.filter(x => !String(x.id).startsWith('fila-')).concat(filaComoRegistros()); renderMes(); avisoFila();
+}
+function avisoFila(){
+  const n = lerFila().length;
+  $('#cFila').innerHTML = (S.offline ? '<div class="note aviso" style="margin-bottom:12px">Sem internet: mostrando os dados da última vez que o site abriu.</div>' : '')
+    + (n ? `<div class="note" style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>${n} ${n === 1 ? 'registro esperando' : 'registros esperando'} internet para ir para a planilha.</span><button class="chip" id="filaEnviar" style="min-height:40px">Enviar agora</button></div>` : '');
+  if ($('#filaEnviar')) $('#filaEnviar').onclick = () => enviaFila(true);
+}
+let enviando = false;
+async function enviaFila(avisa){
+  if (enviando) return; const f = lerFila(); if (!f.length) return;
+  enviando = true; let ok = 0;
+  while (lerFila().length) {
+    const item = lerFila()[0];
+    try { await api('salvar', item.r); gravaFila(lerFila().slice(1)); ok++; }
+    catch (e) { if (avisa) toast(/Sem conexão/.test(String(e)) ? 'Ainda sem internet. Tenta de novo depois.' : 'Não enviou: ' + e); break; }
+  }
+  enviando = false;
+  if (ok) { toast(`${ok} ${ok === 1 ? 'registro enviado' : 'registros enviados'} para a planilha`); carregar(); } else avisoFila();
+}
+addEventListener('online', () => { if (chave()) carregar(); });
+setInterval(() => { if (navigator.onLine && lerFila().length) enviaFila(); }, 60000);
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+
 let CH = null;
 function grafico(saldos, atual){
   if (!window.Chart) { $('#iColsWrap').classList.remove('hide'); $('#iChart').parentNode.classList.add('hide'); return; }
@@ -1278,7 +1322,12 @@ $('#aSalvar').onclick = async () => {
     toast(n > 1 ? `Salvo em ${n} meses` : 'Salvo');
     ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = '');
     await carregar(); renderForm();
-  } catch (e) { $('#aErro').textContent = 'Não salvou: ' + e; }
+  } catch (e) {
+    if (/Sem conexão/.test(String(e)) || !navigator.onLine) {
+      enfileira(r); toast('Sem internet: guardado no celular. Envia sozinho quando a conexão voltar.');
+      ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); renderForm();
+    } else $('#aErro').textContent = 'Não salvou: ' + e;
+  }
   b.disabled = false; b.textContent = 'Salvar';
 };
 
@@ -1372,6 +1421,7 @@ function renderHist(){
   ligaLinhas('#hLista');
 }
 function abrir(id){
+  if (String(id).startsWith('fila-')) { toast('Esse registro ainda está esperando internet. Dá para corrigir depois que ele for enviado.'); return; }
   const r = S.regs.find(x => x.id === id); if (!r) return;
   S.editId = id; S.escopo = 'um';
   $('#eTitulo').textContent = r.tipo === 'Investimento' ? 'Investimento' : r.conta;
