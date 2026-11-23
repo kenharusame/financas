@@ -466,7 +466,7 @@ html.pc .toast{bottom:24px}
   <div class="card" id="cPrev"><h2>Previsão</h2><div id="iPrev"></div></div>
   <div id="cFila"></div>
   <div id="cCheck"></div>
-  <div class="card" id="cLim"><h2>Limites do mês</h2><div id="iLim"></div></div>
+  <div class="card" id="cLim"><h2>Orçamento do mês</h2><div id="iLim"></div></div>
   <div class="card" id="cMetas"><h2>Metas</h2><div id="iMetas"></div></div>
   <div class="card futuro" id="cFuturo"><img id="fuImg" alt="Ken e Sam idosos com o filho" width="720" height="520"><h2>Eu do futuro</h2><div id="iFuturo"></div></div>
   <div class="card" id="cFase"><h2>Em que fase estamos</h2><div id="iFase"></div></div>
@@ -705,6 +705,15 @@ html.pc .toast{bottom:24px}
   <button class="btn" id="limSalvar">Salvar limites</button>
   <button class="link" id="limFechar">Cancelar</button>
 </dialog>
+<dialog id="dlgOrc">
+  <h2>Orçamento do mês</h2>
+  <p class="s" style="color:var(--muted);font-size:14px;margin:-6px 0 8px">Em branco = usa a média dos últimos 3 meses. Coloque 0 para não ter orçamento.</p>
+  <div id="orcLista"></div>
+  <div class="err" id="orcErro" role="alert"></div>
+  <button class="btn" id="orcSalvar">Salvar orçamento</button>
+  <button class="link" id="orcMedia">Voltar tudo para a média</button>
+  <button class="link" id="orcFechar">Cancelar</button>
+</dialog>
 <dialog id="dlgAdi">
   <h2 id="adTit">Adiantei a fatura</h2>
   <div id="adBox"><label for="adValor">Quanto pagou</label><input id="adValor" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off">
@@ -755,8 +764,8 @@ html.pc .toast{bottom:24px}
   card('#iContas').after(document.getElementById('cResiste'));
   ini.appendChild(document.getElementById('cFatura'));
   document.getElementById('adicionar').appendChild(document.getElementById('nCard'));
-  poe('relatorios', ['#cLim', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
-  poe('planejar', ['#cFuturo', '#cFase', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cZero']);
+  poe('relatorios', ['#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
+  poe('planejar', ['#cFuturo', '#cFase', '#cLim', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cZero']);
   const rel = document.getElementById('relatorios'), rv = document.getElementById('cRevisao'); rel.insertBefore(rv, rel.querySelector('header').nextSibling);
   [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo') && !el.querySelector('#iContas')) el.classList.add('hide'); });
 })();
@@ -766,8 +775,8 @@ html.pc .toast{bottom:24px}
   const el = sel => { const e = document.querySelector(sel); return e && (e.closest('.card') || e); };
   const P = {
     inicio:     { topo: ['.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#iHero', '#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
-    relatorios: { main: ['#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cLim', '#cPrev', '#cPat'] },
-    planejar:   { main: ['#cMetas', '#cFase', '#cDesejos', '#cAnual', '#iParc'], side: ['#cFuturo', '#cMesada', '#cGuia', '#cZero'] },
+    relatorios: { main: ['#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cPrev', '#cPat'] },
+    planejar:   { main: ['#cLim', '#cMetas', '#cFase', '#cDesejos', '#cAnual', '#iParc'], side: ['#cFuturo', '#cMesada', '#cGuia', '#cZero'] },
     historico:  { main: ['#hLista'], side: ['#historico .busca', '#hModo', '#hFiltro', '#hCal'] }
   };
   const orig = {};
@@ -851,6 +860,7 @@ const FAKE = (() => {
       { nome: 'Ração para gatos 3kg', valor: 68.9, conta: 'Higiene e Alimentação - Gatas' }, { nome: 'Banana prata', valor: 15.0, conta: 'Mercado' } ] }),
     salvarNota: n => { const g = {}; n.itens.forEach(i => g[i.conta] = (g[i.conta] || 0) + i.valor); Object.entries(g).forEach(([c, v]) => add(n.data, 'Despesa', c, Math.round(v * 100) / 100, { obs: n.loja })); return { registros: Object.keys(g).length, itens: n.itens.length }; },
     limiteCartao: v => (dados.limiteCartao = Number(v)),
+    salvarOrcamento: m => { dados.orcamento = {}; Object.keys(m).forEach(k => { if (m[k] !== '' && m[k] != null && Number(m[k]) >= 0) dados.orcamento[k] = Number(m[k]); }); return JSON.parse(JSON.stringify(dados.orcamento)); },
     definirLimites: m => { Object.keys(m).forEach(c => { if (Number(m[c]) > 0) dados.limites[c] = Number(m[c]); else delete dados.limites[c]; }); return JSON.parse(JSON.stringify(dados.limites)); },
     interpretar: x => ({ tipo: 'Despesa', valor: 45, conta: 'Cartão de crédito', forma: 'Única', vezes: 1, valorEhTotal: true, data: '2026-11-22', obs: 'pix', meta: '', duvida: '' }),
     salvarAnual: a => { dados.anuais = (dados.anuais || []).filter(x => x.nome !== (a.nomeAntigo || a.nome)).concat([{ nome: a.nome, valor: Number(a.valor), mes: Number(a.mes), dia: Number(a.dia) || 1 }]); return JSON.parse(JSON.stringify(dados.anuais)); },
@@ -936,7 +946,7 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.limiteCartao = d.limiteCartao || 500; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.orc = d.orcamento || {}; S.limiteCartao = d.limiteCartao || 500; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -1288,16 +1298,42 @@ function limEfetivo(c, i){
   for (let k = 0; k < i; k++) sobra = Math.max(0, base + sobra - gastoConta(c, k));
   return base + sobra;
 }
+/* ---------- Orçamento por tipo de conta: começa com a média dos últimos 3 meses, a família pode mudar ---------- */
+const TIPO_FORA = ['Cartão/Carteira'];
+function gastoTipo(tp, i){ return S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === i && tipoDe(r.conta) === tp).reduce((a, r) => a + r.valor, 0); }
+function mesesBase(){ const at = ciclo(hoje()); return [1, 2, 3].map(d => at - d).filter(k => k >= 0 && totais(k).Despesa > 0); }
+function mediaTipo(tp){ const ks = mesesBase(); return ks.length ? ks.reduce((a, k) => a + gastoTipo(tp, k), 0) / ks.length : 0; }
+function salarioFamilia(){ const at = ciclo(hoje()), ks = [1, 2, 3].map(d => at - d).filter(k => k >= 0 && totais(k).Entrada > 0), b = ks.length ? ks : [at];
+  return b.reduce((a, k) => a + totais(k).Entrada, 0) / b.length * (1 - GUARDAR); }
+function orcLinhas(i){ const o = S.orc || {};
+  return listaTipos().filter(n => !TIPO_FORA.includes(n)).map(n => { const salvo = o[n] != null, v = salvo ? o[n] : Math.round(mediaTipo(n)); return { n, v, salvo, g: gastoTipo(n, i) }; })
+    .filter(x => x.v > 0 || x.g > 0); }
 function limitesInicio(i){
-  const L = Object.entries(S.limites || {}).map(([c, b]) => ({ c, b, l: limEfetivo(c, i), g: gastoConta(c, i) })).sort((a, b) => b.g / b.l - a.g / a.l);
-  $('#iLim').innerHTML = !L.length
-    ? '<div class="empty">Combinem um teto por mês para as contas que querem controlar (Mercado, Diversão...).<button class="btn" id="limAbrir">Definir limites</button></div>'
-    : L.map(({ c, b, l, g }) => { const p = g / l, k = nivelLim(p);
-        return `<div class="lim"><div class="lim-top"><span class="t">${esc(c)}</span><span class="gasto-tag ${k}">${k === 'alto' ? 'Passou ' + brl(g - l) : k === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
-          <div class="gasto-bar" role="progressbar" aria-label="${esc(c)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p * 100)}"><i class="${k}" style="width:${Math.min(100, p * 100)}%"></i></div>
-          <div class="lim-num"><span>${brl(g)} de ${brl(l)}${l > b ? ' <small class="sobra">(+' + brl0(l - b) + ' de sobra)</small>' : ''}</span><b>${Math.round(p * 100)}%</b></div></div>`; }).join('') + '<button class="link" id="limAbrir">Editar limites</button>';
-  $('#limAbrir').onclick = abrirLimites;
+  const L = orcLinhas(i).sort((a, b) => (b.v ? b.g / b.v : -1) - (a.v ? a.g / a.v : -1));
+  if (!L.length) { $('#iLim').innerHTML = '<div class="empty">Quando tiver gastos lançados, o orçamento aparece aqui com a média de cada tipo.<button class="btn" id="limAbrir">Montar orçamento</button></div>'; $('#limAbrir').onclick = abrirOrc; return; }
+  const tot = L.reduce((a, x) => a + x.v, 0), gt = L.reduce((a, x) => a + x.g, 0), sal = salarioFamilia(), dif = sal - tot;
+  $('#iLim').innerHTML = `<p class="fase-txt">Orçamento total: <b>${brl0(tot)}</b> (gasto até agora ${brl0(gt)}). Salário da família: ${brl0(sal)}. ${dif >= 0 ? 'Sobram <b>' + brl0(dif) + '</b>.' : '<b style="color:var(--out)">Faltam ' + brl0(-dif) + '</b>: o orçamento passa do salário.'}</p>`
+    + L.map(({ n, v, salvo, g }) => { const p = v ? g / v : 0, k = nivelLim(p);
+        return `<div class="lim"><div class="lim-top"><span class="t">${esc(n)}${salvo || !v ? '' : ' <small class="sobra">(média)</small>'}</span><span class="gasto-tag ${v ? k : ''}">${!v ? 'Sem orçamento' : k === 'alto' ? 'Passou ' + brl(g - v) : k === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
+          <div class="gasto-bar" role="progressbar" aria-label="${esc(n)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(Math.min(p, 1) * 100)}"><i class="${k}" style="width:${Math.min(100, p * 100)}%"></i></div>
+          <div class="lim-num"><span>${brl(g)}${v ? " de " + brl(v) : " gasto"}</span><b>${v ? Math.round(p * 100) + '%' : ''}</b></div></div>`; }).join('') + '<button class="link" id="limAbrir">Editar orçamento</button>';
+  $('#limAbrir').onclick = abrirOrc;
 }
+function abrirOrc(){
+  $('#orcErro').textContent = ''; const o = S.orc || {};
+  $('#orcLista').innerHTML = listaTipos().filter(n => !TIPO_FORA.includes(n)).map((n, k) => { const m = Math.round(mediaTipo(n));
+    return `<div class="lim-ed"><label for="orc${k}">${esc(n)} <small class="sobra">média ${brl0(m)}</small></label><input id="orc${k}" data-tipo="${esc(n)}" inputmode="decimal" placeholder="${m ? m.toLocaleString('pt-BR') : 'Sem orçamento'}" value="${o[n] != null ? o[n].toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}"></div>`; }).join('');
+  $('#dlgOrc').showModal();
+}
+$('#orcFechar').onclick = () => $('#dlgOrc').close();
+$('#orcMedia').onclick = () => $$('#orcLista input').forEach(x => x.value = '');
+$('#orcSalvar').onclick = async () => {
+  const m = {}; $$('#orcLista input').forEach(x => { if (x.value.trim() !== '') m[x.dataset.tipo] = num(x.value); });
+  const b = $('#orcSalvar'); b.disabled = true; b.textContent = 'Salvando...';
+  try { S.orc = await api('salvarOrcamento', m); $('#dlgOrc').close(); toast('Orçamento salvo'); renderMes(); }
+  catch (e) { $('#orcErro').textContent = 'Não salvou: ' + e; }
+  b.disabled = false; b.textContent = 'Salvar orçamento';
+};
 function abrirLimites(){
   $('#limErro').textContent = '';
   $('#limLista').innerHTML = S.contas.map((c, k) => `<div class="lim-ed"><label for="lim${k}">${esc(c)}</label><input id="lim${k}" data-conta="${esc(c)}" inputmode="decimal" placeholder="Sem limite" value="${S.limites[c] ? S.limites[c].toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}">
@@ -1394,8 +1430,9 @@ function acaoInicio(i, t){
   // Alertas: limite andando mais rápido que o mês + compras esperando 24h
   const ini = inicioCiclo(i), total = (p.fim - ini) / 864e5 + 1, passou = atual ? Math.min(1, Math.max(0, (agora - ini) / 864e5 / total)) : 1;
   const al = Object.keys(S.limites || {}).map(c => { const l = limEfetivo(c, i), g = gastoConta(c, i); return { c, l, g, p: l ? g / l : 0 }; })
+    .concat(orcLinhas(i).map(x => ({ c: x.n, l: x.v, g: x.g, p: x.v ? x.g / x.v : 0 })))
     .filter(x => x.l && (x.p >= 1 || (atual && x.p >= .5 && x.p - passou >= .3))).sort((a, b) => b.p - a.p).slice(0, 3)
-    .map(x => x.p >= 1 ? `<div class="alerta alto"><b>${esc(x.c)}</b> ${x.g - x.l >= 1 ? 'passou do limite em ' + brl0(x.g - x.l) : 'chegou no limite'}.</div>`
+    .map(x => x.p >= 1 ? `<div class="alerta alto"><b>${esc(x.c)}</b> ${x.g - x.l >= 1 ? 'passou do orçamento em ' + brl0(x.g - x.l) : 'chegou no orçamento'}.</div>`
       : `<div class="alerta medio"><b>${esc(x.c)}</b> já em ${Math.round(x.p * 100)}% e faltam ${dias} ${dias === 1 ? 'dia' : 'dias'}.</div>`);
   const rev = assinaturaParaRever();
   if (rev) al.push(`<div class="alerta pensa"><span>Usaram <b>${esc(rev.conta)}</b> (${brl0(rev.valor)}/mês) nos últimos 30 dias?</span><span style="display:flex;gap:6px"><button class="chip acao" data-rev="1" data-c="${esc(rev.conta)}">Manter</button><button class="chip acao" data-rev="0" data-c="${esc(rev.conta)}" data-v="${rev.valor}">Cancelar</button></span></div>`);
