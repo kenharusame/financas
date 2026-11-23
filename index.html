@@ -411,6 +411,7 @@ img.foto-meta.mini{width:24px;height:24px}
 nav button{position:relative} nav button.pendente::after{content:'';position:absolute;top:5px;right:calc(50% - 20px);width:10px;height:10px;border-radius:50%;background:rgba(255,172,64,.55);border:0;box-shadow:none;animation:pisca 2.6s ease-in-out infinite}
 @keyframes pisca{0%,100%{opacity:.75}50%{opacity:.2}} @media (prefers-reduced-motion:reduce){nav button.pendente::after{animation:none}}
 .cmp-d.inv{color:var(--inv)}
+.sal-res{margin-top:12px;padding:12px;border-radius:14px;background:rgba(155,135,245,.08);display:grid;gap:8px} .sal-res>div:first-child{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap} .sal-res span{color:var(--muted);font-size:13px}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -1380,14 +1381,14 @@ function acaoInicio(i, t){
 
   // Planejado para guardar no mês: o que as metas pedem + 5% das entradas
   const ex = entradaExtra(i), plano = Math.max(ativas().reduce((a, x) => a + mensalMeta(x), 0), t.Entrada * GUARDAR) + ex / 2;
-  $('#iInvPlan').innerHTML = plano > 0 ? `<i style="width:${Math.min(100, t.Investimento / plano * 100)}%"></i><span>${Math.round(t.Investimento / plano * 100)}% do plano (${brl0(plano)})</span>` : '';
+  $('#iInvPlan').innerHTML = '' && plano > 0 ? `<i style="width:${Math.min(100, t.Investimento / plano * 100)}%"></i><span>${Math.round(t.Investimento / plano * 100)}% do plano (${brl0(plano)})</span>` : '';
 
   // Pague-se primeiro / fim do mês
   const p = periodo(i), dias = Math.ceil((p.fim - agora) / 864e5), falta = plano - t.Investimento, nomeM = m ? m.nome : '';
   let pg = '';
   if (atual && dias <= 5 && t.saldo > 0) pg = `<div class="card pague"><div class="sem-txt">Sobram <b>${brl0(t.saldo)}</b> e o mês acaba em ${dias} ${dias === 1 ? 'dia' : 'dias'}. ${nomeM ? 'Mandar para a meta ' + esc(nomeM) + '?' : 'Guardar como investimento?'}</div>${btn('pgBtn', 'Mandar agora')}</div>`;
   else if (atual && t.Entrada > 0 && falta > 1 && t.Despesa / t.Entrada < .8 && t.saldo > falta * 2) pg = `<div class="card pague"><div class="sem-txt">Entrou <b>${brl0(t.Entrada)}</b>${ex > 0 ? ' (' + brl0(ex) + ' a mais que o normal: a metade disso já está na conta)' : ''}. Separar <b>${brl0(falta)}</b> para metas e investimento antes de gastar?</div>${btn('pgBtn', 'Separar agora')}</div>`;
-  $('#cPague').innerHTML = pg;
+  $('#cPague').innerHTML = ''; pg = '';
   if ($('#pgBtn')) $('#pgBtn').onclick = () => guardarPara(nomeM, dias <= 5 && t.saldo > 0 ? t.saldo : falta);
 
   // Alertas: limite andando mais rápido que o mês + compras esperando 24h
@@ -1400,10 +1401,10 @@ function acaoInicio(i, t){
   if (rev) al.push(`<div class="alerta pensa"><span>Usaram <b>${esc(rev.conta)}</b> (${brl0(rev.valor)}/mês) nos últimos 30 dias?</span><span style="display:flex;gap:6px"><button class="chip acao" data-rev="1" data-c="${esc(rev.conta)}">Manter</button><button class="chip acao" data-rev="0" data-c="${esc(rev.conta)}" data-v="${rev.valor}">Cancelar</button></span></div>`);
   const prontas = lerPensando().filter(x => Date.now() - x.quando >= 864e5);
   prontas.slice(0, 2).forEach(x => al.push(`<div class="alerta pensa"><span>Ainda querem <b>${esc(x.oque)}</b> (${brl0(x.valor)})? Já passaram 24h.</span><button class="chip acao" data-pensa="${x.quando}">Decidir</button></div>`));
-  $('#cAlertas').innerHTML = al.length ? `<div class="card"><h2>Atenção</h2>${al.join('')}</div>` : '';
-  $$('#cAlertas [data-rev]').forEach(b => b.onclick = () => { const r = lsLe('fin_revAssin', {}); r[b.dataset.c] = Date.now(); lsGrava('fin_revAssin', r);
+  $('#cAlertas').innerHTML = ''; S.alertasHtml = al.join('');
+  const ligaAlertas = () => { $$('#cResumo [data-rev]').forEach(b => b.onclick = () => { const r = lsLe('fin_revAssin', {}); r[b.dataset.c] = Date.now(); lsGrava('fin_revAssin', r);
     if (b.dataset.rev === '0') toast('Cancelem no site ou app de ' + b.dataset.c + '. Economia de ' + brl0(+b.dataset.v * 12) + ' por ano.'); acaoInicio(i, t); });
-  $$('#cAlertas [data-pensa]').forEach(b => b.onclick = () => decidirPensando(+b.dataset.pensa));
+  $$('#cResumo [data-pensa]').forEach(b => b.onclick = () => decidirPensando(+b.dataset.pensa)); };
 
   // Comparação em uma linha: mesmo ponto do mês x média dos 3 anteriores + regra do guia
   const ate = k => { const i0 = inicioCiclo(k), lim = atual ? (agora - ini) : Infinity;
@@ -1421,7 +1422,7 @@ function acaoInicio(i, t){
     if (pc > 0) linhas.push(`<div class="cmp1 ${pa != null && pc > pa + .02 ? 'ruim' : 'bom'}"><b>${Math.round(pc * 100)}%</b> das despesas foram no cartão ou parceladas${pa != null ? ' (mês anterior: ' + Math.round(pa * 100) + '%)' : ''}. No cartão a gente sente menos o gasto.</div>`); }
   if (t.Despesa) { const sp = k => S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === k && superfluo(r.conta)).reduce((a, r) => a + r.valor, 0), v = sp(i);
     if (v > 0 && Math.abs(v - vPior) > 1) linhas.push(`<div class="cmp1 ${v / t.Despesa > .15 ? 'ruim' : 'bom'}"><b>${brl0(v)}</b> (${Math.round(v / t.Despesa * 100)}%) foram em coisas supérfluas.</div>`); }
-  $('#cResumo').innerHTML = linhas.length ? `<div class="card"><h2>Como estamos</h2>${linhas.join('')}<button class="link" data-ir="relatorios">Ver comparação completa</button></div>` : '';
+  $('#cResumo').innerHTML = linhas.length || S.alertasHtml ? `<div class="card"><h2>Como estamos</h2>${S.alertasHtml || ''}${linhas.join('')}<button class="link" data-ir="relatorios">Ver comparação completa</button></div>` : ''; ligaAlertas();
 }
 
 function entradaExtra(i){
@@ -1622,14 +1623,30 @@ function salarioInicio(i, t){
   const ks = [1, 2, 3].map(d => at - d).filter(k => k >= 0 && totais(k).Entrada > 0), base = ks.length ? ks : (t.Entrada ? [at] : []);
   if (!base.length) { $('#cSalario').innerHTML = ''; return; }
   const media = base.reduce((a, k) => a + totais(k).Entrada, 0) / base.length, sal = media * (1 - GUARDAR);
-  const gastoMed = ks.length ? ks.reduce((a, k) => a + totais(k).Despesa, 0) / ks.length : 0, guardar = t.Entrada * GUARDAR;
+  const gastoMed = ks.length ? ks.reduce((a, k) => a + totais(k).Despesa, 0) / ks.length : 0;
   const sobra = sal - t.Despesa, pg = Math.min(1, t.Despesa / sal);
+  // investir 20% do que entrou; a reserva vem antes das outras metas
+  const guardar = t.Entrada * GUARDAR, falta = Math.max(0, guardar - t.Investimento);
+  const res = (S.metas || []).find(ehReserva), D = degraus(), gRes = res ? progressoMeta(res).guardado : 0;
+  const alvoRes = res ? res.alvo : D[0], destino = !res || gRes < D[2] ? res : metaDaSemana();
+  const p = periodo(i), dias = Math.ceil((p.fim - new Date()) / 864e5), fimMes = dias <= 5 && t.saldo > falta + 1;
+  const mandar = fimMes ? t.saldo : falta;
+  let inv = '';
+  if (!res) inv = `<div class="alerta medio" style="margin-top:10px">Vocês ainda não têm reserva de emergência. Ela é o primeiro destino dos 20%: protege a família se a renda das redes cair.</div><button class="btn" id="salCriaRes" style="margin-top:8px">Criar reserva de ${brl0(D[0])}</button>`;
+  else if (mandar > 1) inv = `<div class="sal-res"><div><b>${fimMes ? 'Sobram ' + brl0(t.saldo) + ' e o mês acaba em ' + dias + (dias === 1 ? ' dia' : ' dias') : 'Mandar ' + brl0(mandar)} para ${destino ? esc(destino.nome) : 'investimento'}</b>
+      ${destino === res ? `<span>Reserva: ${brl0(gRes)} de ${brl0(alvoRes)}</span>` : ''}</div>${destino === res ? `<div class="gasto-bar meta-bar"><i style="width:${Math.max(2, Math.min(100, gRes / alvoRes * 100))}%"></i></div>` : ''}
+      <button class="btn" id="salSepara">${fimMes ? 'Mandar agora' : 'Separar agora'}</button></div>`;
+  else inv = `<div class="cmp1 bom" style="margin-top:10px">Os 20% deste mês já foram investidos. ${res && gRes < alvoRes ? 'Reserva: ' + brl0(gRes) + ' de ' + brl0(alvoRes) + '.' : ''}</div>`;
   $('#cSalario').innerHTML = `<div class="card"><h2>Salário da família</h2>
-    <p class="fase-txt">Vocês podem gastar até <b>${brl0(sal)} por mês</b>. É 80% da média do que entra${ks.length ? ' nos últimos ' + (ks.length > 1 ? ks.length + ' meses' : 'mês') : ' (só este mês por enquanto)'}. Os outros 20% são para investir.</p>
+    <p class="fase-txt">Vocês podem gastar até <b>${brl0(sal)} por mês</b> (80% da média do que entra${ks.length ? '' : ', só este mês por enquanto'}). Os outros 20% vão para investir.</p>
     <div class="gasto-bar" role="progressbar" aria-label="Quanto do salário já foi gasto" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pg * 100)}"><i class="${pg >= 1 ? 'alto' : pg >= .8 ? 'medio' : 'ok'}" style="width:${pg * 100}%"></i></div>
     <div class="res-grid" style="margin-top:10px"><div><small>${sobra >= 0 ? 'Ainda dá para gastar' : 'Passou do salário'}</small><b style="${sobra < 0 ? 'color:var(--out)' : ''}">${brl0(Math.abs(sobra))}</b><span>gasto até agora: ${brl0(t.Despesa)}</span></div>
-    <div><small>Investir este mês</small><b>${brl0(guardar)}</b><span>${t.Investimento >= guardar && guardar ? 'Feito!' : 'já foi ' + brl0(t.Investimento)}</span></div></div>
+    <div><small>Investir este mês (20%)</small><b style="color:var(--inv)">${brl0(guardar)}</b><span>já foi ${brl0(t.Investimento)}</span></div></div>
+    ${inv}
     ${gastoMed > sal ? `<div class="alerta medio" style="margin-top:10px">Na média, vocês gastam ${brl0(gastoMed)} por mês, mais que o salário. Para guardar os 20%, precisam cortar ${brl0(gastoMed - sal)}.</div>` : ''}</div>`;
+  if ($('#salSepara')) $('#salSepara').onclick = () => guardarPara(destino ? destino.nome : '', mandar);
+  if ($('#salCriaRes')) $('#salCriaRes').onclick = async () => { const b = $('#salCriaRes'); b.disabled = true; b.textContent = 'Criando...';
+    try { S.metas = await api('salvarMeta', { nome: 'Reserva de emergência', alvo: D[0], prazo: '', inicial: 0 }); toast('Reserva criada'); renderMes(); } catch (e) { toast('Não criou: ' + e); b.disabled = false; } };
 }
 function passosInicio(i, t){
   if (lsLe('fin_passosOk', '')) { $('#cPassos').innerHTML = ''; return; }
