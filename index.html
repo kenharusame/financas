@@ -388,6 +388,9 @@ img.foto-meta.mini{width:24px;height:24px}
 .futuro{overflow:hidden;padding-top:0} .futuro img{display:block;width:calc(100% + 40px);max-width:none;height:auto;margin:0 -20px 4px;aspect-ratio:720/520;object-fit:contain;object-position:bottom;background:linear-gradient(180deg,rgba(108,195,206,.10),transparent)}
 .fu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px} .fu-grid div{background:rgba(255,255,255,.04);border-radius:14px;padding:10px} .fu-grid small{display:block;color:var(--muted);font-size:12px;font-weight:700} .fu-grid b{display:block;font-family:Outfit,system-ui,sans-serif;font-size:17px;color:var(--in);font-variant-numeric:tabular-nums} .fu-grid span{display:block;font-size:11px;color:var(--muted)}
 .saldo .dia{margin-top:6px;font-size:14px;color:var(--muted)} .saldo .dia b{color:var(--text,#fff)} .saldo .dia.ruim b{color:var(--warn)}
+.pagto{border:1px solid rgba(108,195,206,.35)} .pg-top{display:flex;gap:12px;align-items:center;margin-bottom:10px} .pg-top b{font-size:16px} .pg-top .s{color:var(--muted);font-size:13px}
+.pg-linha{display:flex;gap:8px} .pg-linha input{flex:1;min-width:0} .pg-linha .btn{flex:0 0 auto;width:auto;padding:0 18px}
+.chip-ico{width:16px;height:16px;vertical-align:-3px;margin-right:5px}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -409,6 +412,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <div class="mini out"><small>Despesas</small><b id="iDes"></b><span class="var" id="vDes"></span></div>
     <div class="mini inv"><small>Investido</small><b id="iInv"></b><span class="var" id="vInv"></span><div class="inv-plan" id="iInvPlan"></div></div>
   </div>
+  <div id="cPagto"></div>
   <div id="cPassos"></div>
   <div id="cSemana"></div>
   <div id="cPague"></div>
@@ -837,7 +841,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); passosInicio(i, t); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); passosInicio(i, t); pagtoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -870,6 +874,9 @@ function renderInicio(){
 
 const CORES = ['#17A398', '#5B8DEF', '#B98A2E', '#8A72D4', '#C9607A', '#5B6474']; // validadas para daltonismo no fundo escuro; cinza = Outras
 const ICONES = {
+  tiktok: '<path d="M14 4v10.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 4c.4 2.6 2.2 4.3 5 4.5"/>',
+  youtube: '<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/>',
+  facebook: '<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15.5 8H14a2 2 0 0 0-2 2v11"/><path d="M9.5 13h5"/>',
   casa: '<path d="M3 11l9-8 9 8M5 9.5V20h5v-6h4v6h5V9.5"/>',
   celular: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
   cama: '<path d="M3 18V7M3 13h18v5M21 13a3 3 0 0 0-3-3h-7v3M7 10.5h.01"/>',
@@ -1064,8 +1071,9 @@ function mini(contas){
 }
 ICONES.entrada = '<path d="M12 3v11M7.5 9.5 12 14l4.5-4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>';
 ICONES.porquinho = '<path d="M19 10.5c0-3.6-3.1-6-7-6-1.4 0-2.7.3-3.8.9L6 4v3.2A5.6 5.6 0 0 0 4.3 10H3v4h1.6c.6 1.2 1.6 2.2 2.9 2.9V20h3v-2h3v2h3v-3.3c1.5-1.1 2.5-2.8 2.5-4.7z"/><path d="M15.5 9.5h.01"/>';
+const icoRede = n => { const x = semAcento(String(n || '')); return /tiktok/.test(x) ? ICONES.tiktok : /youtube/.test(x) ? ICONES.youtube : /facebook/.test(x) ? ICONES.facebook : ''; };
 function icoReg(r){ const k = r.tipo === 'Entrada' ? 'in' : r.tipo === 'Despesa' ? 'out' : 'inv';
-  const d = r.tipo === 'Entrada' ? ICONES.entrada : r.tipo === 'Investimento' ? ICONES.porquinho : iconeDe(r.conta);
+  const d = r.tipo === 'Entrada' ? (icoRede(r.conta) || ICONES.entrada) : r.tipo === 'Investimento' ? ICONES.porquinho : iconeDe(r.conta);
   return `<span class="ico ${k}" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg></span>`; }
 function linhaReg(r, comTag){
   const tag = !comTag ? '' : r.forma === 'Fixa' ? '<span class="tag fixa">Fixa</span>' : r.forma === 'Parcelada' ? `<span class="tag parc">${esc(r.parcela.replace('/', ' de '))}</span>` : '';
@@ -1301,6 +1309,26 @@ function assinaturaParaRever(){
     if (grupoDe(r.conta) === 'Custos fixos' || /mesada|mercado|cartao/.test(semAcento(r.conta))) return;
     const ch = r.conta + '|' + Math.round(r.valor); (cont[ch] = cont[ch] || { conta: r.conta, valor: r.valor, meses: new Set() }).meses.add(k); });
   return Object.values(cont).filter(x => x.meses.size >= 3 && !(Date.now() - (rev[x.conta] || 0) < 90 * 864e5)).sort((a, b) => b.valor - a.valor)[0] || null;
+}
+const PAGTOS = [{ dia: 15, nome: 'TikTok' }, { dia: 23, nome: 'YouTube' }, { dia: 26, nome: 'Facebook' }];
+function pagtoInicio(){
+  const box = $('#cPagto'), hj = new Date(), dHoje = hoje(), ad = lsLe('fin_pagtoAdia', {});
+  const pend = PAGTOS.map(x => { // do dia do pagamento até 4 dias depois, se ainda não registrado
+    const d0 = new Date(hj.getFullYear(), hj.getMonth(), x.dia), atraso = Math.round((new Date(hj.getFullYear(), hj.getMonth(), hj.getDate()) - d0) / 864e5);
+    const nome = (S.origens || []).find(o => semAcento(o) === semAcento(x.nome)) || x.nome;
+    const iso0 = `${d0.getFullYear()}-${String(d0.getMonth() + 1).padStart(2, '0')}-${String(d0.getDate()).padStart(2, '0')}`;
+    const ja = S.regs.some(r => r.tipo === 'Entrada' && semAcento(r.conta) === semAcento(nome) && r.data >= iso0);
+    return { ...x, nome, atraso, ok: atraso >= 0 && atraso <= 4 && !ja && ad[nome] !== dHoje }; }).filter(x => x.ok);
+  if (!pend.length) { box.innerHTML = ''; return; }
+  box.innerHTML = pend.map(x => `<div class="card pagto"><div class="pg-top"><span class="ico in" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icoRede(x.nome)}</svg></span>
+      <div><b>O pagamento do ${esc(x.nome)} caiu?</b><div class="s">${x.atraso === 0 ? 'Hoje é dia ' + x.dia : 'Era para o dia ' + x.dia}</div></div></div>
+      <div class="pg-linha"><input class="money" inputmode="decimal" placeholder="Quanto caiu? R$ 0,00" aria-label="Quanto caiu do ${esc(x.nome)}" data-pv="${esc(x.nome)}">
+      <button class="btn" data-pok="${esc(x.nome)}">Caiu</button></div>
+      <button class="link" data-pnao="${esc(x.nome)}">Ainda não caiu</button></div>`).join('');
+  $$('#cPagto [data-pok]').forEach(b => b.onclick = () => { const n = b.dataset.pok, v = $(`#cPagto [data-pv="${n}"]`).value;
+    S.tipo = 'Entrada'; S.origem = n; ir('adicionar'); renderForm();
+    $('#aValor').value = v; $('#aValor').dispatchEvent(new Event('input')); $('#aValor').focus(); toast('Confira e toque em Salvar'); });
+  $$('#cPagto [data-pnao]').forEach(b => b.onclick = () => { const a = lsLe('fin_pagtoAdia', {}); a[b.dataset.pnao] = dHoje; lsGrava('fin_pagtoAdia', a); pagtoInicio(); });
 }
 function passosInicio(i, t){
   if (lsLe('fin_passosOk', '')) { $('#cPassos').innerHTML = ''; return; }
@@ -1892,7 +1920,7 @@ function renderForm(){
   $('#f-in').classList.toggle('hide', tp !== 'Entrada'); $('#f-out').classList.toggle('hide', tp !== 'Despesa'); $('#f-inv').classList.toggle('hide', tp !== 'Investimento');
   $('#f-valor').classList.toggle('hide', tp === 'Investimento');
   if (!S.origem || !S.origens.includes(S.origem)) S.origem = S.origens[0];
-  $('#aOrigens').innerHTML = S.origens.map(o => `<button class="chip" data-v="${esc(o)}">${esc(o)}</button>`).join('') + '<button class="chip add" id="aNovaOrigem">+ Nova</button>';
+  $('#aOrigens').innerHTML = S.origens.map(o => `<button class="chip" data-v="${esc(o)}">${icoRede(o) ? `<svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icoRede(o)}</svg>` : ''}${esc(o)}</button>`).join('') + '<button class="chip add" id="aNovaOrigem">+ Nova</button>';
   chipGroup('#aOrigens', S.origem, v => { S.origem = v; renderForm(); });
   $('#aNovaOrigem').onclick = async () => { const n = prompt('Nome da nova origem:'); if (!n) return; try { const nome = await api('addLista', 'origem', n); if (!S.origens.includes(nome)) S.origens.push(nome); S.origem = nome; renderForm(); } catch (e) { toast(e); } };
   const contaAtual = $('#aConta').value && $('#aConta').value !== '__nova' ? $('#aConta').value : S.contas[0];
