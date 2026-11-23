@@ -339,7 +339,7 @@ input,select{background:rgba(12,18,27,.5);border:1px solid rgba(255,255,255,.05)
 .pat-top .var.bom{color:var(--in)} .pat-top .var.ruim{color:var(--out)}
 .pat-ed{display:grid;grid-template-columns:1fr 82px 104px;gap:6px;margin-bottom:8px}
 .pat-ed input,.pat-ed select{min-height:44px;font-size:15px;padding:8px 10px}
-.prev-l{grid-template-columns:1fr 100px 110px}
+.prev-l{grid-template-columns:minmax(0,1fr) auto;row-gap:2px} .prev-l>span:first-child{grid-column:1/-1;font-weight:700} .prev-l>span:nth-child(2){color:var(--muted);text-align:left}
 .fluxo{display:block;width:100%;overflow:visible;margin-top:6px}
 .fl-n{font-size:12px;font-weight:700;fill:var(--text)} .fl-n.forte{fill:var(--in)} .fl-n.falta{fill:var(--out)} .fl-v{font-size:10.5px;fill:var(--muted);font-variant-numeric:tabular-nums}
 .fl-cab{font-size:9px;font-weight:700;letter-spacing:.08em;fill:var(--muted)}
