@@ -963,14 +963,15 @@ function renderInicio(){
   // saldo = dinheiro na conta: compras no cartão só saem no vencimento da fatura (fecha dia 11, vence dia 16)
   const venc = d => { const [y, m, dd] = d.split('-').map(Number); return isoD(new Date(y, dd <= FECHA ? m - 1 : m, VENCE)); };
   const naFatura = S.regs.filter(r => r.tipo === 'Despesa' && r.cartao && ciclo(r.data) === i && venc(r.data) > hoje()).reduce((a, r) => a + r.valor, 0);
-  const saldo = t.saldo + naFatura;
+  // o adiantamento da fatura já saiu da conta: sai do saldo e abate do que falta pagar na fatura
+  const adi = t.Adiantamento || 0, saldo = t.saldo + naFatura - adi, faltaFat = Math.max(0, naFatura - adi);
   $('#iSaldo').textContent = brl(saldo); $('#iSaldo').classList.toggle('neg', saldo < 0); $('#iFalta').textContent = 'Faltou ' + brl(-saldo); $('#iFalta').classList.toggle('hide', saldo >= 0);
-  $('#iNaFatura').innerHTML = naFatura > 0 ? `Já comprometido na fatura do cartão: <b>${brl(naFatura)}</b>` : '';
+  $('#iNaFatura').innerHTML = faltaFat > 0 ? `Já comprometido na fatura do cartão: <b>${brl(faltaFat)}</b>` : '';
   let sub = p.txt; const dias = Math.ceil((p.fim - new Date()) / 864e5);
   if (ciclo(hoje()) === i && dias >= 0) sub += ' · faltam ' + dias + (dias === 1 ? ' dia' : ' dias');
   $('#iPeriodo').textContent = sub;
-  { const el = $('#iDia'); if (ciclo(hoje()) === i && dias > 0 && t.Entrada > 0) { const pd = Math.max(0, saldo - naFatura) / dias;
-      el.innerHTML = saldo - naFatura > 0 ? `Dá para gastar <b>${brl(pd)} por dia</b> até o dia 14` : '<b>Sem folga:</b> qualquer gasto agora sai do vermelho'; el.className = 'dia' + (pd < 20 ? ' ruim' : ''); }
+  { const el = $('#iDia'); if (ciclo(hoje()) === i && dias > 0 && t.Entrada > 0) { const pd = Math.max(0, saldo - faltaFat) / dias;
+      el.innerHTML = saldo - faltaFat > 0 ? `Dá para gastar <b>${brl(pd)} por dia</b> até o dia 14` : '<b>Sem folga:</b> qualquer gasto agora sai do vermelho'; el.className = 'dia' + (pd < 20 ? ' ruim' : ''); }
     else el.innerHTML = ''; }
   { const g = t.Entrada ? t.Despesa / t.Entrada : null, nivel = g == null ? '' : g > 1 ? 'alto' : g >= .8 ? 'medio' : 'ok';
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
