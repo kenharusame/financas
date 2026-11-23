@@ -961,9 +961,12 @@ async function entrarComCodigo(){
 }
 async function carregar(){
   if (NO_GOOGLE && !chave()) { mostraLogin(); return; }
-  let d;
+  let d, c0 = null;
   try {
-    try { d = await api('getDados'); try { localStorage.setItem('fin_dados', JSON.stringify(d)); } catch (e) {} S.offline = false; }
+    /* 1ª vez que abre: mostra na hora a cópia guardada e só baixa tudo se o servidor disser que mudou. */
+    if (!S.jaMostrou) { try { c0 = JSON.parse(localStorage.getItem('fin_dados') || 'null'); } catch (x) {} if (!c0 || c0.versao == null) c0 = null; }
+    if (c0) { d = c0; S.offline = false; }
+    else try { d = await api('getDados'); try { localStorage.setItem('fin_dados', JSON.stringify(d)); } catch (e) {} S.offline = false; }
     catch (e) {
       const semRede = /Sem conexão/.test(String(e)) || !navigator.onLine;
       let c = null; try { c = JSON.parse(localStorage.getItem('fin_dados') || 'null'); } catch (x) {}
@@ -979,6 +982,8 @@ async function carregar(){
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
     renderMes(); avisoFila();
     if (!S.offline) enviaFila();
+    S.jaMostrou = true;
+    if (c0) api('versao').then(v => { if (v !== c0.versao) carregar(); }).catch(() => {});
   } catch (e) { $('#carregando').removeAttribute('aria-busy'); $('#carregando').innerHTML = '<div class="card err">Não deu para carregar: ' + esc(e) + '</div>'; }
 }
 
