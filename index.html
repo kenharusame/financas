@@ -1325,7 +1325,7 @@ function pagtoInicio(){
       <div><b>O pagamento do ${esc(x.nome)} caiu?</b><div class="s">${x.atraso === 0 ? 'Hoje é dia ' + x.dia : 'Era para o dia ' + x.dia}</div></div></div>
       <div class="pg-linha"><input class="money" inputmode="decimal" placeholder="R$ 0,00" aria-label="Quanto caiu do ${esc(x.nome)}" data-pv="${esc(x.nome)}">
       <button class="btn" data-pok="${esc(x.nome)}">Caiu</button></div>
-      <button class="link" data-pnao="${esc(x.nome)}">Ainda não caiu</button></div>`).join('');
+      <button class="link" data-pnao="${esc(x.nome)}">Esconder por hoje</button></div>`).join('');
   $$('#cPagto [data-pok]').forEach(b => b.onclick = () => { const n = b.dataset.pok, v = $(`#cPagto [data-pv="${n}"]`).value;
     S.tipo = 'Entrada'; S.origem = n; ir('adicionar'); renderForm();
     $('#aValor').value = v; $('#aValor').dispatchEvent(new Event('input')); $('#aValor').focus(); toast('Confira e toque em Salvar'); });
