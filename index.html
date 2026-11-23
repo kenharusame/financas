@@ -396,6 +396,13 @@ img.foto-meta.mini{width:24px;height:24px}
 .peso{background:rgba(255,255,255,.05);border-radius:14px;padding:10px 12px;margin:10px 0;font-size:14px;line-height:1.5;display:grid;gap:4px}
 .res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px} .res-grid div{background:rgba(255,255,255,.04);border-radius:14px;padding:10px} .res-grid small{display:block;color:var(--muted);font-size:12px;font-weight:700} .res-grid b{display:block;font-family:Outfit,system-ui,sans-serif;font-size:22px;color:var(--in)} .res-grid span{font-size:12px;color:var(--muted)}
 .tipo-conta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin-top:6px} .tipo-conta b{color:var(--text,#fff)} .tipo-conta .link{padding:0;margin:0}
+.des{border-top:1px solid rgba(255,255,255,.06);padding:10px 0} .des:first-child{border-top:0}
+.des-top{display:flex;gap:10px;align-items:center} .des-n{flex:0 0 28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;background:rgba(255,255,255,.06)} .des:first-child .des-n{background:var(--accent);color:#06141A}
+.des-nome{flex:1;min-width:0;text-align:left;background:none;border:0;color:inherit;font:inherit;padding:4px 0;cursor:pointer} .des-nome .s{color:var(--muted);font-size:13px}
+.des-mov{display:flex;gap:4px} .des-mov .chip{width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center} .des-mov .chip svg{width:18px;height:18px} .des-mov .chip:disabled{opacity:.3}
+.des-det{padding:8px 0 0 38px;display:grid;gap:8px} .des-p{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45} .des-p input{margin-top:3px;width:18px;height:18px;flex:none}
+.des-acoes{display:flex;gap:8px;align-items:center;flex-wrap:wrap} .des-acoes .btn{width:auto;flex:1}
+#dQuem{margin-bottom:8px} #dNovo{margin-top:10px}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -433,6 +440,11 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div class="card" id="cMetas"><h2>Metas</h2><div id="iMetas"></div></div>
   <div class="card futuro" id="cFuturo"><img id="fuImg" alt="Ken e Sam idosos com o filho" width="720" height="520"><h2>Eu do futuro</h2><div id="iFuturo"></div></div>
   <div class="card" id="cFase"><h2>Em que fase estamos</h2><div id="iFase"></div></div>
+  <div class="card" id="cDesejos"><h2>Lista de desejos</h2>
+    <div class="seg" id="dQuem" role="tablist"></div>
+    <div id="dLista"></div>
+    <div id="dNovo"></div>
+  </div>
   <div class="card" id="cMesada"><h2>Mesada pessoal</h2><div id="iMesada"></div></div>
   <div id="cDica"></div>
   <div class="card" id="cGuia"><h2>Regra do guia</h2><div id="iGuia"></div></div>
@@ -692,7 +704,7 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     .filter(Boolean).forEach(el => ini.appendChild(el));
   document.getElementById('adicionar').appendChild(document.getElementById('nCard'));
   poe('relatorios', ['#cLim', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
-  poe('planejar', ['#cFuturo', '#cFase', '#cMetas', '#cMesada', '#cGuia', '#cAnual', '#iParc']);
+  poe('planejar', ['#cFuturo', '#cFase', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc']);
   [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo, .rapido') && !el.querySelector('#iContas')) el.classList.add('hide'); });
 })();
 </script>
@@ -831,7 +843,7 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -856,7 +868,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); passosInicio(i, t); pagtoInicio(); resisteInicio(i); parInicio(); revisaoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); resisteInicio(i); parInicio(); revisaoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1390,6 +1402,57 @@ function revisaoInicio(){
   box.innerHTML = `<div class="card"><h2>Revisão da semana</h2><p class="fase-txt">Os supérfluos dos últimos 7 dias. Valeu a pena?</p>${falta.slice(0, 8).map(r => `<div class="row"><div class="mid"><div class="t">${esc(r.conta)}</div><div class="s">${ddmm(r.data)} · ${brl(r.valor)}</div></div>
     <div style="display:flex;gap:6px"><button class="chip" data-vl="${r.id}" data-ok="1">Valeu</button><button class="chip" data-vl="${r.id}" data-ok="0">Não valeu</button></div></div>`).join('')}</div>`;
   $$('#cRevisao [data-vl]').forEach(b => b.onclick = () => { const v = lsLe('fin_valeu', {}); v[b.dataset.vl] = b.dataset.ok === '1'; lsGrava('fin_valeu', v); revisaoInicio(); resisteInicio(S.mes); });
+}
+/* ---------- Lista de desejos ---------- */
+S.dQuem = null; S.dAberto = null;
+async function apiDesejo(fn, ...a){
+  try { const r = await api(fn, ...a); S.desejos = r.desejos; S.metas = r.metas; renderMes(); }
+  catch (e) { toast('Não deu: ' + e); }
+}
+function renderDesejos(){
+  const eu = S.quem || 'Ken'; if (!S.dQuem) S.dQuem = eu;
+  const donos = ['Ken', 'Sam'], meu = S.dQuem === eu, l = (S.desejos || []).filter(d => d.dono === S.dQuem);
+  $('#dQuem').innerHTML = donos.map(n => `<button role="tab" aria-selected="${n === S.dQuem}" class="${n === S.dQuem ? 'on' : ''}" data-dq="${n}">${n === eu ? 'Minha' : n === 'Sam' ? 'Da Sam' : 'Do Ken'}</button>`).join('');
+  $$('#dQuem [data-dq]').forEach(b => b.onclick = () => { S.dQuem = b.dataset.dq; S.dAberto = null; renderDesejos(); });
+  const seta = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
+  $('#dLista').innerHTML = !l.length ? `<div class="empty">${meu ? 'Nada na lista ainda. O primeiro item vira meta sozinho.' : 'A lista está vazia.'}</div>` : l.map((d, k) => {
+    const aberto = S.dAberto === d.id, m = (S.metas || []).find(x => x.nome === d.nome), g = m ? progressoMeta(m) : null, feitos = d.pontos.filter(x => x.ok).length;
+    return `<div class="des${aberto ? ' aberto' : ''}">
+      <div class="des-top"><span class="des-n">${k + 1}</span>
+        <button class="des-nome" data-dab="${d.id}" aria-expanded="${aberto}"><b>${esc(d.nome)}</b>${k === 0 ? ' <span class="tag fixa">Meta</span>' : ''}<div class="s">${brl(d.preco)}${g ? ' · guardado ' + Math.round(g.p * 100) + '%' : ''}${d.pontos.length ? ` · ${feitos} de ${d.pontos.length} passos` : ''}</div></button>
+        ${meu ? `<div class="des-mov"><button class="chip" data-dmv="${d.id}" data-dir="-1" aria-label="Subir ${esc(d.nome)}" ${k === 0 ? 'disabled' : ''}>${seta('M6 15l6-6 6 6')}</button><button class="chip" data-dmv="${d.id}" data-dir="1" aria-label="Descer ${esc(d.nome)}" ${k === l.length - 1 ? 'disabled' : ''}>${seta('M6 9l6 6 6-6')}</button></div>` : ''}</div>
+      ${aberto ? `<div class="des-det">
+        ${d.link ? `<a class="link" href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">Abrir onde comprar</a>` : ''}
+        <h3 class="pl-tit">Como conseguir comprar</h3>
+        ${d.pontos.length ? d.pontos.map((x, j) => `<label class="des-p"><input type="checkbox" data-dpt="${d.id}" data-j="${j}" ${x.ok ? 'checked' : ''} ${meu ? '' : 'disabled'}><span>${esc(x.t)}</span></label>`).join('') : '<div class="s" style="color:var(--muted)">Ainda sem passos.</div>'}
+        ${meu ? `<button class="btn ghost" data-dia="${d.id}">${d.pontos.length ? 'Pedir mais ideias à IA' : 'Pedir ideias à IA'}</button>
+        <div class="des-acoes"><button class="btn" data-dcp="${d.id}">Comprei</button><button class="btn ghost" data-ded="${d.id}">Editar</button><button class="link" data-dap="${d.id}">Tirar da lista</button></div>` : ''}
+      </div>` : ''}</div>`; }).join('');
+  $$('#dLista [data-dab]').forEach(b => b.onclick = () => { S.dAberto = S.dAberto === b.dataset.dab ? null : b.dataset.dab; renderDesejos(); });
+  $$('#dLista [data-dmv]').forEach(b => b.onclick = () => { b.disabled = true; apiDesejo('moverDesejo', b.dataset.dmv, +b.dataset.dir); });
+  $$('#dLista [data-dpt]').forEach(c => c.onchange = () => apiDesejo('pontoDesejo', c.dataset.dpt, +c.dataset.j, c.checked));
+  $$('#dLista [data-dia]').forEach(b => b.onclick = async () => { b.disabled = true; b.textContent = 'Pensando...'; await apiDesejo('ideiasDesejo', b.dataset.dia); });
+  $$('#dLista [data-dap]').forEach(b => b.onclick = () => { if (confirm('Tirar este item da lista?')) apiDesejo('apagarDesejo', b.dataset.dap, false); });
+  $$('#dLista [data-ded]').forEach(b => b.onclick = () => formDesejo(l.find(d => d.id === b.dataset.ded)));
+  $$('#dLista [data-dcp]').forEach(b => b.onclick = async () => { const d = l.find(x => x.id === b.dataset.dcp); if (!confirm(`Comprou ${d.nome}? Ele sai da lista e abre o formulário de despesa.`)) return;
+    await apiDesejo('apagarDesejo', d.id, true); S.tipo = 'Despesa'; ir('adicionar'); renderForm();
+    $('#aValor').value = d.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); $('#aObs').value = d.nome; resumo(); toast('Escolha a conta e toque em Salvar'); });
+  if (meu) formDesejo(null, true); else $('#dNovo').innerHTML = '<div class="help">Vocês veem a lista um do outro, mas cada um só mexe na sua.</div>';
+}
+function formDesejo(d, fechado){
+  const box = $('#dNovo');
+  if (fechado && !d) { box.innerHTML = '<button class="btn ghost" id="dAdd">+ Adicionar desejo</button>'; $('#dAdd').onclick = () => formDesejo(null); return; }
+  box.innerHTML = `<div class="des-form"><label for="dNome">O que é?</label><input id="dNome" placeholder="Ex.: Fone novo" value="${d ? esc(d.nome) : ''}" autocomplete="off">
+    <label for="dPreco">Preço</label><input id="dPreco" class="money" inputmode="decimal" placeholder="R$ 0,00" value="${d ? d.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}" autocomplete="off">
+    <label for="dLink">Link de onde comprar <span style="color:var(--muted);font-weight:600">(opcional)</span></label><input id="dLink" inputmode="url" placeholder="https://..." value="${d ? esc(d.link) : ''}" autocomplete="off">
+    <div class="err" id="dErro" role="alert"></div>
+    <div class="des-acoes"><button class="btn" id="dSalvar">${d ? 'Salvar' : 'Adicionar'}</button><button class="btn ghost" id="dCancela">Cancelar</button></div></div>`;
+  $('#dCancela').onclick = () => formDesejo(null, true);
+  $('#dSalvar').onclick = async () => { const nome = $('#dNome').value.trim(), preco = num($('#dPreco').value);
+    if (!nome || !(preco > 0)) { $('#dErro').textContent = 'Diga o que é e o preço.'; return; }
+    $('#dSalvar').disabled = true; $('#dSalvar').textContent = 'Salvando...';
+    await apiDesejo('salvarDesejo', { id: d ? d.id : '', nome, preco, link: $('#dLink').value.trim() }); };
+  $('#dNome').focus();
 }
 function passosInicio(i, t){
   if (lsLe('fin_passosOk', '')) { $('#cPassos').innerHTML = ''; return; }
