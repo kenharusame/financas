@@ -899,8 +899,10 @@ const FAKE = (() => {
 /* ---------- Utilidades ---------- */
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const brl = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const brl0 = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+/* nunca mostra -R$ 0: valores que arredondam para zero viram zero */
+const semMenosZero = (v, casas) => { const k = Math.pow(10, casas), r = Math.round((v || 0) * k) / k; return r === 0 ? 0 : r; };
+const brl = v => semMenosZero(v, 2).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const brl0 = v => semMenosZero(v, 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 function num(s){ s = String(s || '').replace(/[R$\s%]/g, ''); if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.'); else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ''); const v = parseFloat(s); return isNaN(v) ? 0 : v; }
 const parse = d => { const [y, m, dd] = d.split('-').map(Number); return { y, m, d: dd }; };
@@ -1805,9 +1807,32 @@ function decidirPensando(quando){
 const semAcento = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 let buscaT; $('#hBusca').addEventListener('input', () => { clearTimeout(buscaT); buscaT = setTimeout(renderHist, 200); });
 function opcoesMetas(sel, atual){ sel.innerHTML = '<option value="">Nenhuma</option>' + (S.metas || []).map(m => `<option ${m.nome === atual ? 'selected' : ''}>${esc(m.nome)}</option>`).join(''); }
+/* Rendimento estimado do cofrinho (Mercado Pago): 130% do CDI até R$ 5 mil (promoção até 11/02/2027, depois 100%),
+   base 252 dias úteis, começa 2 dias úteis depois do depósito, IOF regressivo nos 30 primeiros dias e IR pela tabela regressiva.
+   É uma estimativa: feriados não entram e o CDI fica fixo. */
+const CDI_ANO = .1365, CDI_DIA = Math.pow(1 + CDI_ANO, 1 / 252) - 1, FIM_PROMO = '2027-02-11', TETO_PROMO = 5000;
+const IOF = [96, 93, 90, 86, 83, 80, 76, 73, 70, 66, 63, 60, 56, 53, 50, 46, 43, 40, 36, 33, 30, 26, 23, 20, 16, 13, 10, 6, 3, 0];
+function rendimentoMeta(m){
+  const movs = S.regs.filter(r => (r.tipo === 'Investimento' || r.tipo === 'Retirada') && r.meta === m.nome).sort((a, b) => a.data < b.data ? -1 : 1);
+  if (!movs.length) return 0;
+  const hj = new Date(); hj.setHours(0, 0, 0, 0); let liquido = 0;
+  movs.forEach(r => {
+    const d0 = new Date(r.data + 'T00:00'); let uteis = 0, bruto = 0, saldo = r.valor;
+    // 2 dias úteis de carência
+    const d = new Date(d0); let car = 0; while (car < 2) { d.setDate(d.getDate() + 1); if (d.getDay() % 6) car++; }
+    for (; d <= hj; d.setDate(d.getDate() + 1)) { if (!(d.getDay() % 6)) continue;
+      const taxa = isoD(d) <= FIM_PROMO ? CDI_DIA * 1.3 : CDI_DIA; const j = saldo * taxa; bruto += j; saldo += j; uteis++; }
+    const corridos = Math.round((hj - d0) / 864e5), iof = corridos < 30 ? IOF[Math.max(0, corridos - 1)] / 100 : 0;
+    const ir = corridos <= 180 ? .225 : corridos <= 360 ? .2 : corridos <= 720 ? .175 : .15;
+    const liq = bruto * (1 - iof) * (1 - ir);
+    liquido += r.tipo === 'Retirada' ? -liq : liq;
+  });
+  return Math.max(0, Math.round(liquido * 100) / 100);
+}
 function progressoMeta(m){
   const inv = S.regs.filter(r => r.tipo === 'Investimento' && r.meta === m.nome);
-  const guardado = m.inicial + inv.reduce((a, r) => a + r.valor, 0) - S.regs.filter(r => r.tipo === 'Retirada' && r.meta === m.nome).reduce((a, r) => a + r.valor, 0);
+  const rendeu = ehReserva(m) ? rendimentoMeta(m) : 0;
+  const guardado = m.inicial + rendeu + inv.reduce((a, r) => a + r.valor, 0) - S.regs.filter(r => r.tipo === 'Retirada' && r.meta === m.nome).reduce((a, r) => a + r.valor, 0);
   const atual = ciclo(hoje()), meses = [0, 1, 2].map(k => inv.filter(r => ciclo(r.data) === atual - k).reduce((a, r) => a + r.valor, 0));
   const comAporte = meses.filter(v => v > 0), ritmo = comAporte.length ? comAporte.reduce((a, v) => a + v, 0) / comAporte.length : 0;
   const falta = Math.max(0, m.alvo - guardado);
@@ -1817,7 +1842,7 @@ function progressoMeta(m){
   else previsao = 'Ainda sem investimentos nesta meta nos últimos meses.';
   let prazo = '';
   if (m.prazo && falta) { const c = ciclo(m.prazo), resta = Math.max(1, c - atual); prazo = `Para chegar até ${ddmm(m.prazo)}/${m.prazo.slice(0, 4)}, precisa de ${brl0(falta / resta)} por mês.`; }
-  return { guardado, falta, p: Math.min(1, guardado / m.alvo), previsao, prazo };
+  return { rendeu, guardado, falta, p: Math.min(1, guardado / m.alvo), previsao, prazo };
 }
 function metasInicio(){
   const M = S.metas || [], D = degraus(), res = M.find(ehReserva);
@@ -1827,7 +1852,7 @@ function metasInicio(){
     + (M.length ? M.slice().sort((a, b) => ((a.espera ? 1 : 0) - (b.espera ? 1 : 0)) || ((ehReserva(b) ? 1 : 0) - (ehReserva(a) ? 1 : 0))).map(m => { const g = progressoMeta(m), k = M.indexOf(m);
     return `<button class="meta${m.espera ? ' espera' : ''}" data-k="${k}" aria-label="Editar meta ${esc(m.nome)}"><div class="lim-top"><span class="t">${fotoHtml(m)}${esc(m.nome)}${m.espera ? ' <small>(em espera)</small>' : ''}</span><b class="meta-p">${Math.round(g.p * 100)}%</b></div>
       <div class="gasto-bar meta-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
-      <div class="lim-num"><span>${brl(g.guardado)} de ${brl(m.alvo)}</span><span>${g.falta ? 'faltam ' + brl0(g.falta) : ''}</span></div>
+      <div class="lim-num"><span>${brl(g.guardado)} de ${brl(m.alvo)}${g.rendeu ? ` <small style="color:var(--in)">(+${brl(g.rendeu)} de rendimento)</small>` : ''}</span><span>${g.falta ? 'faltam ' + brl0(g.falta) : ''}</span></div>
       <div class="meta-prev">${esc(g.previsao)}${g.prazo ? '<br>' + esc(g.prazo) : ''}</div>${degrau(m)}</button>`; }).join('')
     : '<div class="empty" style="padding-top:0">Crie uma meta (reserva de emergência, carro, viagem) e marque os investimentos para ela.</div>')
     + '<button class="link" id="metaNova">+ Nova meta</button>';
