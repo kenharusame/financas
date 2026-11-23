@@ -536,6 +536,7 @@ html.pc .toast{bottom:24px}
       <input type="file" id="nArq3" accept="application/pdf" multiple class="hide">
       <button class="btn ghost" id="nLote">Várias notas em PDF (uma por arquivo)</button>
       <button class="btn ghost" id="nColar">Colar lista de itens (sem IA)</button>
+      <div class="help" id="nColarDica">No computador, é só apertar Ctrl+V em qualquer tela.</div>
       <div id="nColarBox" class="hide"><label for="nTexto">Cole a lista: um item por linha, com o valor no fim</label>
         <textarea id="nTexto" class="nota-txt" rows="8" placeholder="Leite 1L R$ 5,99&#10;Pano de copa R$ 4,90"></textarea>
         <button class="btn" id="nColarOk">Separar os itens</button></div>
@@ -2600,15 +2601,33 @@ function leLista(txt){
   });
   return { itens, ruins };
 }
-$('#nColar').onclick = () => { const b = $('#nColarBox'); b.classList.toggle('hide'); if (!b.classList.contains('hide')) $('#nTexto').focus(); };
-$('#nColarOk').onclick = () => {
-  const r = leLista($('#nTexto').value);
-  if (!r.itens.length) { $('#nErro').textContent = 'Não achei nenhum item com valor. Cada linha precisa terminar com o valor (ex.: Leite R$ 5,99).'; return; }
+function abreLista(txt){
+  const r = leLista(txt);
+  if (!r.itens.length) return false;
   $('#nErro').textContent = '';
   S.nota = { loja: '', data: hoje(), total: null, pagoCom: '', itens: r.itens, ruins: r.ruins };
   $('#nTexto').value = ''; $('#nColarBox').classList.add('hide');
-  $('#nIni').classList.add('hide'); $('#nConf').classList.remove('hide'); pintaNota(); $('#nConf').scrollIntoView({ block: 'start' });
+  try { ir('adicionar'); } catch (e) {}
+  $('#nIni').classList.add('hide'); $('#nConf').classList.remove('hide'); pintaNota();
+  setTimeout(() => $('#nConf').scrollIntoView({ block: 'start' }), 50);
+  return true;
+}
+const semValor = 'Não achei nenhum item com valor. Cada linha precisa terminar com o valor (ex.: Leite R$ 5,99).';
+/* Botão: tenta ler direto o que foi copiado; se o celular não deixar, abre a caixa para colar. */
+$('#nColar').onclick = async () => {
+  $('#nErro').textContent = '';
+  try { const t = navigator.clipboard && await navigator.clipboard.readText(); if (t && abreLista(t)) return; if (t) $('#nErro').textContent = semValor; } catch (e) {}
+  $('#nColarBox').classList.remove('hide'); $('#nTexto').focus();
 };
+$('#nColarOk').onclick = () => { if (!abreLista($('#nTexto').value)) $('#nErro').textContent = semValor; };
+/* Ctrl+V em qualquer tela (fora de um campo de texto) com uma lista de itens e valores abre a conferência. */
+document.addEventListener('paste', e => {
+  const a = document.activeElement;
+  if (a && (/INPUT|TEXTAREA|SELECT/.test(a.tagName) || a.isContentEditable) && a.id !== 'nTexto') return;
+  if (document.querySelector('dialog[open]') || S.nota) return;
+  const t = (e.clipboardData || window.clipboardData).getData('text');
+  if (t && abreLista(t)) e.preventDefault();
+});
 /* Lote: cada PDF é uma nota diferente. Lê todos (um por vez) e depois mostra para conferir na sequência. */
 S.lote = []; S.loteErros = [];
 $('#nLote').onclick = () => $('#nArq3').click();
