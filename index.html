@@ -326,6 +326,34 @@ input,select{background:rgba(12,18,27,.5);border:1px solid rgba(255,255,255,.05)
 .cmp-d.bom{color:var(--in)} .cmp-d.ruim{color:var(--out)}
 .cmp-sub{font-size:13px;color:var(--muted);font-weight:700;margin:14px 0 2px}
 #cComp .two{margin-bottom:8px}
+.guia-bar{position:relative;overflow:visible}
+.guia-bar b{position:absolute;top:-4px;bottom:-4px;width:2px;background:#F8FAFC;border-radius:2px;opacity:.8}
+.sobra{color:var(--in);font-weight:700}
+.acum{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-weight:600;margin:0}
+.acum input{width:18px;height:18px;min-height:0;box-shadow:none}
+.pat-top{display:flex;justify-content:space-between;align-items:flex-end}
+.pat-top small{display:block;color:var(--muted);font-weight:700;font-size:13px}
+.pat-top b{font-family:Outfit,system-ui,sans-serif;font-size:30px;font-variant-numeric:tabular-nums}
+.pat-top b.ruim{color:var(--out)}
+.pat-top .var{display:block;font-size:13px;font-weight:700}
+.pat-top .var.bom{color:var(--in)} .pat-top .var.ruim{color:var(--out)}
+.pat-ed{display:grid;grid-template-columns:1fr 82px 104px;gap:6px;margin-bottom:8px}
+.pat-ed input,.pat-ed select{min-height:44px;font-size:15px;padding:8px 10px}
+.prev-l{grid-template-columns:1fr 100px 110px}
+.fluxo{display:block;width:100%;overflow:visible;margin-top:6px}
+.fl-n{font-size:11px;font-weight:700;fill:var(--text)} .fl-v{font-size:10px;fill:var(--muted)}
+.seg.modo{grid-template-columns:1fr 1fr;margin-bottom:12px}
+.cal{padding:14px}
+.cal-sem,.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-sem span{text-align:center;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.cal-d{position:relative;aspect-ratio:1/1.1;border:0;border-radius:10px;background:rgba(12,18,27,.4);color:var(--text);font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 2px;min-height:44px}
+.cal-d span{font-size:13px;font-weight:700}
+.cal-d small{font-size:9px;color:var(--out);font-weight:700;margin-top:1px}
+.cal-d.fut{opacity:.6}
+.cal-d.hoje-d{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.cal-d.sel{background:linear-gradient(160deg,#4FA6B1,#286F7B)} .cal-d.sel small{color:#fff}
+.cal-d .dot{position:absolute;bottom:4px;width:6px;height:6px;border-radius:50%}
+.cal-d .dot.in{left:calc(50% - 8px);background:var(--in)} .cal-d .dot.inv{left:calc(50% + 2px);background:var(--inv)}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -347,11 +375,15 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
     <div class="mini out"><small>Despesas</small><b id="iDes"></b><span class="var" id="vDes"></span></div>
     <div class="mini inv"><small>Investido</small><b id="iInv"></b><span class="var" id="vInv"></span></div>
   </div>
+  <div class="card" id="cPrev"><h2>Previsão</h2><div id="iPrev"></div></div>
   <div id="cFila"></div>
   <div id="cCheck"></div>
   <div class="card" id="cLim"><h2>Limites do mês</h2><div id="iLim"></div></div>
   <div class="card" id="cMetas"><h2>Metas</h2><div id="iMetas"></div></div>
+  <div class="card" id="cGuia"><h2>Regra do guia</h2><div id="iGuia"></div></div>
+  <div class="card" id="cPat"><h2>Patrimônio</h2><div id="iPat"></div></div>
   <div class="card" id="cAnual"><h2>Gastos do ano</h2><div id="iAnual"></div></div>
+  <div class="card" id="cFluxo"><h2>Para onde vai a renda</h2><div id="iFluxo"></div></div>
   <div class="card"><h2>Para onde foi o dinheiro</h2><div id="iContas"></div></div>
   <div class="card" id="cBar"><h2>Entradas x Despesas</h2><div class="chart"><canvas id="iBar" role="img"></canvas></div><div class="leg-inline"><span><i style="background:#2FB37A"></i>Entradas</span><span><i style="background:#E5484D"></i>Despesas</span></div></div>
   <div class="card" id="cComp"><h2>Comparar meses</h2>
@@ -435,6 +467,8 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
 <section id="historico" class="hide">
   <header><h1>Histórico</h1><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></header>
   <div class="busca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hBusca" type="search" placeholder="Buscar em todos os meses (ex.: farmácia)" aria-label="Buscar no histórico"></div>
+  <div class="seg modo" id="hModo"><button data-m="lista">Lista</button><button data-m="cal">Calendário</button></div>
+  <div id="hCal"></div>
   <div class="filter chips" id="hFiltro"><button class="chip" data-v="Tudo">Tudo</button><button class="chip" data-v="Entrada">Entradas</button><button class="chip" data-v="Despesa">Despesas</button><button class="chip" data-v="Investimento">Investimentos</button></div>
   <div class="card" id="hLista"></div>
   <div class="badge">Toque num registro para corrigir ou apagar</div>
@@ -466,6 +500,13 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   <div id="qRes"></div>
   <div class="card hide" id="qHistCard"><h2>Perguntas anteriores</h2><div id="qHist"></div></div>
   <div class="card">
+    <h2>Assinaturas e cobranças repetidas</h2>
+    <p style="margin-top:0">A IA procura cobranças que se repetem, aumentos de preço e cobranças em dobro nos últimos 6 meses.</p>
+    <button class="btn ghost" id="sBtn" style="margin-top:4px">Procurar</button>
+    <div class="err" id="sErro" role="alert"></div>
+    <div id="sRes"></div>
+  </div>
+  <div class="card">
     <h2>Análise dos gastos</h2>
     <p style="margin-top:0">A IA olha os números do ano e mostra onde dá para gastar menos. Ela não sugere investimentos: para isso, procure um profissional certificado.</p>
     <button class="btn" id="dBtn" style="margin-top:4px">Analisar nossos gastos</button>
@@ -485,6 +526,23 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   </div>
 </div>
 
+<dialog id="dlgCfg">
+  <h2>Grupos das contas</h2>
+  <p class="s" style="color:var(--muted);font-size:14px;margin:-6px 0 8px">Diga em qual grupo do guia cada conta entra. Investimentos entram sozinhos em "Liberdade financeira".</p>
+  <div id="cfgLista"></div>
+  <div class="err" id="cfgErro" role="alert"></div>
+  <button class="btn" id="cfgSalvar">Salvar</button>
+  <button class="link" id="cfgFechar">Cancelar</button>
+</dialog>
+<dialog id="dlgPat">
+  <h2 id="patTit">Patrimônio</h2>
+  <p class="s" style="color:var(--muted);font-size:14px;margin:-6px 0 8px">Coloque quanto há hoje em cada lugar e quanto vocês devem. Atualizem uma vez por mês.</p>
+  <div id="patLista"></div>
+  <button class="link" id="patMais">+ Adicionar item</button>
+  <div class="err" id="patErro" role="alert"></div>
+  <button class="btn" id="patSalvar">Salvar</button>
+  <button class="link" id="patFechar">Cancelar</button>
+</dialog>
 <dialog id="dlgAnual">
   <h2 id="anTit">Novo gasto do ano</h2>
   <label for="anNome">Nome</label><input id="anNome" placeholder="Ex.: IPVA">
@@ -576,7 +634,7 @@ const FAKE = (() => {
   for (let k = 0; k < 12; k++) add(`20${k < 2 ? 26 : 27}-${String((10 + k) % 12 + 1).padStart(2, '0')}-15`, 'Despesa', 'Aluguel', 2200, { forma: 'Fixa', grupo: 'g1' });
   for (let k = 0; k < 12; k++) add(`20${k < 2 ? 26 : 27}-${String((10 + k) % 12 + 1).padStart(2, '0')}-18`, 'Despesa', 'iPhone', 350, { forma: 'Parcelada', parcela: (k + 1) + '/12', grupo: 'g2' });
   add('2026-11-21', 'Despesa', 'Cartão de crédito', 312, { obs: 'Mercado' }); add('2026-11-22', 'Despesa', 'Luz', 290);
-  const dados = { registros: R, contas: ['Aluguel', 'iPhone', 'Cama', 'Luz', 'Água', 'Cartão de crédito', 'Mercado Pago', 'Higiene e Alimentação - Gatas', 'Mercado', 'Limpeza', 'Higiene', 'Farmácia'], origens: ['YouTube', 'TikTok', 'Facebook', 'Publi'], inicio: '2026-11-15', limites: { 'Aluguel': 2200, 'Luz': 250, 'Cartão de crédito': 400 }, metas: [{ nome: 'Reserva de emergência', alvo: 6000, prazo: '2027-06-15', inicial: 1500 }, { nome: 'Carro', alvo: 10000, prazo: '', inicial: 0 }], temIA: true, quem: 'Sam' };
+  const dados = { registros: R, contas: ['Aluguel', 'iPhone', 'Cama', 'Luz', 'Água', 'Cartão de crédito', 'Mercado Pago', 'Higiene e Alimentação - Gatas', 'Mercado', 'Limpeza', 'Higiene', 'Farmácia'], origens: ['YouTube', 'TikTok', 'Facebook', 'Publi'], inicio: '2026-11-15', patrimonio: [{ ciclo: 0, item: 'Conta corrente', tipo: 'Tenho', valor: 2300 }, { ciclo: 0, item: 'Reserva', tipo: 'Tenho', valor: 1500 }, { ciclo: 0, item: 'Fatura do cartão', tipo: 'Devo', valor: 800 }], configContas: { 'Cartão de crédito': { grupo: 'Conforto', acumula: false } }, anuais: [{ nome: 'IPVA', valor: 1800, mes: 2, dia: 10 }], limites: { 'Aluguel': 2200, 'Luz': 250, 'Cartão de crédito': 400 }, metas: [{ nome: 'Reserva de emergência', alvo: 6000, prazo: '2027-06-15', inicial: 1500 }, { nome: 'Carro', alvo: 10000, prazo: '', inicial: 0 }], temIA: true, quem: 'Sam' };
   return {
     getDados: () => JSON.parse(JSON.stringify(dados)),
     salvar: r => { add(r.data, r.tipo, r.conta, r.valor, { forma: r.forma, obs: r.obs, veioDe: r.veioDe, pct: r.pct }); return 1; },
@@ -593,6 +651,9 @@ const FAKE = (() => {
     interpretar: x => ({ tipo: 'Despesa', valor: 45, conta: 'Cartão de crédito', forma: 'Única', vezes: 1, valorEhTotal: true, data: '2026-11-22', obs: 'pix', meta: '', duvida: '' }),
     salvarAnual: a => { dados.anuais = (dados.anuais || []).filter(x => x.nome !== (a.nomeAntigo || a.nome)).concat([{ nome: a.nome, valor: Number(a.valor), mes: Number(a.mes), dia: Number(a.dia) || 1 }]); return JSON.parse(JSON.stringify(dados.anuais)); },
     apagarAnual: n => { dados.anuais = dados.anuais.filter(x => x.nome !== n); return JSON.parse(JSON.stringify(dados.anuais)); },
+    salvarPatrimonio: (c, itens) => { dados.patrimonio = (dados.patrimonio || []).filter(x => x.ciclo !== c).concat(itens.map(i => ({ ciclo: c, item: i.item, tipo: i.tipo, valor: Number(i.valor) }))); return JSON.parse(JSON.stringify(dados.patrimonio)); },
+    salvarConfigContas: m => { dados.configContas = Object.assign(dados.configContas || {}, m); return JSON.parse(JSON.stringify(dados.configContas)); },
+    assinaturas: () => ({ resumo: 'Essas cobranças somam cerca de R$ 160 por mês.', itens: [{ nome: 'Adobe', valor: 110, vezes: 3, alerta: 'Subiu de R$ 90 para R$ 110' }, { nome: 'Spotify', valor: 23.9, vezes: 4, alerta: '' }] }),
     salvarMeta: m => { const i = dados.metas.findIndex(x => x.nome === (m.nomeAntigo || m.nome)); const n = { nome: m.nome, alvo: Number(m.alvo), prazo: m.prazo || '', inicial: Number(m.inicial) || 0 }; if (i < 0) dados.metas.push(n); else dados.metas[i] = n; return JSON.parse(JSON.stringify(dados.metas)); },
     apagarMeta: n => { dados.metas = dados.metas.filter(x => x.nome !== n); return JSON.parse(JSON.stringify(dados.metas)); },
     checkin: c => ({ mes: 'Novembro', texto: '**Sobrou dinheiro e teve investimento.** Bom sinal.\n- O cartão ficou dentro do limite.\n\n**A luz passou do limite.** Vale olhar o chuveiro e o ar.' }),
@@ -645,7 +706,7 @@ function historico(modo, sec){
 if (window.google && google.script && google.script.history) google.script.history.setChangeHandler(e => ir((e.state && e.state.s) || 'inicio', true));
 else addEventListener('popstate', e => ir((e.state && e.state.s) || 'inicio', true));
 document.addEventListener('click', e => { const b = e.target.closest('[data-novo]'); if (b) { S.tipo = b.dataset.novo; ir('adicionar'); } });
-$$('[data-mes]').forEach(b => b.onclick = () => { S.mes = Math.min(11, Math.max(0, S.mes + Number(b.dataset.mes))); PZsel = null; renderMes(); });
+$$('[data-mes]').forEach(b => b.onclick = () => { S.mes = Math.min(11, Math.max(0, S.mes + Number(b.dataset.mes))); PZsel = null; S.diaSel = null; renderMes(); });
 
 function mostraLogin(){
   $('#login').classList.remove('hide'); $('#carregando').classList.add('hide');
@@ -669,7 +730,7 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -691,7 +752,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar();
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl0(t.Investimento); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) porConta[r.conta] = (porConta[r.conta] || 0) + r.valor; });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -946,32 +1007,42 @@ function heroi(i, t){
 /* ---------- Limites por conta ---------- */
 function gastoConta(conta, i){ return S.regs.filter(r => r.tipo === 'Despesa' && r.conta === conta && ciclo(r.data) === i).reduce((a, r) => a + r.valor, 0); }
 const nivelLim = p => p > 1 ? 'alto' : p >= .8 ? 'medio' : 'ok';
+/* Limite do mês com a sobra dos meses anteriores, quando a conta tem "sobra passa" ligado (só a sobra passa; estouro não desconta). */
+function limEfetivo(c, i){
+  const base = (S.limites || {})[c]; if (!base) return 0;
+  if (!((S.cfg || {})[c] || {}).acumula) return base;
+  let sobra = 0;
+  for (let k = 0; k < i; k++) sobra = Math.max(0, base + sobra - gastoConta(c, k));
+  return base + sobra;
+}
 function limitesInicio(i){
-  const L = Object.entries(S.limites || {}).map(([c, l]) => ({ c, l, g: gastoConta(c, i) })).sort((a, b) => b.g / b.l - a.g / a.l);
+  const L = Object.entries(S.limites || {}).map(([c, b]) => ({ c, b, l: limEfetivo(c, i), g: gastoConta(c, i) })).sort((a, b) => b.g / b.l - a.g / a.l);
   $('#iLim').innerHTML = !L.length
     ? '<div class="empty">Combinem um teto por mês para as contas que querem controlar (Mercado, Diversão...).<button class="btn" id="limAbrir">Definir limites</button></div>'
-    : L.map(({ c, l, g }) => { const p = g / l, k = nivelLim(p);
+    : L.map(({ c, b, l, g }) => { const p = g / l, k = nivelLim(p);
         return `<div class="lim"><div class="lim-top"><span class="t">${esc(c)}</span><span class="gasto-tag ${k}">${k === 'alto' ? 'Passou ' + brl(g - l) : k === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
           <div class="gasto-bar" role="progressbar" aria-label="${esc(c)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p * 100)}"><i class="${k}" style="width:${Math.min(100, p * 100)}%"></i></div>
-          <div class="lim-num"><span>${brl(g)} de ${brl(l)}</span><b>${Math.round(p * 100)}%</b></div></div>`; }).join('') + '<button class="link" id="limAbrir">Editar limites</button>';
+          <div class="lim-num"><span>${brl(g)} de ${brl(l)}${l > b ? ' <small class="sobra">(+' + brl0(l - b) + ' de sobra)</small>' : ''}</span><b>${Math.round(p * 100)}%</b></div></div>`; }).join('') + '<button class="link" id="limAbrir">Editar limites</button>';
   $('#limAbrir').onclick = abrirLimites;
 }
 function abrirLimites(){
   $('#limErro').textContent = '';
-  $('#limLista').innerHTML = S.contas.map((c, k) => `<div class="lim-ed"><label for="lim${k}">${esc(c)}</label><input id="lim${k}" data-conta="${esc(c)}" inputmode="decimal" placeholder="Sem limite" value="${S.limites[c] ? S.limites[c].toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}"></div>`).join('');
+  $('#limLista').innerHTML = S.contas.map((c, k) => `<div class="lim-ed"><label for="lim${k}">${esc(c)}</label><input id="lim${k}" data-conta="${esc(c)}" inputmode="decimal" placeholder="Sem limite" value="${S.limites[c] ? S.limites[c].toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}">
+    <label class="acum"><input type="checkbox" data-acum="${esc(c)}" ${((S.cfg || {})[c] || {}).acumula ? 'checked' : ''}> sobra passa para o mês seguinte</label></div>`).join('');
   $('#dlgLim').showModal();
 }
 $('#limFechar').onclick = () => $('#dlgLim').close();
 $('#limSalvar').onclick = async () => {
   const m = {}; $$('#limLista input').forEach(i => m[i.dataset.conta] = num(i.value));
   const b = $('#limSalvar'); b.disabled = true; b.textContent = 'Salvando...';
-  try { S.limites = await api('definirLimites', m); $('#dlgLim').close(); toast('Limites salvos'); renderMes(); resumo(); }
+  const ac = {}; $$('#limLista [data-acum]').forEach(x => { const c = x.dataset.acum, at = (S.cfg[c] || {}); if (!!at.acumula !== x.checked) ac[c] = { grupo: at.grupo || '', acumula: x.checked }; });
+  try { S.limites = await api('definirLimites', m); if (Object.keys(ac).length) S.cfg = await api('salvarConfigContas', ac); $('#dlgLim').close(); toast('Limites salvos'); renderMes(); resumo(); }
   catch (e) { $('#limErro').textContent = 'Não salvou: ' + e; }
   b.disabled = false; b.textContent = 'Salvar limites';
 };
 function avisoLimite(){
   const el = $('#aLimite'); if (!el) return;
-  const conta = $('#aConta').value, lim = (S.limites || {})[conta];
+  const conta = $('#aConta').value, lim = limEfetivo(conta, ciclo($('#aData').value || hoje()));
   let v = num($('#aValor').value);
   if (S.tipo !== 'Despesa' || !lim || !v) { el.classList.add('hide'); return; }
   if (S.forma === 'Parcelada' && S.ehTotal === '1') v = v / Math.max(1, parseInt($('#aVezes').value) || 1);
@@ -1227,6 +1298,168 @@ addEventListener('online', () => { if (chave()) carregar(); });
 setInterval(() => { if (navigator.onLine && lerFila().length) enviaFila(); }, 60000);
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 
+/* ---------- Regra do guia (6 grupos do Investidor Sardinha) ---------- */
+const GRUPOS = [
+  { n: 'Custos fixos', p: 40, t: 'max', cor: '#17A398' }, { n: 'Conforto', p: 20, t: 'max', cor: '#5B8DEF' },
+  { n: 'Liberdade financeira', p: 25, t: 'min', cor: '#8A72D4' }, { n: 'Metas', p: 5, t: 'alvo', cor: '#B98A2E' },
+  { n: 'Prazeres', p: 5, t: 'max', cor: '#C9607A' }, { n: 'Conhecimento', p: 5, t: 'alvo', cor: '#4FA6B1' }];
+const SUGESTAO_GRUPO = [['aluguel|condominio|luz|agua|internet|mercado|van|escola|saude|fono|telefone|gata|higiene|limpeza|farmacia|gas|transporte|onibus', 'Custos fixos'],
+  ['iphone|cama|adobe|streaming|netflix|spotify|cartao|mercado pago|movel|roupa', 'Conforto'], ['viagem|natal|presente|ferias', 'Metas'],
+  ['restaurante|ifood|lazer|cinema|bar|diversao|passeio', 'Prazeres'], ['livro|curso|aula', 'Conhecimento']];
+function grupoDe(conta){
+  const g = ((S.cfg || {})[conta] || {}).grupo; if (g) return g;
+  const n = semAcento(conta); const r = SUGESTAO_GRUPO.find(([re]) => new RegExp(re).test(n)); return r ? r[1] : '';
+}
+function porGrupo(i){
+  const o = {}; GRUPOS.forEach(g => o[g.n] = 0); let sem = 0;
+  S.regs.forEach(r => { if (ciclo(r.data) !== i) return;
+    if (r.tipo === 'Investimento') o['Liberdade financeira'] += r.valor;
+    else if (r.tipo === 'Despesa') { const g = grupoDe(r.conta); if (g && o[g] != null) o[g] += r.valor; else sem += r.valor; } });
+  return { o, sem };
+}
+function guiaInicio(i){
+  const t = totais(i), { o, sem } = porGrupo(i);
+  if (!t.Entrada) { $('#iGuia').innerHTML = '<div class="empty" style="padding-top:0">Registre as entradas do mês para comparar com o guia.</div><button class="link" id="cfgAbrir">Grupos das contas</button>'; $('#cfgAbrir').onclick = abrirCfg; return; }
+  $('#iGuia').innerHTML = '<p class="s" style="margin:-6px 0 12px;color:var(--muted);font-size:14px">Quanto da renda foi para cada grupo, comparado com o método do Investidor Sardinha.</p>' + GRUPOS.map(g => {
+    const pct = o[g.n] / t.Entrada * 100, bom = g.t === 'max' ? pct <= g.p : g.t === 'min' ? pct >= 15 : null;
+    const tag = bom == null ? '' : `<span class="gasto-tag ${bom ? 'ok' : (g.t === 'min' ? 'medio' : 'alto')}">${bom ? 'Dentro' : g.t === 'min' ? 'Abaixo' : 'Acima'}</span>`;
+    return `<div class="lim"><div class="lim-top"><span class="t">${g.n}</span>${tag}</div>
+      <div class="gasto-bar guia-bar" role="img" aria-label="${g.n}: ${Math.round(pct)}% da renda, o guia sugere ${g.t === 'max' ? 'até' : g.t === 'min' ? 'pelo menos 15 a' : ''} ${g.p}%"><i style="width:${Math.min(100, pct / 50 * 100)}%;background:${g.cor}"></i><b style="left:${g.p / 50 * 100}%"></b></div>
+      <div class="lim-num"><span>${brl0(o[g.n])} · ${pct.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}% da renda</span><span>guia: ${g.t === 'max' ? 'até ' : g.t === 'min' ? '15 a ' : ''}${g.p}%</span></div></div>`; }).join('')
+    + (sem ? `<div class="note aviso">${brl0(sem)} em contas sem grupo. Toque em "Grupos das contas" para escolher.</div>` : '')
+    + '<button class="link" id="cfgAbrir">Grupos das contas</button>';
+  $('#cfgAbrir').onclick = abrirCfg;
+}
+function abrirCfg(){
+  $('#cfgErro').textContent = '';
+  $('#cfgLista').innerHTML = S.contas.map((c, k) => `<div class="lim-ed"><label for="cfg${k}">${esc(c)}</label><select id="cfg${k}" data-conta="${esc(c)}"><option value="">Sem grupo</option>${GRUPOS.filter(g => g.n !== 'Liberdade financeira').map(g => `<option ${grupoDe(c) === g.n ? 'selected' : ''}>${g.n}</option>`).join('')}</select></div>`).join('');
+  $('#dlgCfg').showModal();
+}
+$('#cfgFechar').onclick = () => $('#dlgCfg').close();
+$('#cfgSalvar').onclick = async () => {
+  const m = {}; $$('#cfgLista select').forEach(x => { const c = x.dataset.conta; m[c] = { grupo: x.value, acumula: !!((S.cfg || {})[c] || {}).acumula }; });
+  const b = $('#cfgSalvar'); b.disabled = true;
+  try { S.cfg = await api('salvarConfigContas', m); $('#dlgCfg').close(); toast('Grupos salvos'); renderMes(); } catch (e) { $('#cfgErro').textContent = 'Não salvou: ' + e; }
+  b.disabled = false;
+};
+
+/* ---------- Patrimônio ---------- */
+let PT = null;
+function fotos(){ const m = {}; (S.patrimonio || []).forEach(x => (m[x.ciclo] = m[x.ciclo] || []).push(x)); return m; }
+const liquido = l => l.reduce((a, x) => a + (x.tipo === 'Devo' ? -x.valor : x.valor), 0);
+function patrimonioInicio(){
+  const F = fotos(), cs = Object.keys(F).map(Number).sort((a, b) => a - b);
+  if (!cs.length) { $('#iPat').innerHTML = '<div class="empty" style="padding-top:0">Quanto vocês têm (conta, reserva, investimentos) menos o que devem. É o número que mostra se a família está ficando mais rica mês a mês.<button class="btn" id="patAbrir">Registrar agora</button></div>'; $('#patAbrir').onclick = abrirPat; return; }
+  const ult = cs[cs.length - 1], l = F[ult], tot = liquido(l), ant = cs.length > 1 ? liquido(F[cs[cs.length - 2]]) : null;
+  const tenho = l.filter(x => x.tipo !== 'Devo').reduce((a, x) => a + x.valor, 0), devo = l.filter(x => x.tipo === 'Devo').reduce((a, x) => a + x.valor, 0);
+  $('#iPat').innerHTML = `<div class="pat-top"><div><small>Patrimônio em ${nomeCiclo(ult).toLowerCase()}</small><b class="${tot < 0 ? 'ruim' : ''}">${brl0(tot)}</b>${ant != null ? `<span class="var ${tot >= ant ? 'bom' : 'ruim'}">${tot >= ant ? '↑' : '↓'} ${brl0(Math.abs(tot - ant))} vs ${nomeCiclo(cs[cs.length - 2]).slice(0, 3).toLowerCase()}</span>` : ''}</div></div>
+    <div class="resp-nums"><div><small>Tenho</small><b>${brl0(tenho)}</b></div><div><small>Devo</small><b class="${devo ? 'ruim' : ''}">${brl0(devo)}</b></div></div>
+    ${cs.length > 1 && window.Chart ? '<div class="chart" style="height:150px;margin-top:10px"><canvas id="patChart" role="img"></canvas></div>' : '<div class="help">O gráfico aparece a partir do segundo mês registrado.</div>'}
+    <button class="link" id="patAbrir">Atualizar valores de ${nomeCiclo(Math.min(11, Math.max(0, ciclo(hoje())))).toLowerCase()}</button>`;
+  $('#patAbrir').onclick = abrirPat;
+  if ($('#patChart')) {
+    const d = cs.map(c => Math.round(liquido(F[c])));
+    $('#patChart').setAttribute('aria-label', 'Patrimônio por mês: ' + cs.map((c, k) => nomeCiclo(c) + ' ' + brl0(d[k])).join(', '));
+    if (PT) PT.destroy();
+    PT = new Chart($('#patChart'), { type: 'line', data: { labels: cs.map(c => nomeCiclo(c).slice(0, 3)), datasets: [{ data: d, borderColor: '#6CC3CE', backgroundColor: 'rgba(108,195,206,.12)', fill: true, tension: .3, pointRadius: 4, pointBackgroundColor: '#6CC3CE', borderWidth: 2.5 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { displayColors: false, callbacks: { label: c => brl(c.raw) } } },
+        scales: { x: { grid: { display: false }, ticks: { color: '#A3B1C6' } }, y: { grid: { color: 'rgba(255,255,255,.06)' }, border: { display: false }, ticks: { color: '#A3B1C6', maxTicksLimit: 4, callback: v => brl0(v) } } } } });
+  }
+}
+function linhaPat(x){ return `<div class="pat-ed"><input placeholder="Ex.: Conta corrente" value="${esc(x.item || '')}" data-f="item" aria-label="Item"><select data-f="tipo" aria-label="Tenho ou devo"><option ${x.tipo !== 'Devo' ? 'selected' : ''}>Tenho</option><option ${x.tipo === 'Devo' ? 'selected' : ''}>Devo</option></select><input inputmode="decimal" placeholder="R$ 0,00" value="${x.valor ? x.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ''}" data-f="valor" aria-label="Valor"></div>`; }
+function abrirPat(){
+  const F = fotos(), cs = Object.keys(F).map(Number).sort((a, b) => a - b), c = Math.min(11, Math.max(0, ciclo(hoje())));
+  const base = F[c] || (cs.length ? F[cs[cs.length - 1]] : [{ item: 'Conta corrente', tipo: 'Tenho' }, { item: 'Reserva de emergência', tipo: 'Tenho' }, { item: 'Investimentos', tipo: 'Tenho' }, { item: 'Fatura do cartão', tipo: 'Devo' }]);
+  $('#patTit').textContent = 'Patrimônio de ' + nomeCiclo(c).toLowerCase();
+  $('#patLista').innerHTML = base.map(linhaPat).join(''); $('#patErro').textContent = ''; $('#dlgPat').showModal();
+}
+$('#patMais').onclick = () => $('#patLista').insertAdjacentHTML('beforeend', linhaPat({}));
+$('#patFechar').onclick = () => $('#dlgPat').close();
+$('#patSalvar').onclick = async () => {
+  const itens = $$('#patLista .pat-ed').map(l => ({ item: l.querySelector('[data-f=item]').value.trim(), tipo: l.querySelector('[data-f=tipo]').value, valor: num(l.querySelector('[data-f=valor]').value) })).filter(x => x.item);
+  if (!itens.length) { $('#patErro').textContent = 'Coloque pelo menos um item.'; return; }
+  const b = $('#patSalvar'); b.disabled = true;
+  try { S.patrimonio = await api('salvarPatrimonio', Math.min(11, Math.max(0, ciclo(hoje()))), itens); $('#dlgPat').close(); toast('Patrimônio salvo'); patrimonioInicio(); } catch (e) { $('#patErro').textContent = 'Não salvou: ' + e; }
+  b.disabled = false;
+};
+
+/* ---------- Previsão do fim do mês e dos próximos meses ---------- */
+function variavel(i){ return S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === i && r.forma !== 'Fixa' && r.forma !== 'Parcelada').reduce((a, r) => a + r.valor, 0); }
+function anuaisNoCiclo(i){
+  return (S.anuais || []).filter(a => { const ano = S.ini.y + Math.floor((S.ini.m - 1 + i) / 12), mes = (S.ini.m - 1 + i) % 12 + 1;
+    const datas = [`${ano}-${String(mes).padStart(2, '0')}`, `${mes === 12 ? ano + 1 : ano}-${String(mes % 12 + 1).padStart(2, '0')}`];
+    return ciclo(`${ano}-${String(a.mes).padStart(2, '0')}-${String(a.dia).padStart(2, '0')}`) === i || ciclo(`${ano + 1}-${String(a.mes).padStart(2, '0')}-${String(a.dia).padStart(2, '0')}`) === i; });
+}
+function previsaoInicio(i){
+  const atual = ciclo(hoje());
+  if (i !== atual || atual < 0 || atual > 11) { $('#cPrev').classList.add('hide'); return; }
+  $('#cPrev').classList.remove('hide');
+  const t = totais(i), p = periodo(i), diasTot = Math.round((p.fim - new Date(S.ini.y, S.ini.m - 1 + i, 15)) / 864e5) + 1;
+  const passados = Math.max(1, diasTot - Math.max(0, Math.ceil((p.fim - new Date()) / 864e5))), restam = diasTot - passados;
+  const ant = [i - 1, i - 2, i - 3].filter(k => k >= 0 && totais(k).Entrada > 0);
+  const ritmoHist = ant.length ? ant.reduce((a, k) => a + variavel(k), 0) / ant.length : null, varAtual = variavel(i);
+  const extra = ritmoHist != null ? Math.max(0, ritmoHist - varAtual) : varAtual / passados * restam;
+  const anu = anuaisNoCiclo(i).filter(a => !S.regs.some(r => ciclo(r.data) === i && semAcento(r.conta + ' ' + r.obs).includes(semAcento(a.nome)))).reduce((s, a) => s + a.valor, 0);
+  const prev = t.saldo - extra - anu;
+  const medEnt = ant.length ? ant.reduce((a, k) => a + totais(k).Entrada, 0) / ant.length : t.Entrada, medVar = ritmoHist != null ? ritmoHist : varAtual / passados * diasTot;
+  const fixoDe = k => S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === k && (r.forma === 'Fixa' || r.forma === 'Parcelada')).reduce((a, r) => a + r.valor, 0);
+  const prox = [1, 2, 3].map(d => i + d).filter(k => k <= 11).map(k => { const sai = fixoDe(k) + medVar + anuaisNoCiclo(k).reduce((s, a) => s + a.valor, 0); return { k, sai, sobra: medEnt - sai }; });
+  $('#iPrev').innerHTML = `<div class="pat-top"><div><small>Se continuar assim, em ${ddmm(p.fim.getFullYear() + '-' + String(p.fim.getMonth() + 1).padStart(2, '0') + '-' + String(p.fim.getDate()).padStart(2, '0'))}</small>
+      <b class="${prev < 0 ? 'ruim' : ''}">${prev < 0 ? 'faltam ' + brl0(-prev) : 'sobram ' + brl0(prev)}</b></div></div>
+    <div class="help" style="margin-top:4px">Saldo de hoje ${brl0(t.saldo)} · gastos do dia a dia previstos até o fim ${brl0(extra)}${anu ? ' · gastos do ano ' + brl0(anu) : ''}. ${ritmoHist != null ? 'Base: média dos últimos meses.' : 'Base: o ritmo deste mês (ainda não há meses anteriores).'}</div>
+    ${prox.length ? '<div class="cmp-sub">Próximos meses (entrada média ' + brl0(medEnt) + ')</div>' + prox.map(x => `<div class="cmp-l prev-l"><span>${nomeCiclo(x.k)}</span><span class="num">sai ${brl0(x.sai)}</span><span class="num cmp-d ${x.sobra < 0 ? 'ruim' : 'bom'}">${x.sobra < 0 ? 'falta ' + brl0(-x.sobra) : 'sobra ' + brl0(x.sobra)}</span></div>`).join('') : ''}`;
+}
+
+/* ---------- Para onde vai a renda (diagrama de fluxo) ---------- */
+function fluxoInicio(i){
+  const t = totais(i), { o, sem } = porGrupo(i);
+  const destinos = GRUPOS.map(g => ({ n: g.n, v: o[g.n], cor: g.cor })).concat(sem ? [{ n: 'Sem grupo', v: sem, cor: '#5B6474' }] : []).filter(d => d.v > 0);
+  const sobra = t.Entrada - t.Despesa - t.Investimento; if (sobra > 0) destinos.push({ n: 'Sobrou', v: sobra, cor: '#34D399' });
+  if (!t.Entrada || !destinos.length) { $('#iFluxo').innerHTML = '<div class="empty" style="padding-top:0">Aparece quando o mês tiver entradas e despesas.</div>'; return; }
+  const origens = {}; S.regs.forEach(r => { if (r.tipo === 'Entrada' && ciclo(r.data) === i) origens[r.conta] = (origens[r.conta] || 0) + r.valor; });
+  const fontes = Object.entries(origens).map(([n, v]) => ({ n, v })); if (sobra < 0) fontes.push({ n: 'Faltou', v: -sobra, falta: true });
+  const totE = fontes.reduce((a, f) => a + f.v, 0), totS = destinos.reduce((a, d) => a + d.v, 0), W = 360, gap = 6, H = Math.max(220, destinos.length * 34);
+  const escala = (H - gap * (Math.max(fontes.length, destinos.length) - 1)) / Math.max(totE, totS);
+  let y = 0; fontes.forEach(f => { f.y = y; f.h = Math.max(2, f.v * escala); y += f.h + gap; });
+  y = 0; destinos.forEach(d => { d.y = y; d.h = Math.max(2, d.v * escala); y += d.h + gap; d.usado = 0; });
+  const x0 = 92, x1 = 214; let links = '';
+  fontes.forEach(f => { let fy = f.y; destinos.forEach(d => { const h = f.h * d.v / totS; if (h < .3) return; const dy = d.y + d.usado; d.usado += h;
+    links += `<path d="M${x0} ${fy + h / 2}C${(x0 + x1) / 2} ${fy + h / 2} ${(x0 + x1) / 2} ${dy + h / 2} ${x1} ${dy + h / 2}" stroke="${d.cor}" stroke-opacity=".38" stroke-width="${h}" fill="none"/>`; fy += h; }); });
+  const pctR = v => Math.round(v / t.Entrada * 100);
+  $('#iFluxo').innerHTML = `<svg class="fluxo" viewBox="0 0 ${W} ${y}" role="img" aria-label="Entradas: ${fontes.map(f => f.n + ' ' + brl0(f.v)).join(', ')}. Destinos: ${destinos.map(d => d.n + ' ' + brl0(d.v)).join(', ')}">
+    ${links}
+    ${fontes.map(f => `<rect x="${x0 - 8}" y="${f.y}" width="8" height="${f.h}" rx="3" fill="${f.falta ? '#F87171' : '#A3B1C6'}"/><text x="${x0 - 12}" y="${f.y + f.h / 2 - 2}" text-anchor="end" class="fl-n">${esc(f.n)}</text><text x="${x0 - 12}" y="${f.y + f.h / 2 + 11}" text-anchor="end" class="fl-v">${brl0(f.v)}</text>`).join('')}
+    ${destinos.map(d => `<rect x="${x1}" y="${d.y}" width="8" height="${d.h}" rx="3" fill="${d.cor}"/><text x="${x1 + 13}" y="${d.y + d.h / 2 - 2}" class="fl-n">${esc(d.n)}</text><text x="${x1 + 13}" y="${d.y + d.h / 2 + 11}" class="fl-v">${brl0(d.v)} · ${pctR(d.v)}%</text>`).join('')}
+  </svg>`;
+}
+
+/* ---------- Assinaturas ---------- */
+$('#sBtn').onclick = async () => {
+  const b = $('#sBtn'); b.disabled = true; b.textContent = 'Procurando...'; $('#sErro').textContent = '';
+  try { const r = await api('assinaturas');
+    $('#sRes').innerHTML = (r.resumo ? `<div class="note" style="margin-top:12px">${esc(r.resumo)}</div>` : '') + (r.itens.length ? r.itens.map(x => `<div class="row"><div class="mid"><div class="t">${esc(x.nome)}</div><div class="s">${x.vezes ? x.vezes + ' vezes' : ''}${x.alerta ? ' · <b class="hoje">' + esc(x.alerta) + '</b>' : ''}</div></div><span class="num out">${brl(x.valor)}</span></div>`).join('') : '<div class="empty">Nenhuma cobrança repetida encontrada.</div>');
+  } catch (e) { $('#sErro').textContent = String(e); }
+  b.disabled = false; b.textContent = 'Procurar de novo';
+};
+
+/* ---------- Calendário do Histórico ---------- */
+S.histModo = 'lista'; S.diaSel = null;
+function calendario(){
+  const box = $('#hCal'); chipGroupSeg();
+  if (S.histModo !== 'cal') { box.innerHTML = ''; return; }
+  const ini = new Date(S.ini.y, S.ini.m - 1 + S.mes, 15), fim = periodo(S.mes).fim, dias = [];
+  for (let d = new Date(ini); d <= fim; d.setDate(d.getDate() + 1)) dias.push(new Date(d));
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`, h = hoje();
+  const cel = dias.map(d => { const k = iso(d), rs = S.regs.filter(r => r.data === k), sai = rs.filter(r => r.tipo === 'Despesa').reduce((a, r) => a + r.valor, 0), ent = rs.some(r => r.tipo === 'Entrada');
+    return `<button class="cal-d${k === h ? ' hoje-d' : ''}${S.diaSel === k ? ' sel' : ''}${k > h ? ' fut' : ''}" data-d="${k}" aria-label="${d.getDate()}/${d.getMonth() + 1}: ${rs.length} registros${sai ? ', saiu ' + brl0(sai) : ''}"><span>${d.getDate()}</span>${sai ? `<small>${brl0(sai).replace('R$', '').trim()}</small>` : ''}${ent ? '<i class="dot in"></i>' : ''}${rs.some(r => r.tipo === 'Investimento') ? '<i class="dot inv"></i>' : ''}</button>`; });
+  const vazio = '<span></span>'.repeat(ini.getDay());
+  box.innerHTML = `<div class="card cal"><div class="cal-sem">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(x => `<span>${x}</span>`).join('')}</div><div class="cal-g">${vazio}${cel.join('')}</div>
+    <div class="help">Valor = quanto saiu no dia. Bolinha verde = entrada, roxa = investimento. ${S.diaSel ? 'Mostrando só ' + ddmm(S.diaSel) + '. <button class="link" id="calTodos" style="width:auto;min-height:32px;display:inline">Ver o mês todo</button>' : 'Toque num dia para ver os registros.'}</div></div>`;
+  $$('#hCal .cal-d').forEach(b => b.onclick = () => { S.diaSel = S.diaSel === b.dataset.d ? null : b.dataset.d; renderHist(); });
+  if ($('#calTodos')) $('#calTodos').onclick = () => { S.diaSel = null; renderHist(); };
+}
+function chipGroupSeg(){ $$('#hModo button').forEach(b => { b.classList.toggle('on', b.dataset.m === S.histModo); b.onclick = () => { S.histModo = b.dataset.m; S.diaSel = null; renderHist(); }; }); }
+
 let CH = null;
 function grafico(saldos, atual){
   if (!window.Chart) { $('#iColsWrap').classList.remove('hide'); $('#iChart').parentNode.classList.add('hide'); return; }
@@ -1416,7 +1649,8 @@ function renderHist(){
       : '<div class="empty">Nada encontrado com "' + esc($('#hBusca').value.trim()) + '".</div>';
     ligaLinhas('#hLista'); return;
   }
-  const lista = S.regs.filter(r => ciclo(r.data) === S.mes && (S.filtro === 'Tudo' || r.tipo === S.filtro) && (!S.conta || r.conta === S.conta)).sort((a, b) => a.data < b.data ? -1 : a.data > b.data ? 1 : 0);
+  calendario();
+  const lista = S.regs.filter(r => ciclo(r.data) === S.mes && (S.filtro === 'Tudo' || r.tipo === S.filtro) && (!S.conta || r.conta === S.conta) && (!S.diaSel || r.data === S.diaSel)).sort((a, b) => a.data < b.data ? -1 : a.data > b.data ? 1 : 0);
   $('#hLista').innerHTML = lista.length ? lista.map(r => linhaReg(r, true)).join('') : '<div class="empty">Nada registrado aqui.<button class="btn" data-novo="' + (S.filtro === 'Tudo' ? 'Despesa' : S.filtro) + '">Adicionar o primeiro</button></div>';
   ligaLinhas('#hLista');
 }
