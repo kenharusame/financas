@@ -431,6 +431,7 @@ html.pc .pc-topo>.saldo{grid-row:span 2}
 html.pc .pc-topo>.grid3,html.pc .pc-topo>#cResumo{grid-column:2}
 html.pc .pc-topo>#cResumo .card{margin:0;height:100%}
 html.pc .pc-topo .grid3>.mini{display:flex;flex-direction:column;justify-content:center;margin:0}
+html.pc #planejar .pc-topo{grid-template-columns:1fr 1fr}
 html.pc .pc-cols{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;align-items:start}
 html.pc .pc-cols>div>*{width:100%}
 html.pc #adicionar,html.pc #dicas{max-width:760px;margin:0 auto}
@@ -776,7 +777,7 @@ html.pc .toast{bottom:24px}
   const P = {
     inicio:     { topo: ['.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#iHero', '#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
     relatorios: { main: ['#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cPrev', '#cPat'] },
-    planejar:   { topo: ['#cFase'], main: ['#cLim', '#cMetas', '#cDesejos', '#cAnual', '#iParc'], side: ['#cFuturo', '#cMesada', '#cGuia', '#cZero'] },
+    planejar:   { topo: ['#cFase', '#cFuturo'], main: ['#cLim', '#cMetas', '#cDesejos', '#cAnual', '#iParc'], side: ['#cMesada', '#cGuia', '#cZero'] },
     historico:  { main: ['#hLista'], side: ['#historico .busca', '#hModo', '#hFiltro', '#hCal'] }
   };
   const orig = {};
