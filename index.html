@@ -971,7 +971,9 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.orc = d.orcamento || {}; S.limiteCartao = d.limiteCartao || 500; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.orc = d.orcamento || {}; S.limiteCartao = d.limiteCartao || 500; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.par = d.partilha || {};
+    Object.keys(PAR).forEach(k => { if (S.par[PAR[k]] == null) { let loc = null; try { loc = JSON.parse(localStorage.getItem(k)); } catch (e) {}
+      if (loc != null && (Array.isArray(loc) ? loc.length : typeof loc === 'object' ? Object.keys(loc).length : loc)) lsGrava(k, loc); } }); S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -1004,7 +1006,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl(t.Investimento - (t.Retirada || 0)); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); faturaInicio(); salarioInicio(i, t); resisteInicio(i); revisaoInicio(); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl(t.Investimento - (t.Retirada || 0)); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); faturaInicio(); salarioInicio(i, t); revisaoInicio(); resisteInicio(i); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1400,8 +1402,12 @@ function avisoLimite(){
 }
 
 /* ---------- Início: o que fazer agora (meta da semana, pague-se primeiro, alertas, comparação) ---------- */
-const lsLe = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
-const lsGrava = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+/* estes ficam na planilha, para o casal ver o mesmo nos dois celulares */
+const PAR = { fin_pensando: 'pensando', fin_economizado: 'economizado', fin_valeu: 'valeu' };
+const lsLe = (k, d) => { if (PAR[k] && S.par && S.par[PAR[k]] != null) return JSON.parse(JSON.stringify(S.par[PAR[k]]));
+  try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
+const lsGrava = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
+  if (PAR[k]) { S.par = S.par || {}; S.par[PAR[k]] = JSON.parse(JSON.stringify(v)); api('salvarPartilha', PAR[k], v).catch(() => {}); } };
 const inicioCiclo = k => new Date(S.ini.y, S.ini.m - 1 + k, 15);
 function guardarPara(meta, v){
   S.tipo = 'Investimento'; ir('adicionar');
@@ -1475,7 +1481,7 @@ function acaoInicio(i, t){
   const rev = assinaturaParaRever();
   if (rev) al.push(`<div class="alerta pensa"><span>Usaram <b>${esc(rev.conta)}</b> (${brl0(rev.valor)}/mês) nos últimos 30 dias?</span><span style="display:flex;gap:6px"><button class="chip acao" data-rev="1" data-c="${esc(rev.conta)}">Manter</button><button class="chip acao" data-rev="0" data-c="${esc(rev.conta)}" data-v="${rev.valor}">Cancelar</button></span></div>`);
   const prontas = lerPensando().filter(x => Date.now() - x.quando >= 864e5);
-  prontas.slice(0, 2).forEach(x => al.push(`<div class="alerta pensa"><span>Ainda querem <b>${esc(x.oque)}</b> (${brl0(x.valor)})? Já passaram 24h.</span><button class="chip acao" data-pensa="${x.quando}">Decidir</button></div>`));
+  if (0) prontas.slice(0, 2).forEach(x => al.push(`<div class="alerta pensa"><span>Ainda querem <b>${esc(x.oque)}</b> (${brl0(x.valor)})? Já passaram 24h.</span><button class="chip acao" data-pensa="${x.quando}">Decidir</button></div>`));
   $('#cAlertas').innerHTML = ''; S.alertasHtml = al.join('');
   const ligaAlertas = () => { $$('#cResumo [data-rev]').forEach(b => b.onclick = () => { const r = lsLe('fin_revAssin', {}); r[b.dataset.c] = Date.now(); lsGrava('fin_revAssin', r);
     if (b.dataset.rev === '0') toast('Cancelem no site ou app de ' + b.dataset.c + '. Economia de ' + brl0(+b.dataset.v * 12) + ' por ano.'); acaoInicio(i, t); });
@@ -1567,10 +1573,15 @@ function resisteInicio(i){
   const seq = diasSemSuperfluo(), eco = lsLe('fin_economizado', 0);
   const valeu = lsLe('fin_valeu', {}), arr = {}; S.regs.forEach(r => { if (valeu[r.id] === false) arr[r.conta] = (arr[r.conta] || 0) + 1; });
   const top = Object.entries(arr).filter(x => x[1] >= 2).sort((a, b) => b[1] - a[1]).slice(0, 3);
-  $('#cResiste').innerHTML = `<div class="card"><h2>Resistindo</h2>${linhas.join('')}
+  const pront = lerPensando().filter(x => Date.now() - x.quando >= 864e5), esperando = lerPensando().length - pront.length;
+  pront.slice(0, 3).forEach(x => linhas.push(`<div class="alerta pensa"><span>Ainda querem <b>${esc(x.oque)}</b> (${brl0(x.valor)})? Já passaram 24h.</span><button class="chip acao" data-pensa="${x.quando}">Decidir</button></div>`));
+  if (esperando > 0) linhas.push(`<div class="cmp1">${esperando} ${esperando === 1 ? 'compra esperando' : 'compras esperando'} as 24h da trava.</div>`);
+  if (S.revFalta) linhas.push(`<button class="alerta medio rev-link" data-ir="relatorios" type="button" style="width:100%;text-align:left"><span><b>Revisão da semana:</b> ${S.revFalta} ${S.revFalta === 1 ? 'gasto' : 'gastos'} para avaliar</span><span>Abrir</span></button>`);
+  $('#cResiste').innerHTML = `<div class="card"><h2>Controle das vontades</h2>${linhas.join('')}
     <div class="res-grid"><div><small>Dias sem supérfluo</small><b>${seq}</b><span>${seq >= 7 ? 'Semana inteira!' : seq >= 3 ? 'Continuem assim' : 'Cada dia conta'}</span></div>
     <div><small>Deixaram de gastar</small><b>${brl0(eco)}</b><span>desistindo na trava de 24h</span></div></div>
     ${top.length ? `<div class="help">Mais arrependimentos: ${top.map(([c, n]) => `${esc(c)} (${n}x)`).join(', ')}.</div>` : ''}</div>`;
+  $$('#cResiste [data-pensa]').forEach(b => b.onclick = () => decidirPensando(+b.dataset.pensa));
 }
 // 3) aviso ao par
 function parInicio(){
@@ -1588,7 +1599,7 @@ function revisaoInicio(){
   const valeu = lsLe('fin_valeu', {}), lim = new Date(); lim.setDate(lim.getDate() - 7); const limIso = lim.toISOString().slice(0, 10);
   const l = S.regs.filter(r => r.tipo === 'Despesa' && r.data >= limIso && r.data <= hoje() && superfluo(r.conta) && r.forma !== 'Fixa').sort((a, b) => b.valor - a.valor);
   const falta = l.filter(r => valeu[r.id] == null);
-  $('#cRevLink').innerHTML = falta.length ? `<button class="card rev-link" data-ir="relatorios" type="button"><b>Revisão da semana pronta</b><span>${falta.length} ${falta.length === 1 ? 'gasto' : 'gastos'} para avaliar</span></button>` : '';
+  S.revFalta = falta.length; $('#cRevLink').innerHTML = '' && falta.length ? `<button class="card rev-link" data-ir="relatorios" type="button"><b>Revisão da semana pronta</b><span>${falta.length} ${falta.length === 1 ? 'gasto' : 'gastos'} para avaliar</span></button>` : '';
   marcaRel(falta.length > 0);
   if (!falta.length) { box.innerHTML = ''; return; }
   box.innerHTML = `<div class="card"><h2>Revisão da semana</h2><p class="fase-txt">Os supérfluos dos últimos 7 dias. Valeu a pena?</p>${falta.slice(0, 8).map(r => `<div class="rev-it"><div class="rev-txt"><b>${esc(r.conta)}</b><span>${ddmm(r.data)} · ${brl(r.valor)}</span></div>
@@ -2763,7 +2774,7 @@ $('#zBtn').onclick = async () => {
   if ($('#zConf').value.trim().toUpperCase() !== 'APAGAR') { $('#zErro').textContent = 'Digite APAGAR para confirmar.'; return; }
   if (!confirm('Apagar TODOS os lançamentos? Uma cópia fica na aba Backup da planilha.')) return;
   const b = $('#zBtn'); b.disabled = true; b.textContent = 'Apagando...';
-  try { const r = await api('comecarDoZero', 'APAGAR'); $('#zConf').value = ''; ['fin_pensando', 'fin_economizado', 'fin_valeu', 'fin_avisosVistos'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+  try { const r = await api('comecarDoZero', 'APAGAR'); $('#zConf').value = ''; [['fin_pensando', []], ['fin_economizado', 0], ['fin_valeu', {}]].forEach(([k, v]) => lsGrava(k, v)); ['fin_pensando', 'fin_economizado', 'fin_valeu', 'fin_avisosVistos'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     toast(`${r.apagados} lançamentos apagados. Cópia na aba "${r.backup}".`); await carregar(); ir('inicio'); }
   catch (e) { $('#zErro').textContent = 'Não apagou: ' + e; }
   b.disabled = false; b.textContent = 'Apagar todos os lançamentos';
