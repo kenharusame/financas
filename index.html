@@ -974,7 +974,7 @@ function renderInicio(){
   { const el = $('#iDia'); if (ciclo(hoje()) === i && dias > 0 && t.Entrada > 0) { const pd = Math.max(0, saldo - faltaFat) / dias;
       el.innerHTML = saldo - faltaFat > 0 ? `Dá para gastar <b>${brl(pd)} por dia</b> até o dia 14` : '<b>Sem folga:</b> qualquer gasto agora sai do vermelho'; el.className = 'dia' + (pd < 20 ? ' ruim' : ''); }
     else el.innerHTML = ''; }
-  { const g = t.Entrada ? t.Despesa / t.Entrada : null, nivel = g == null ? '' : g > 1 ? 'alto' : g >= .8 ? 'medio' : 'ok';
+  { const g = t.Entrada ? (t.Despesa - naFatura + adi) / t.Entrada : null, nivel = g == null ? '' : g > 1 ? 'alto' : g >= .8 ? 'medio' : 'ok';
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
