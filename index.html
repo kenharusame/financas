@@ -1317,7 +1317,7 @@ function fixosMes(){
   return porGrupo(atual).o['Custos fixos'] || 0;
 }
 function degraus(){ const f = fixosMes(); return [10000, Math.max(10000, Math.round(f * 3 / 100) * 100), Math.max(10000, Math.round(f * 6 / 100) * 100)]; }
-const fotoHtml = (m, cls) => m && m.foto ? '<img class="foto-meta ' + (cls || '') + '" loading="lazy" referrerpolicy="no-referrer" src="' + esc(m.foto) + '" alt="">' : '';
+const fotoHtml = (m, cls) => m && m.foto ? '<img class="foto-meta ' + (cls || '') + '" onerror="this.remove()" loading="lazy" referrerpolicy="no-referrer" src="' + esc(m.foto) + '" alt="">' : '';
 function mensalMeta(m){                       // quanto falta guardar por mês para chegar no prazo
   const g = progressoMeta(m); if (!g.falta) return 0;
   if (!m.prazo) return 0;
@@ -1341,7 +1341,7 @@ function acaoInicio(i, t){
     const semana = S.regs.filter(r => r.tipo === 'Investimento' && r.meta === m.nome && (agora - parse(r.data)) / 864e5 < 7).reduce((a, r) => a + r.valor, 0);
     const feito = semana >= sem;
     const outras = minhas().filter(x => progressoMeta(x).falta > 0);
-    h = `<div class="card semana ${feito ? 'feito' : ''}">${m.foto ? `<img class="sem-foto" loading="lazy" referrerpolicy="no-referrer" src="${esc(m.foto)}" alt="${esc(m.nome)}">` : ''}<div class="lim-top"><span class="t">Meta da semana</span>${outras.length > 1 ? '<button class="link" id="semTroca" style="margin:0">Trocar</button>' : ''}</div>
+    h = `<div class="card semana ${feito ? 'feito' : ''}">${m.foto ? `<img class="sem-foto" onerror="this.remove()" loading="lazy" referrerpolicy="no-referrer" src="${esc(m.foto)}" alt="${esc(m.nome)}">` : ''}<div class="lim-top"><span class="t">Meta da semana</span>${outras.length > 1 ? '<button class="link" id="semTroca" style="margin:0">Trocar</button>' : ''}</div>
       <div class="sem-txt">${feito ? `Esta semana já foi: <b>${brl0(semana)}</b> para ${esc(m.nome)}.` : `Faltam <b>${brl0(g.falta)}</b> para ${esc(m.nome)}. Guarde <b>${brl0(sem - semana)}</b> esta semana.`}</div>
       <div class="gasto-bar meta-bar" role="progressbar" aria-label="${esc(m.nome)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${feito ? '' : btn('semGuardei', 'Guardei')}<button class="chip acao" id="semFoto">${m.foto ? 'Trocar foto' : 'Pôr foto do que quer comprar'}</button><button class="chip acao" id="semLink">Colar link da foto</button><input type="file" id="semArq" accept="image/*" class="hide"></div></div>`;
@@ -1496,7 +1496,7 @@ function renderDesejos(){
     const aberto = S.dAberto === d.id, m = (S.metas || []).find(x => x.nome === d.nome), g = m ? progressoMeta(m) : null, feitos = d.pontos.filter(x => x.ok).length;
     return `<div class="des${aberto ? ' aberto' : ''}">
       <div class="des-top"><span class="des-n">${k + 1}</span>
-        ${m && m.foto ? `<img class="des-foto" loading="lazy" referrerpolicy="no-referrer" src="${esc(m.foto)}" alt="">` : ''}<button class="des-nome" data-dab="${d.id}" aria-expanded="${aberto}"><b>${esc(d.nome)}</b>${k === 0 ? ' <span class="tag fixa">Meta</span>' : ''}<div class="s">${brl(d.preco)}${g ? ' · guardado ' + Math.round(g.p * 100) + '%' : ''}${d.pontos.length ? ` · ${feitos} de ${d.pontos.length} passos` : ''}</div></button>
+        ${m && m.foto ? `<img class="des-foto" onerror="this.remove()" loading="lazy" referrerpolicy="no-referrer" src="${esc(m.foto)}" alt="">` : ''}<button class="des-nome" data-dab="${d.id}" aria-expanded="${aberto}"><b>${esc(d.nome)}</b>${k === 0 ? ' <span class="tag fixa">Meta</span>' : ''}<div class="s">${brl(d.preco)}${g ? ' · guardado ' + Math.round(g.p * 100) + '%' : ''}${d.pontos.length ? ` · ${feitos} de ${d.pontos.length} passos` : ''}</div></button>
         ${meu ? `<div class="des-mov"><button class="chip" data-dmv="${d.id}" data-dir="-1" aria-label="Subir ${esc(d.nome)}" ${k === 0 ? 'disabled' : ''}>${seta('M6 15l6-6 6 6')}</button><button class="chip" data-dmv="${d.id}" data-dir="1" aria-label="Descer ${esc(d.nome)}" ${k === l.length - 1 ? 'disabled' : ''}>${seta('M6 9l6 6 6-6')}</button></div>` : ''}</div>
       ${aberto ? `<div class="des-det">
         ${d.link ? `<a class="link" href="${esc(d.link)}" target="_blank" rel="noopener noreferrer">Abrir onde comprar</a>` : ''}
