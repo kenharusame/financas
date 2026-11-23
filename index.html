@@ -802,7 +802,7 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; preencheTipos(); S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -896,7 +896,7 @@ const TIPOS = [
   { n: 'Assinaturas', ic: 'play', g: 'Conforto', re: 'adobe|netflix|spotify|streaming|youtube|disney|prime|assinatura|canva', sup: true },
   { n: 'Celular', ic: 'celular', g: 'Custos fixos', re: 'iphone|telefone|celular' },
   { n: 'Lazer', ic: 'presente', g: 'Prazeres', re: 'lazer|cinema|show|passeio|diversao', sup: true },
-  { n: 'Restaurante', ic: 'garfo', g: 'Prazeres', re: 'restaurante|ifood|lanche|delivery|almoco|jantar', sup: true },
+  { n: 'Restaurante', ic: 'garfo', g: 'Prazeres', re: 'restaurante|ifood|lanche|delivery|almoco|jantar|galeto|confeitaria|pizza|padoca|cafe', sup: true },
   { n: 'Roupas', ic: 'camiseta', g: 'Conforto', re: 'roupa|calcado|sapato|tenis' },
   { n: 'Compras para casa', ic: 'cama', g: 'Conforto', re: 'cama|movel|sofa|eletro' },
   { n: 'Viagem', ic: 'aviao', g: 'Metas', re: 'viagem|passagem|hotel' },
