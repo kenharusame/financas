@@ -2167,6 +2167,7 @@ async function economiaGuia(i, t, o){
     entradasDoMes: Math.round(t.Entrada), despesasDoMes: Math.round(t.Despesa), investidoNoMes: Math.round(t.Investimento), salarioDaFamilia: Math.round(salarioFamilia()),
     grupos: GRUPOS.map(g => ({ grupo: g.n, gasto: Math.round(o[g.n]), pctDaRenda: Math.round(o[g.n] / t.Entrada * 100), guia: (g.t === 'max' ? 'até ' : g.t === 'min' ? '15 a ' : '') + g.p + '%' })),
     contas: Object.values(contas).map(c => ({ ...c, esteMes: Math.round(c.esteMes), media3m: Math.round(c.media3m) })).sort((a, b) => b.esteMes - a.esteMes),
+    comprasDoMes: S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === i).sort((a, b) => b.valor - a.valor).slice(0, 80).map(r => ({ data: r.data, conta: r.conta, tipo: tipoDe(r.conta), valor: Math.round(r.valor), obs: r.obs || '' })),
     orcamentoPorTipo: orcLinhas(i).map(x => ({ tipo: x.n, orcamento: x.v, gasto: Math.round(x.g) })) };
   try { S.econ = await api('economiaGuia', info); pinta(S.econ); }
   catch (e) { box.innerHTML = `<div class="note aviso" style="margin-top:12px">A análise de economia não veio agora: ${esc(String(e))}</div>`; }
