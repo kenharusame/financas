@@ -1101,7 +1101,8 @@ async function interpretarTexto(){
   const txt = $('#rTxt').value.trim(); if (!txt) return;
   const b = $('#rOk'); b.disabled = true; $('#rErro').textContent = ''; $('#rHelp').textContent = 'Entendendo...';
   try {
-    const r = await api('interpretar', txt);
+    let r = await api('interpretar', txt); if (Array.isArray(r)) r = r[0] || {};
+    if (!r.tipo) throw 'Não entendi. Tente de novo, dizendo o valor e onde foi.';
     S.tipo = r.tipo; S.forma = r.forma; S.ehTotal = r.valorEhTotal === false ? '0' : '1';
     if (r.tipo === 'Entrada' && r.conta) S.origem = r.conta;
     renderForm();
