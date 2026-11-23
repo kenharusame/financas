@@ -711,14 +711,14 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   const poe = (secao, lista) => { const s = document.getElementById(secao); lista.map(card).filter(Boolean).forEach(el => s.appendChild(el)); };
   const ini = document.getElementById('inicio');
   // Início, nesta ordem
-  ['#iHero', '.card.rapido', '#cSemana', '.card.saldo', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx', '#cDica']
+  ['#iHero', '#cSemana', '.card.saldo', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx', '#cDica']
     .map(x => ['#iContas', '#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
     .filter(Boolean).forEach(el => ini.appendChild(el));
   document.getElementById('adicionar').appendChild(document.getElementById('nCard'));
   poe('relatorios', ['#cLim', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
   poe('planejar', ['#cFuturo', '#cFase', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cZero']);
   const rel = document.getElementById('relatorios'), rv = document.getElementById('cRevisao'); rel.insertBefore(rv, rel.querySelector('header').nextSibling);
-  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo, .rapido') && !el.querySelector('#iContas')) el.classList.add('hide'); });
+  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo') && !el.querySelector('#iContas')) el.classList.add('hide'); });
 })();
 </script>
 <script>
