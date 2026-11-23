@@ -531,6 +531,8 @@ html.pc .toast{bottom:24px}
       <input type="file" id="nArq2" accept="image/*,application/pdf" multiple class="hide">
       <button class="btn ghost" id="nFoto">Tirar foto da nota</button>
       <button class="btn ghost" id="nEnviar">Enviar foto ou PDF</button>
+      <input type="file" id="nArq3" accept="application/pdf" multiple class="hide">
+      <button class="btn ghost" id="nLote">Várias notas em PDF (uma por arquivo)</button>
       <button class="btn hide" id="nLer">Ler nota</button>
       <div class="err" id="nErro" role="alert"></div>
     </div>
@@ -2550,10 +2552,35 @@ $('#nLer').onclick = async () => {
   } catch (e) { $('#nErro').textContent = String(e); }
   b.disabled = false; b.textContent = 'Ler nota';
 };
+/* Lote: cada PDF é uma nota diferente. Lê todos (um por vez) e depois mostra para conferir na sequência. */
+S.lote = []; S.loteErros = [];
+$('#nLote').onclick = () => $('#nArq3').click();
+$('#nArq3').onchange = async e => {
+  const arqs = [...e.target.files].slice(0, 10), b = $('#nLote'), sobra = e.target.files.length - arqs.length;
+  e.target.value = ''; if (!arqs.length) return;
+  $('#nErro').textContent = ''; S.lote = []; S.loteErros = []; b.disabled = true;
+  for (let k = 0; k < arqs.length; k++) {
+    b.textContent = `Lendo nota ${k + 1} de ${arqs.length}...`;
+    try {
+      const f = await lePdf(arqs[k]), r = await api('lerNota', [{ mime: f.mime, b64: f.b64 }]);
+      r.data = r.data || hoje(); r.pagoCom = ''; r.itens.forEach(i => { i.ok = false; i.fora = false; });
+      r.arq = arqs[k].name; S.lote.push(r);
+    } catch (er) { S.loteErros.push(arqs[k].name + ' (' + String(er).replace(/^Error:\s*/, '') + ')'); }
+  }
+  b.disabled = false; b.textContent = 'Várias notas em PDF (uma por arquivo)';
+  S.lote.forEach((r, k) => { r.pos = k + 1; r.de = S.lote.length; });
+  if (sobra > 0) S.loteErros.push(`${sobra} ${sobra === 1 ? 'arquivo ficou' : 'arquivos ficaram'} de fora (máximo 10 por vez)`);
+  proximaNota();
+};
+function proximaNota(){
+  if (!S.lote.length) { fechaNota(); return; }
+  S.nota = S.lote.shift(); S.nFotos = []; pintaFotos();
+  $('#nIni').classList.add('hide'); $('#nConf').classList.remove('hide'); pintaNota(); $('#nConf').scrollIntoView({ block: 'start' });
+}
 function pintaNota(){
   const n = S.nota, dentro = n.itens.filter(i => !i.fora), soma = dentro.reduce((a, i) => a + i.valor, 0), faltam = dentro.filter(i => !i.ok).length;
   const bate = n.total == null ? null : Math.abs(soma - n.total) < 0.05;
-  $('#nConf').innerHTML = `<h2>Confira os itens</h2>
+  $('#nConf').innerHTML = `<h2>Confira os itens</h2>${n.de ? `<div class="help">Nota ${n.pos} de ${n.de} · ${esc(n.arq)}</div>` : ''}
     <div class="two"><div><label for="nLoja">Loja</label><input id="nLoja" value="${esc(n.loja)}"></div><div><label for="nData">Data</label><input id="nData" type="date" value="${n.data}"></div></div>
     <label>Pago com</label><div class="chips" id="nPago">${['Cartão de crédito', 'Mercado Pago', 'Pix', 'Dinheiro'].map(v => `<button class="chip" data-v="${v}">${v}</button>`).join('')}</div>
     <div class="nota-lista">${n.itens.map((i, k) => `<div class="nota-it${i.fora ? ' fora' : ''}${i.ok ? ' ok' : ''}" data-k="${k}">
@@ -2567,7 +2594,7 @@ function pintaNota(){
     ${bate == null ? '' : `<div class="note ${bate ? '' : 'aviso'}">${bate ? 'Bate com o total da nota.' : `A nota diz ${brl(n.total)}. Confira se faltou ou sobrou algum item.`}</div>`}
     <div class="err" id="nErro2" role="alert"></div>
     <button class="btn" id="nSalvar" ${faltam || !dentro.length ? 'disabled' : ''}>${faltam ? `Falta conferir ${faltam} ${faltam === 1 ? 'item' : 'itens'}` : `Salvar ${dentro.length} ${dentro.length === 1 ? 'item' : 'itens'}`}</button>
-    <button class="link" id="nCancela">Cancelar</button>`;
+    <button class="link" id="nCancela">${n.de && n.pos < n.de ? 'Pular esta nota' : 'Cancelar'}</button>${n.de && n.pos < n.de ? '<button class="link" id="nCancelaTudo">Parar o lote</button>' : ''}`;
   chipGroup('#nPago', n.pagoCom, v => { n.pagoCom = v; pintaNota(); });
   $('#nLoja').oninput = e => n.loja = e.target.value; $('#nData').onchange = e => n.data = e.target.value;
   $$('#nConf .nota-it').forEach(el => { const i = n.itens[+el.dataset.k];
@@ -2576,6 +2603,7 @@ function pintaNota(){
   $$('#nConf [data-fora]').forEach(b => b.onclick = () => { const i = n.itens[+b.dataset.fora]; i.fora = !i.fora; i.ok = false; pintaNota(); });
   $('#nTodos').onclick = () => { n.itens.forEach(i => { if (!i.fora) i.ok = true; }); pintaNota(); };
   $('#nCancela').onclick = () => { if (confirm('Descartar a leitura desta nota?')) fechaNota(); };
+  if ($('#nCancelaTudo')) $('#nCancelaTudo').onclick = () => { if (confirm(`Descartar esta e as outras ${S.lote.length} notas que faltam?`)) { S.lote = []; fechaNota(); } };
   $('#nSalvar').onclick = async () => {
     const b = $('#nSalvar'); b.disabled = true; b.textContent = 'Salvando...';
     try {
@@ -2584,7 +2612,11 @@ function pintaNota(){
     } catch (e) { $('#nErro2').textContent = 'Não salvou: ' + e; b.disabled = false; b.textContent = 'Tentar de novo'; }
   };
 }
-function fechaNota(){ S.nota = null; S.nFotos = []; pintaFotos(); $('#nConf').classList.add('hide'); $('#nIni').classList.remove('hide'); }
+function fechaNota(){
+  if (S.lote.length) { proximaNota(); return; }
+  S.nota = null; S.nFotos = []; pintaFotos(); $('#nConf').classList.add('hide'); $('#nIni').classList.remove('hide');
+  if (S.loteErros.length) { $('#nErro').textContent = 'Não consegui ler: ' + S.loteErros.join('; '); S.loteErros = []; }
+}
 
 /* ---------- Histórico ---------- */
 function renderHist(){
