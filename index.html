@@ -2776,7 +2776,7 @@ function renderHist(){
     ligaLinhas('#hLista'); return;
   }
   calendario();
-  const lista = S.regs.filter(r => ciclo(r.data) === S.mes && (S.filtro === 'Tudo' || r.tipo === S.filtro) && (!S.conta || r.conta === S.conta) && (!S.diaSel || r.data === S.diaSel)).sort((a, b) => a.data < b.data ? -1 : a.data > b.data ? 1 : 0);
+  const lista = S.regs.filter(r => ciclo(r.data) === S.mes && (S.filtro === 'Tudo' || r.tipo === S.filtro) && (!S.conta || r.conta === S.conta) && (!S.diaSel || r.data === S.diaSel)).map((r, k) => [r, k]).sort((a, b) => a[0].data < b[0].data ? 1 : a[0].data > b[0].data ? -1 : b[1] - a[1]).map(x => x[0]);
   $('#hLista').innerHTML = lista.length ? lista.map(r => linhaReg(r, true)).join('') : '<div class="empty">Nada registrado aqui.<button class="btn" data-novo="' + (S.filtro === 'Tudo' ? 'Despesa' : S.filtro) + '">Adicionar o primeiro</button></div>';
   ligaLinhas('#hLista');
 }
