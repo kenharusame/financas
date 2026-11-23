@@ -395,6 +395,8 @@ img.foto-meta.mini{width:24px;height:24px}
 .fu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px} .fu-grid div{background:rgba(255,255,255,.04);border-radius:14px;padding:10px} .fu-grid small{display:block;color:var(--muted);font-size:12px;font-weight:700} .fu-grid b{display:block;font-family:Sora,system-ui,sans-serif;font-size:17px;color:var(--in);font-variant-numeric:tabular-nums} .fu-grid span{display:block;font-size:11px;color:var(--muted)}
 .saldo .prox{margin-top:16px;text-align:left} .saldo .prox h3{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 6px} .saldo .prox .pl{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.06);font-size:14px} .saldo .prox .pl span:first-child{color:var(--muted)}
 .saldo .dia{margin-top:6px;font-size:14px;color:var(--muted)} .saldo .dia b{color:var(--text,#fff)} .saldo .dia.ruim b{color:var(--warn)}
+.lembra{border:1px solid rgba(255,172,64,.45)} .lembra h2{color:var(--warn);font-size:17px} .lb-item+.lb-item{border-top:1px solid var(--line);margin-top:12px;padding-top:12px} .lb-item .s{color:var(--muted);font-size:14px} .lb-bt{display:flex;gap:8px;align-items:center;margin-top:10px} .lb-bt .btn{margin-top:0;width:auto;flex:1;min-height:46px;font-size:16px} .lb-bt .link{width:auto;flex:1}
+.lb-conta{display:flex;align-items:center;gap:10px;min-height:52px} .lb-conta>div{flex:1;min-width:0} .lb-conta .s{color:var(--muted);font-size:13px} .lb-conta .s b{color:var(--warn)} .lb-conta .chip{min-height:40px;padding:0 14px} .lb-conta .x{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;min-height:40px;padding:0 4px}
 .pagto{border:1px solid rgba(108,195,206,.35)} .pg-top{display:flex;gap:12px;align-items:center;margin-bottom:10px} .pg-top b{font-size:16px} .pg-top .s{color:var(--muted);font-size:13px}
 .pg-top .ico{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:none;background:linear-gradient(160deg,#34877C,#1E5C55);color:#DDF5F0;box-shadow:var(--clay-sm)} .pg-top .ico svg{width:24px;height:24px}
 .pg-linha{display:flex;gap:8px} .pg-linha input{flex:1;min-width:0;font-size:18px !important} .pg-linha .btn{flex:0 0 auto;width:auto;padding:0 18px}
@@ -467,6 +469,10 @@ html.pc .toast{bottom:24px}
     <div class="mini inv"><small>Investido</small><b id="iInv"></b><span class="var" id="vInv"></span><div class="inv-plan" id="iInvPlan"></div></div>
   </div>
   <div id="cPagto"></div>
+  <div id="cLembra"></div>
+  <div id="cRapido"><div class="card"><label for="hTxt" style="margin-top:0">Lançar um gasto</label>
+    <div class="chat-in" style="margin-top:0"><input id="hTxt" autocomplete="off" enterkeyhint="send" placeholder='Ex.: "gastei 45 no mercado"'>
+      <button class="chat-env" id="hOk" aria-label="Lançar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div></div></div>
   <div id="cPassos"></div>
   <div id="cFatura"></div>
   <div id="cSalario"></div>
@@ -786,7 +792,7 @@ html.pc .toast{bottom:24px}
   const poe = (secao, lista) => { const s = document.getElementById(secao); lista.map(card).filter(Boolean).forEach(el => s.appendChild(el)); };
   const ini = document.getElementById('inicio');
   // Início, nesta ordem
-  ['#iHero', '#cSemana', '.card.saldo', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx', '#cDica']
+  ['#iHero', '#cLembra', '.card.saldo', '#cRapido', '#cSemana', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx', '#cDica']
     .map(x => ['#iContas', '#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
     .filter(Boolean).forEach(el => ini.appendChild(el));
   ini.insertBefore(document.getElementById('cSalario'), card('#cProx'));
@@ -804,7 +810,7 @@ html.pc .toast{bottom:24px}
   const mq = matchMedia('(min-width:1024px)'); const mqPc = { get matches(){ return document.documentElement.classList.contains('pc'); } };
   const el = sel => { const e = document.querySelector(sel); return e && (e.closest('.card') || e); };
   const P = {
-    inicio:     { topo: ['#iHero', '.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
+    inicio:     { topo: ['#iHero', '.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#cLembra', '#cRapido', '#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
     relatorios: { main: ['#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cPrev', '#cPat'] },
     planejar:   { topo: ['#cFase', '#cFuturo'], main: ['#cLim', '#cMetas', '#cDesejos', '#cAnual', '#iParc'], side: ['#cMesada', '#cGuia', '#cZero'] },
     historico:  { main: ['#hLista'], side: ['#historico .busca', '#hModo', '#hFiltro', '#hCal'] }
@@ -997,7 +1003,9 @@ async function carregar(){
       if (loc != null && (Array.isArray(loc) ? loc.length : typeof loc === 'object' ? Object.keys(loc).length : loc)) lsGrava(k, loc); } }); S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
-    if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
+    if ($$('section:not(.hide)').length === 0) { // abre direto na tela do endereço (ex.: ...#adicionar), senão no Início
+      const h = location.hash.slice(1), sec = ['inicio', 'adicionar', 'relatorios', 'planejar', 'historico', 'dicas'].includes(h) ? h : 'inicio';
+      historico('replace', sec); ir(sec, true); }
     renderMes(); avisoFila();
     if (!S.offline) enviaFila();
     S.jaMostrou = true;
@@ -1029,7 +1037,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl(t.Investimento - (t.Retirada || 0)); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); faturaInicio(); salarioInicio(i, t); revisaoInicio(); resisteInicio(i); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl(t.Investimento - (t.Retirada || 0)); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); lembraInicio(); faturaInicio(); salarioInicio(i, t); revisaoInicio(); resisteInicio(i); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1426,7 +1434,7 @@ function avisoLimite(){
 
 /* ---------- Início: o que fazer agora (meta da semana, pague-se primeiro, alertas, comparação) ---------- */
 /* estes ficam na planilha, para o casal ver o mesmo nos dois celulares */
-const PAR = { fin_pensando: 'pensando', fin_economizado: 'economizado', fin_valeu: 'valeu' };
+const PAR = { fin_pensando: 'pensando', fin_economizado: 'economizado', fin_valeu: 'valeu', fin_pagas: 'pagas' };
 const lsLe = (k, d) => { if (PAR[k] && S.par && S.par[PAR[k]] != null) return JSON.parse(JSON.stringify(S.par[PAR[k]]));
   try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (e) { return d; } };
 const lsGrava = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
@@ -1575,6 +1583,51 @@ function pagtoInicio(){
     $('#aValor').value = v; $('#aValor').dispatchEvent(new Event('input')); $('#aValor').focus(); toast('Confira e toque em Salvar'); });
   $$('#cPagto [data-pnao]').forEach(b => b.onclick = () => { const a = lsLe('fin_pagtoAdia', {}); a[b.dataset.pnao] = dHoje; lsGrava('fin_pagtoAdia', a); pagtoInicio(); });
 }
+/* Para quem esquece: avisa quando faz dias sem lançar gasto e quando uma conta venceu e ninguém confirmou */
+function lembraInicio(){
+  const box = $('#cLembra'); if (!box) return;
+  if (S.mes !== ciclo(hoje()) || !S.regs.length) { box.innerHTML = ''; return; }
+  const dHoje = hoje(), partes = [];
+  // 1) dias sem lançar gasto (sem contar contas fixas e parcelas, que entram sozinhas)
+  const ultG = S.regs.filter(r => r.tipo === 'Despesa' && r.forma !== 'Fixa' && r.forma !== 'Parcelada' && r.data <= dHoje).reduce((a, r) => r.data > a ? r.data : a, '');
+  const ok = lsLe('fin_semGastoOk', ''), base = ok > ultG ? ok : ultG, semG = base ? -diasAte(base) : null;
+  if (semG == null || semG >= 2) partes.push(`<div class="lb-item"><b>${semG == null ? 'Nenhum gasto lançado ainda' : `Faz ${semG} dias sem lançar gasto`}</b>
+    <div class="s">${ultG ? 'O último foi em ' + ddmm(ultG) + '. ' : ''}Esqueceu alguma compra, Pix ou cartão?</div>
+    <div class="lb-bt"><button class="btn" data-lb="lancar">Lançar agora</button><button class="link" data-lb="nada">Não gastei nada</button></div></div>`);
+  // 2) contas que vencem hoje ou venceram nos últimos 7 dias e ninguém marcou como pagas (fora do cartão)
+  const pagas = lsLe('fin_pagas', {}), prevOk = lsLe('fin_prevOk', {}), L = [];
+  S.regs.filter(r => r.tipo === 'Despesa' && (r.forma === 'Fixa' || r.forma === 'Parcelada') && !r.cartao && !pagas[r.id] && diasAte(r.data) <= 0 && diasAte(r.data) >= -7)
+    .forEach(r => L.push({ id: r.id, conta: r.conta, v: r.valor, d: r.data, parc: r.forma === 'Parcelada' ? r.parcela.replace('/', ' de ') : '' }));
+  { // custo fixo do mês passado (lançado à mão) que ainda não apareceu neste mês: na mesma data, provavelmente esqueceram de lançar
+    const ca = ciclo(hoje()), ja = new Set(S.regs.filter(r => ciclo(r.data) >= ca && r.tipo === 'Despesa').map(r => r.conta)), vistos = new Set();
+    S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === ca - 1 && r.forma === 'Única' && grupoDe(r.conta) === 'Custos fixos' && !ja.has(r.conta)).forEach(r => {
+      const [y, m, d] = r.data.split('-').map(Number), nd = new Date(y, m, d), iso = isoD(nd), n = diasAte(iso);
+      if (vistos.has(r.conta) || n > 0 || n < -7 || prevOk[r.conta + '|' + iso]) return; vistos.add(r.conta);
+      L.push({ prev: r.conta + '|' + iso, conta: r.conta, v: r.valor, d: iso }); }); }
+  L.sort((a, b) => a.d < b.d ? -1 : 1);
+  if (L.length) { const tot = L.reduce((a, x) => a + x.v, 0), reais = L.filter(x => x.id);
+    partes.push(`<div class="lb-item"><b>${L.length === 1 ? '1 conta para conferir' : L.length + ' contas para conferir'} · ${brl(tot)}</b>
+      ${L.map(x => { const n = diasAte(x.d), q = n === 0 ? '<b>vence hoje</b>' : `<b>venceu há ${-n} ${n === -1 ? 'dia' : 'dias'}</b>`;
+        return `<div class="lb-conta"><div><div>${esc(x.conta)}${x.parc ? ` <span class="tag parc">${esc(x.parc)}</span>` : ''}</div><div class="s">${q} · ${brl(x.v)}${x.prev ? ' · ainda não lançada' : ''}</div></div>`
+          + (x.id ? `<button class="chip" data-pg="${esc(x.id)}">Paguei</button>` : `<button class="chip" data-pl="${esc(x.prev)}">Lançar</button><button class="x" data-px="${esc(x.prev)}" aria-label="Não teve ${esc(x.conta)} este mês">Não teve</button>`) + '</div>'; }).join('')}
+      ${reais.length > 1 ? `<button class="link" data-lb="todas">Paguei todas (${reais.length})</button>` : ''}</div>`); }
+  box.innerHTML = partes.length ? `<div class="card lembra"><h2>Não esquecer</h2>${partes.join('')}</div>` : '';
+  const marca = ids => { const p = lsLe('fin_pagas', {}); ids.forEach(id => p[id] = dHoje); const ks = Object.keys(p); if (ks.length > 200) ks.slice(0, ks.length - 200).forEach(k => delete p[k]);
+    lsGrava('fin_pagas', p); lembraInicio(); toast(ids.length > 1 ? 'Contas marcadas como pagas' : 'Marcada como paga'); };
+  $$('#cLembra [data-pg]').forEach(b => b.onclick = () => marca([b.dataset.pg]));
+  $$('#cLembra [data-lb="todas"]').forEach(b => b.onclick = () => marca(L.filter(x => x.id).map(x => x.id)));
+  $$('#cLembra [data-lb="lancar"]').forEach(b => b.onclick = () => { S.tipo = 'Despesa'; ir('adicionar'); $('#rTxt').focus(); });
+  $$('#cLembra [data-lb="nada"]').forEach(b => b.onclick = () => { lsGrava('fin_semGastoOk', dHoje); lembraInicio(); toast('Certo, contando a partir de hoje'); });
+  $$('#cLembra [data-px]').forEach(b => b.onclick = () => { const p = lsLe('fin_prevOk', {}); p[b.dataset.px] = dHoje; lsGrava('fin_prevOk', p); lembraInicio(); });
+  $$('#cLembra [data-pl]').forEach(b => b.onclick = () => { const x = L.find(y => y.prev === b.dataset.pl); if (!x) return;
+    S.tipo = 'Despesa'; ir('adicionar'); renderForm(); $('#aConta').value = x.conta;
+    $('#aValor').value = x.v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); $('#aValor').dispatchEvent(new Event('input')); resumo(); toast('Confira e toque em Salvar'); });
+}
+/* Lançar um gasto direto do Início: manda o texto para o Registro rápido */
+function lancaDoInicio(){ const t = $('#hTxt').value.trim(); if (!t) { S.tipo = 'Despesa'; ir('adicionar'); $('#rTxt').focus(); return; }
+  S.tipo = 'Despesa'; ir('adicionar'); $('#rTxt').value = t; $('#hTxt').value = ''; interpretarTexto(); }
+$('#hOk').onclick = lancaDoInicio;
+$('#hTxt').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lancaDoInicio(); } });
 const SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 function diasSemSuperfluo(){
   const dSup = new Set(S.regs.filter(r => r.tipo === 'Despesa' && r.forma !== 'Fixa' && r.forma !== 'Parcelada' && superfluo(r.conta)).map(r => r.data));
