@@ -380,6 +380,7 @@ img.foto-meta.mini{width:24px;height:24px}
 .m-foto{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .meta.espera{opacity:.55}
 .dica{margin:4px 2px 12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.035);font-size:14px;line-height:1.55;color:var(--muted)} .dica b{display:block;color:var(--text);margin-bottom:2px}
+.tp-ed{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)} .tp-ed .t{font-weight:700;margin-bottom:6px} .tp-ed .two{gap:8px}
 /* Barra de baixo: imitação do Liquid Glass */
 nav{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));-webkit-backdrop-filter:blur(24px) saturate(190%);backdrop-filter:blur(24px) saturate(190%);border:1px solid rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.06),0 12px 32px rgba(0,0,0,.5);overflow:hidden}
 nav::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(120% 90% at 20% -30%,rgba(255,255,255,.28),transparent 55%),radial-gradient(80% 70% at 100% 130%,rgba(255,255,255,.10),transparent 60%)}
@@ -565,9 +566,18 @@ nav button.on{background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,2
   </div>
 </div>
 
+<dialog id="dlgConta">
+  <h2>Nova conta</h2>
+  <label for="ncNome">Nome</label><input id="ncNome" placeholder="Ex.: Academia" autocomplete="off">
+  <label for="ncTipo">Tipo</label><select id="ncTipo"></select>
+  <label class="acum" style="margin-top:12px"><input type="checkbox" id="ncSup"> É supérfluo (dá para viver sem)</label>
+  <div class="err" id="ncErro" role="alert"></div>
+  <button class="btn" id="ncSalvar">Criar conta</button>
+  <button class="link" id="ncFechar">Cancelar</button>
+</dialog>
 <dialog id="dlgCfg">
-  <h2>Grupos das contas</h2>
-  <p class="s" style="color:var(--muted);font-size:14px;margin:-6px 0 8px">Diga em qual grupo do guia cada conta entra. Investimentos entram sozinhos em "Liberdade financeira".</p>
+  <h2>Tipos das contas</h2>
+  <p class="s" style="color:var(--muted);font-size:14px;margin:-6px 0 8px">Tipo (muda o ícone), grupo do guia e se é supérfluo. Os que estavam vazios eu preenchi pelo nome: confiram.</p>
   <div id="cfgLista"></div>
   <div class="err" id="cfgErro" role="alert"></div>
   <button class="btn" id="cfgSalvar">Salvar</button>
@@ -712,7 +722,7 @@ const FAKE = (() => {
     salvarAnual: a => { dados.anuais = (dados.anuais || []).filter(x => x.nome !== (a.nomeAntigo || a.nome)).concat([{ nome: a.nome, valor: Number(a.valor), mes: Number(a.mes), dia: Number(a.dia) || 1 }]); return JSON.parse(JSON.stringify(dados.anuais)); },
     apagarAnual: n => { dados.anuais = dados.anuais.filter(x => x.nome !== n); return JSON.parse(JSON.stringify(dados.anuais)); },
     salvarPatrimonio: (c, itens) => { dados.patrimonio = (dados.patrimonio || []).filter(x => x.ciclo !== c).concat(itens.map(i => ({ ciclo: c, item: i.item, tipo: i.tipo, valor: Number(i.valor) }))); return JSON.parse(JSON.stringify(dados.patrimonio)); },
-    salvarConfigContas: m => { dados.configContas = Object.assign(dados.configContas || {}, m); return JSON.parse(JSON.stringify(dados.configContas)); },
+    salvarConfigContas: m => { dados.configContas = dados.configContas || {}; Object.keys(m).forEach(c => dados.configContas[c] = { ...(dados.configContas[c] || {}), ...m[c] }); return JSON.parse(JSON.stringify(dados.configContas)); },
     assinaturas: () => ({ resumo: 'Essas cobranças somam cerca de R$ 160 por mês.', itens: [{ nome: 'Adobe', valor: 110, vezes: 3, alerta: 'Subiu de R$ 90 para R$ 110' }, { nome: 'Spotify', valor: 23.9, vezes: 4, alerta: '' }] }),
     salvarMeta: m => { const i = dados.metas.findIndex(x => x.nome === (m.nomeAntigo || m.nome)); const n = { ...(dados.metas[i] || {}), nome: m.nome, alvo: Number(m.alvo), prazo: m.prazo || '', inicial: Number(m.inicial) || 0 }; if (i < 0) dados.metas.push(n); else dados.metas[i] = n; return JSON.parse(JSON.stringify(dados.metas)); },
     fotoMeta: (n, f) => { const m = dados.metas.find(x => x.nome === n); if (m) m.foto = f; return JSON.parse(JSON.stringify(dados.metas)); },
@@ -792,7 +802,7 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; preencheTipos(); S.quem = d.quem || null; S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { historico('replace', 'inicio'); ir('inicio', true); }
@@ -875,7 +885,39 @@ const ICONES = {
   bomba: '<path d="M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M4 10h10M14 8l3 2v7a1.5 1.5 0 0 0 3 0V9l-3-3"/>',
   pilha: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
 };
+const TIPOS = [
+  { n: 'Moradia', ic: 'casa', g: 'Custos fixos', re: 'aluguel|condominio|iptu|casa' },
+  { n: 'Contas da casa', ic: 'raio', g: 'Custos fixos', re: 'luz|energia|agua|sabesp|internet|wifi|gas' },
+  { n: 'Mercado', ic: 'carrinho', g: 'Custos fixos', re: '^mercado$|supermercado|feira|padaria|acougue|higiene|limpeza' },
+  { n: 'Transporte', ic: 'van', g: 'Custos fixos', re: 'van|onibus|transporte|uber|metro|carro|combustivel|gasolina|estacionamento' },
+  { n: 'Saúde', ic: 'cruz', g: 'Custos fixos', re: 'saude|medic|consulta|dentista|farmacia|remedio|fono|terapia|psico' },
+  { n: 'Educação', ic: 'livro', g: 'Custos fixos', re: 'livro|escola|curso|faculdade|material' },
+  { n: 'Pets', ic: 'pata', g: 'Custos fixos', re: 'gata|gato|pet|racao|veterin' },
+  { n: 'Assinaturas', ic: 'play', g: 'Conforto', re: 'adobe|netflix|spotify|streaming|youtube|disney|prime|assinatura|canva', sup: true },
+  { n: 'Celular', ic: 'celular', g: 'Custos fixos', re: 'iphone|telefone|celular' },
+  { n: 'Lazer', ic: 'presente', g: 'Prazeres', re: 'lazer|cinema|show|passeio|diversao', sup: true },
+  { n: 'Restaurante', ic: 'garfo', g: 'Prazeres', re: 'restaurante|ifood|lanche|delivery|almoco|jantar', sup: true },
+  { n: 'Roupas', ic: 'camiseta', g: 'Conforto', re: 'roupa|calcado|sapato|tenis' },
+  { n: 'Compras para casa', ic: 'cama', g: 'Conforto', re: 'cama|movel|sofa|eletro' },
+  { n: 'Viagem', ic: 'aviao', g: 'Metas', re: 'viagem|passagem|hotel' },
+  { n: 'Presentes', ic: 'presente', g: 'Metas', re: 'presente|natal|aniversario' },
+  { n: 'Cartão/Carteira', ic: 'cartao', g: '', re: 'cartao|credito|fatura|mesada|carteira|pix|mercado pago|picpay|nubank' },
+  { n: 'Outros', ic: 'etiqueta', g: '' }];
+// Gatas primeiro (Plano de Saúde - Gatas é Pets); Mercado Pago é carteira, não mercado
+const ORDEM_PALPITE = ['Pets', 'Cartão/Carteira', 'Transporte', 'Moradia', 'Contas da casa', 'Mercado', 'Saúde', 'Educação', 'Assinaturas', 'Celular', 'Lazer', 'Restaurante', 'Roupas', 'Compras para casa', 'Viagem', 'Presentes'];
+function palpiteTipo(conta){ const n = semAcento(conta); const t = ORDEM_PALPITE.map(x => TIPOS.find(y => y.n === x)).find(x => new RegExp(x.re).test(n)); return t ? t.n : 'Outros'; }
+const tipoDe = conta => ((S.cfg || {})[conta] || {}).tipo || palpiteTipo(conta);
+const superfluo = conta => { const c = (S.cfg || {})[conta]; if (c && c.tipo) return !!c.superfluo; const t = TIPOS.find(x => x.n === tipoDe(conta)); return !!(t && t.sup); };
+const listaTipos = () => TIPOS.map(t => t.n).filter(n => n !== 'Outros').concat([...new Set(Object.values(S.cfg || {}).map(c => c.tipo).filter(x => x && !TIPOS.some(t => t.n === x)))].sort(), ['Outros']);
+let preenchendo = false;
+async function preencheTipos(){            // contas sem tipo ganham o palpite pelo nome, uma vez
+  if (preenchendo || S.offline) return;
+  const m = {}; (S.contas || []).forEach(c => { const x = S.cfg[c] || {}; if (!x.tipo) { const tp = palpiteTipo(c), t = TIPOS.find(y => y.n === tp); m[c] = { tipo: tp, superfluo: !!t.sup, grupo: x.grupo || (tp === 'Cartão/Carteira' ? '' : t.g || grupoDe(c)) }; } });
+  if (!Object.keys(m).length) return;
+  preenchendo = true; try { S.cfg = await api('salvarConfigContas', m); renderMes(); } catch (e) {} preenchendo = false;
+}
 function iconeDe(nome){
+  if (nome !== 'Outras contas' && ((S.cfg || {})[nome] || {}).tipo) { const t = TIPOS.find(x => x.n === S.cfg[nome].tipo); if (t && t.n !== 'Outros' && t.n !== 'Cartão/Carteira') return ICONES[t.ic]; }
   const n = nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const regras = [['outras contas', 'pilha'], ['mesada|carteira|pix|mercado pago|picpay|nubank', 'carteira'], ['cartao|credito|fatura', 'cartao'],
     ['van|escolar', 'van'], ['aluguel|condominio|casa|iptu', 'casa'], ['iphone|telefone|celular|claro|vivo|tim', 'celular'], ['cama|movel|sofa', 'cama'],
@@ -1216,6 +1258,8 @@ function acaoInicio(i, t){
   const noCartao = k => S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === k && (r.forma === 'Parcelada' || /cartao|mercado pago|credito/.test(semAcento(r.conta)))).reduce((a, r) => a + r.valor, 0);
   if (t.Despesa) { const pc = noCartao(i) / t.Despesa, pa = i > 0 && totais(i - 1).Despesa ? noCartao(i - 1) / totais(i - 1).Despesa : null;
     if (pc > 0) linhas.push(`<div class="cmp1 ${pa != null && pc > pa + .02 ? 'ruim' : 'bom'}"><b>${Math.round(pc * 100)}%</b> das despesas foram no cartão ou parceladas${pa != null ? ' (mês anterior: ' + Math.round(pa * 100) + '%)' : ''}. No cartão a gente sente menos o gasto.</div>`); }
+  if (t.Despesa) { const sp = k => S.regs.filter(r => r.tipo === 'Despesa' && ciclo(r.data) === k && superfluo(r.conta)).reduce((a, r) => a + r.valor, 0), v = sp(i);
+    if (v > 0) linhas.push(`<div class="cmp1 ${v / t.Despesa > .15 ? 'ruim' : 'bom'}"><b>${brl0(v)}</b> (${Math.round(v / t.Despesa * 100)}%) foram em coisas supérfluas.</div>`); }
   $('#cResumo').innerHTML = linhas.length ? `<div class="card"><h2>Como estamos</h2>${linhas.join('')}<button class="link" data-ir="relatorios">Ver comparação completa</button></div>` : '';
 }
 
@@ -1564,6 +1608,7 @@ const SUGESTAO_GRUPO = [['aluguel|condominio|luz|agua|internet|mercado|van|escol
   ['restaurante|ifood|lazer|cinema|bar|diversao|passeio', 'Prazeres'], ['livro|curso|aula', 'Conhecimento']];
 function grupoDe(conta){
   const g = ((S.cfg || {})[conta] || {}).grupo; if (g) return g;
+  const tp = ((S.cfg || {})[conta] || {}).tipo, tt = tp && TIPOS.find(x => x.n === tp); if (tt && tt.g) return tt.g;
   const n = semAcento(conta); const r = SUGESTAO_GRUPO.find(([re]) => new RegExp(re).test(n)); return r ? r[1] : '';
 }
 function porGrupo(i){
@@ -1575,27 +1620,33 @@ function porGrupo(i){
 }
 function guiaInicio(i){
   const t = totais(i), { o, sem } = porGrupo(i);
-  if (!t.Entrada) { $('#iGuia').innerHTML = '<div class="empty" style="padding-top:0">Registre as entradas do mês para comparar com o guia.</div><button class="link" id="cfgAbrir">Grupos das contas</button>'; $('#cfgAbrir').onclick = abrirCfg; return; }
+  if (!t.Entrada) { $('#iGuia').innerHTML = '<div class="empty" style="padding-top:0">Registre as entradas do mês para comparar com o guia.</div><button class="link" id="cfgAbrir">Tipos das contas</button>'; $('#cfgAbrir').onclick = abrirCfg; return; }
   $('#iGuia').innerHTML = '<p class="s" style="margin:-6px 0 12px;color:var(--muted);font-size:14px">Quanto da renda foi para cada grupo, comparado com o método do Investidor Sardinha.</p>' + GRUPOS.map(g => {
     const pct = o[g.n] / t.Entrada * 100, bom = g.t === 'max' ? pct <= g.p : g.t === 'min' ? pct >= 15 : null;
     const tag = bom == null ? '' : `<span class="gasto-tag ${bom ? 'ok' : (g.t === 'min' ? 'medio' : 'alto')}">${bom ? 'Dentro' : g.t === 'min' ? 'Abaixo' : 'Acima'}</span>`;
     return `<div class="lim"><div class="lim-top"><span class="t">${g.n}</span>${tag}</div>
       <div class="gasto-bar guia-bar" role="img" aria-label="${g.n}: ${Math.round(pct)}% da renda, o guia sugere ${g.t === 'max' ? 'até' : g.t === 'min' ? 'pelo menos 15 a' : ''} ${g.p}%"><i style="width:${Math.min(100, pct / 50 * 100)}%;background:${g.cor}"></i><b style="left:${g.p / 50 * 100}%"></b></div>
       <div class="lim-num"><span>${brl0(o[g.n])} · ${pct.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}% da renda</span><span>guia: ${g.t === 'max' ? 'até ' : g.t === 'min' ? '15 a ' : ''}${g.p}%</span></div></div>`; }).join('')
-    + (sem ? `<div class="note aviso">${brl0(sem)} em contas sem grupo. Toque em "Grupos das contas" para escolher.</div>` : '')
-    + '<button class="link" id="cfgAbrir">Grupos das contas</button>';
+    + (sem ? `<div class="note aviso">${brl0(sem)} em contas sem grupo. Toque em "Tipos das contas" para escolher.</div>` : '')
+    + '<button class="link" id="cfgAbrir">Tipos das contas</button>';
   $('#cfgAbrir').onclick = abrirCfg;
 }
+const opcoesTipo = (atual) => listaTipos().map(t => `<option ${t === atual ? 'selected' : ''}>${esc(t)}</option>`).join('') + '<option value="__novo">+ Novo tipo</option>';
+function novoTipo(sel, antes){ const n = (prompt('Nome do novo tipo:') || '').trim(); if (!n) { sel.value = antes; return; } sel.insertAdjacentHTML('afterbegin', `<option>${esc(n)}</option>`); sel.value = n; }
 function abrirCfg(){
   $('#cfgErro').textContent = '';
-  $('#cfgLista').innerHTML = S.contas.map((c, k) => `<div class="lim-ed"><label for="cfg${k}">${esc(c)}</label><select id="cfg${k}" data-conta="${esc(c)}"><option value="">Sem grupo</option>${GRUPOS.filter(g => g.n !== 'Liberdade financeira').map(g => `<option ${grupoDe(c) === g.n ? 'selected' : ''}>${g.n}</option>`).join('')}</select></div>`).join('');
+  $('#cfgLista').innerHTML = S.contas.map((c, k) => `<div class="tp-ed" data-conta="${esc(c)}"><div class="t">${esc(c)}</div>
+    <div class="two"><select aria-label="Tipo de ${esc(c)}" data-f="tipo">${opcoesTipo(tipoDe(c))}</select><select aria-label="Grupo de ${esc(c)}" data-f="grupo"><option value="">Sem grupo</option>${GRUPOS.filter(g => g.n !== 'Liberdade financeira').map(g => `<option ${grupoDe(c) === g.n ? 'selected' : ''}>${g.n}</option>`).join('')}</select></div>
+    <label class="acum"><input type="checkbox" data-f="sup" ${superfluo(c) ? 'checked' : ''}> Supérfluo</label></div>`).join('');
+  $$('#cfgLista [data-f="tipo"]').forEach(sel => { let antes = sel.value; sel.onchange = () => { if (sel.value === '__novo') return novoTipo(sel, antes);
+    const t = TIPOS.find(x => x.n === sel.value), box = sel.closest('.tp-ed'); if (t) { if (t.g) box.querySelector('[data-f="grupo"]').value = t.g; box.querySelector('[data-f="sup"]').checked = !!t.sup; } antes = sel.value; }; });
   $('#dlgCfg').showModal();
 }
 $('#cfgFechar').onclick = () => $('#dlgCfg').close();
 $('#cfgSalvar').onclick = async () => {
-  const m = {}; $$('#cfgLista select').forEach(x => { const c = x.dataset.conta; m[c] = { grupo: x.value, acumula: !!((S.cfg || {})[c] || {}).acumula }; });
+  const m = {}; $$('#cfgLista .tp-ed').forEach(x => { m[x.dataset.conta] = { grupo: x.querySelector('[data-f="grupo"]').value, tipo: x.querySelector('[data-f="tipo"]').value, superfluo: x.querySelector('[data-f="sup"]').checked }; });
   const b = $('#cfgSalvar'); b.disabled = true;
-  try { S.cfg = await api('salvarConfigContas', m); $('#dlgCfg').close(); toast('Grupos salvos'); renderMes(); } catch (e) { $('#cfgErro').textContent = 'Não salvou: ' + e; }
+  try { S.cfg = await api('salvarConfigContas', m); $('#dlgCfg').close(); toast('Tipos salvos'); renderMes(); } catch (e) { $('#cfgErro').textContent = 'Não salvou: ' + e; }
   b.disabled = false;
 };
 
@@ -1812,11 +1863,26 @@ $('#aAte').onchange = () => { if ($('#aAte').value) $('#aVezes').value = $('#aAt
 $('#aVeio').onchange = () => { $('#aPct').dispatchEvent(new Event('input')); };
 $('#aPct').addEventListener('input', () => { const base = (S.regs.find(r => r.id === $('#aVeio').value) || {}).valor || 0; const p = num($('#aPct').value); if (base && p) $('#aInvValor').value = (base * p / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); resumo(); });
 $('#aInvValor').addEventListener('input', () => { const base = (S.regs.find(r => r.id === $('#aVeio').value) || {}).valor || 0; const v = num($('#aInvValor').value); $('#aPct').value = base && v ? (v / base * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : ''; resumo(); });
-async function novaConta(sel){
-  const n = prompt('Nome da nova conta:');
-  if (!n) { sel.value = S.contas[0]; return; }
-  try { const nome = await api('addLista', 'conta', n); if (!S.contas.includes(nome)) S.contas.push(nome); opcoesContas(sel, nome); } catch (e) { toast(e); }
+let NC = null;
+function novaConta(sel){
+  NC = sel; $('#ncNome').value = ''; $('#ncErro').textContent = ''; $('#ncSup').checked = false;
+  $('#ncTipo').innerHTML = '<option value="">Escolha</option>' + opcoesTipo('');
+  $('#dlgConta').showModal(); $('#ncNome').focus();
 }
+$('#ncNome').oninput = () => { if ($('#ncTipo').dataset.mexeu) return; const t = palpiteTipo($('#ncNome').value); if (t !== 'Outros') { $('#ncTipo').value = t; $('#ncSup').checked = !!(TIPOS.find(x => x.n === t) || {}).sup; } };
+$('#ncTipo').onchange = () => { const sel = $('#ncTipo'); sel.dataset.mexeu = '1'; if (sel.value === '__novo') return novoTipo(sel, ''); $('#ncSup').checked = !!(TIPOS.find(x => x.n === sel.value) || {}).sup; };
+$('#ncFechar').onclick = () => { $('#dlgConta').close(); if (NC) NC.value = S.contas[0]; delete $('#ncTipo').dataset.mexeu; resumo(); };
+$('#ncSalvar').onclick = async () => {
+  const n = $('#ncNome').value.trim(), tipo = $('#ncTipo').value;
+  if (!n) { $('#ncErro').textContent = 'Digite o nome.'; return; }
+  if (!tipo || tipo === '__novo') { $('#ncErro').textContent = 'Escolha o tipo.'; return; }
+  const b = $('#ncSalvar'); b.disabled = true; b.textContent = 'Criando...';
+  try { const nome = await api('addLista', 'conta', n); if (!S.contas.includes(nome)) S.contas.push(nome);
+    const t = TIPOS.find(x => x.n === tipo); S.cfg = await api('salvarConfigContas', { [nome]: { tipo, superfluo: $('#ncSup').checked, grupo: t ? t.g : '' } });
+    $('#dlgConta').close(); delete $('#ncTipo').dataset.mexeu; opcoesContas(NC, nome); resumo(); toast('Conta criada'); }
+  catch (e) { $('#ncErro').textContent = 'Não criou: ' + e; }
+  b.disabled = false; b.textContent = 'Criar conta';
+};
 $('#aConta').onchange = e => { if (e.target.value === '__nova') novaConta(e.target); else resumo(); };
 
 $('#aSalvar').onclick = async () => {
