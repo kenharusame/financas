@@ -1273,7 +1273,7 @@ $('#eApagar').onclick = async () => {
 /* ---------- Dicas ---------- */
 function mdLeve(t){
   return t.split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => {
-    const h = esc(l).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+    const h = esc(l).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)\*(?![*\w])/g, '$1<i>$2</i>');
     return /^[-*] /.test(l) ? '<li>' + h.replace(/^[-*] /, '') + '</li>' : '<p>' + h.replace(/^#+\s*/, '') + '</p>';
   }).join('').replace(/(<li>.*?<\/li>)+/g, m => '<ul>' + m + '</ul>');
 }
