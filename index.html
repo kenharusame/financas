@@ -2677,13 +2677,17 @@ function proximaNota(){
 }
 function pintaNota(){
   const n = S.nota, dentro = n.itens.filter(i => !i.fora), soma = dentro.reduce((a, i) => a + i.valor, 0), faltam = dentro.filter(i => !i.ok).length;
+  const precisaLoja = dentro.some(i => tipoDe(i.conta) === 'Mercado'), semLoja = () => precisaLoja && !String(n.loja || '').trim();
+  const txtSalvar = () => faltam ? `Falta conferir ${faltam} ${faltam === 1 ? 'item' : 'itens'}` : semLoja() ? 'Falta dizer qual mercado' : `Salvar ${dentro.length} ${dentro.length === 1 ? 'item' : 'itens'}`;
+  const rotLoja = precisaLoja ? 'Qual mercado?' : n.lista ? 'Loja (opcional)' : 'Loja', campoLoja = `<input id="nLoja" list="nLojas" autocomplete="off" value="${esc(n.loja)}"><datalist id="nLojas">${lojasUsadas().map(l => `<option value="${esc(l)}">`).join('')}</datalist>`;
+  if (!S.precosOk && !S.precosTentou) { S.precosTentou = true; carregaPrecos().catch(() => {}); }
   const bate = n.total == null ? null : Math.abs(soma - n.total) < 0.05;
   $('#nConf').innerHTML = `<h2>Confira os itens</h2>${n.de ? `<div class="help">Nota ${n.pos} de ${n.de} · ${esc(n.arq)}</div>` : ''}
-    ${n.lista ? `<div class="two"><div><label for="nData">Data</label><input id="nData" type="date" value="${n.data}"></div><div><label for="nLoja">Loja (opcional)</label><input id="nLoja" value="${esc(n.loja)}"></div></div>
+    ${n.lista ? `<div class="two"><div><label for="nData">Data</label><input id="nData" type="date" value="${n.data}"></div><div><label for="nLoja">${rotLoja}</label>${campoLoja}</div></div>
     <label for="nConta">Conta</label><select id="nConta">${S.contas.map(c => `<option ${c === n.conta ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
     <div class="tipo-conta"><span>Tipo: <b>${esc(tipoDe(n.conta))}</b>${superfluo(n.conta) ? ' · supérfluo' : ''}</span><button class="link" type="button" id="nTipoMudar">Mudar</button></div>
     <div class="help">Despesa única, paga na hora (não entra na fatura do cartão).</div>`
-    : `<div class="two"><div><label for="nLoja">Loja</label><input id="nLoja" value="${esc(n.loja)}"></div><div><label for="nData">Data</label><input id="nData" type="date" value="${n.data}"></div></div>
+    : `<div class="two"><div><label for="nLoja">${rotLoja}</label>${campoLoja}</div><div><label for="nData">Data</label><input id="nData" type="date" value="${n.data}"></div></div>
     <label>Pago com</label><div class="chips" id="nPago">${['Cartão de crédito', 'Mercado Pago', 'Pix', 'Dinheiro'].map(v => `<button class="chip" data-v="${v}">${v}</button>`).join('')}</div>`}
     ${n.itens.length > 1 && !n.lista ? `<label for="nTodas">Mudar a conta de todos</label><select id="nTodas"><option value="">Escolha uma conta...</option>${S.contas.map(c => `<option>${esc(c)}</option>`).join('')}</select>` : ''}
     <div class="nota-lista">${n.itens.map((i, k) => `<div class="nota-it${i.fora ? ' fora' : ''}${i.ok ? ' ok' : ''}" data-k="${k}">
@@ -2697,12 +2701,13 @@ function pintaNota(){
     <div class="nota-tot"><span>Total dos itens</span><b>${brl(soma)}</b></div>
     ${bate == null ? '' : `<div class="note ${bate ? '' : 'aviso'}">${bate ? 'Bate com o total da nota.' : `A nota diz ${brl(n.total)}. Confira se faltou ou sobrou algum item.`}</div>`}
     <div class="err" id="nErro2" role="alert"></div>
-    <button class="btn" id="nSalvar" ${faltam || !dentro.length ? 'disabled' : ''}>${faltam ? `Falta conferir ${faltam} ${faltam === 1 ? 'item' : 'itens'}` : `Salvar ${dentro.length} ${dentro.length === 1 ? 'item' : 'itens'}`}</button>
+    <button class="btn" id="nSalvar" ${faltam || !dentro.length || semLoja() ? 'disabled' : ''}>${txtSalvar()}</button>
     <button class="link" id="nCancela">${n.de && n.pos < n.de ? 'Pular esta nota' : 'Cancelar'}</button>${n.de && n.pos < n.de ? '<button class="link" id="nCancelaTudo">Parar o lote</button>' : ''}`;
   if ($('#nPago')) chipGroup('#nPago', n.pagoCom, v => { n.pagoCom = v; pintaNota(); });
   if ($('#nConta')) $('#nConta').onchange = e => { n.conta = e.target.value; n.itens.forEach(i => { i.conta = n.conta; }); try { localStorage.setItem('fin_loteConta', n.conta); } catch (x) {} pintaNota(); };
   if ($('#nTipoMudar')) $('#nTipoMudar').onclick = abrirCfg;
-  $('#nLoja').oninput = e => n.loja = e.target.value; $('#nData').onchange = e => n.data = e.target.value;
+  $('#nLoja').oninput = e => { n.loja = e.target.value; const b = $('#nSalvar'); b.disabled = !!(faltam || !dentro.length || semLoja()); b.textContent = txtSalvar(); };
+  $('#nLoja').onchange = e => { const l = mesmaLoja(e.target.value); if (l !== e.target.value) { e.target.value = l; n.loja = l; } }; $('#nData').onchange = e => n.data = e.target.value;
   $$('#nConf .nota-it').forEach(el => { const i = n.itens[+el.dataset.k];
     el.querySelectorAll('[data-c]').forEach(f => f.onchange = () => { i[f.dataset.c] = f.dataset.c === 'valor' ? num(f.value) : f.value; i.ok = false; pintaNota(); }); });
   $$('#nConf [data-ok]').forEach(b => b.onclick = () => { const i = n.itens[+b.dataset.ok]; i.ok = !i.ok; pintaNota(); });
@@ -2714,6 +2719,7 @@ function pintaNota(){
   $('#nSalvar').onclick = async () => {
     const b = $('#nSalvar'); b.disabled = true; b.textContent = 'Salvando...';
     try {
+      n.loja = mesmaLoja(n.loja);
       const r = await api('salvarNota', { loja: n.loja, data: n.data, pagoCom: n.pagoCom, itens: n.itens.filter(i => !i.fora).map(i => ({ nome: i.nome, valor: i.valor, conta: i.conta, qtd: i.qtd || '', un: i.un || '' })) });
       lembraContas(n.itens.filter(i => !i.fora)); S.precosOk = false;
       toast(`Salvo: ${r.itens} itens em ${r.registros} ${r.registros === 1 ? 'conta' : 'contas'}`); fechaNota(); await carregar();
@@ -2729,11 +2735,18 @@ function fechaNota(){
 /* ---------- Preços: compara um preço visto com tudo o que já foi comprado (aba "Itens das notas") ---------- */
 const prNorm = t => semAcento(t).replace(/(\d)[.,](\d)/g, '$1$2').replace(/(\d)\s+(kg|g|ml|l|un)\b/g, '$1$2').replace(/[^a-z0-9 ]/g, ' ');
 const PR_FORA = ['de', 'da', 'do', 'e', 'com', 'o', 'a'];
+function precosGuardados(){ if (!S.precos) { try { S.precos = JSON.parse(localStorage.getItem('fin_precos') || 'null'); } catch (e) {} } return S.precos || []; }
+async function carregaPrecos(){ const d = await api('precos'); S.precos = d; S.precosOk = true; try { localStorage.setItem('fin_precos', JSON.stringify(d)); } catch (e) {} return d; }
+/* Lojas já usadas, da mais frequente para a menos (sugestões do campo "Qual mercado?") */
+function lojasUsadas(){ const c = {}; precosGuardados().forEach(r => { if (r[1]) c[r[1]] = (c[r[1]] || 0) + 1; }); return Object.keys(c).sort((a, b) => c[b] - c[a]); }
+/* "assai" vira "Assaí" se já existe uma loja com esse nome (sem contar acento e maiúscula) */
+function mesmaLoja(l){ l = String(l || '').trim(); const k = semAcento(l).replace(/\s+/g, ' '); return lojasUsadas().find(x => semAcento(x).replace(/\s+/g, ' ') === k) || l; }
+function haQuanto(iso){ const d = -diasAte(iso); return d <= 0 ? 'hoje' : d === 1 ? 'ontem' : d < 30 ? `há ${d} dias` : d < 60 ? 'há 1 mês' : d < 365 ? `há ${Math.floor(d / 30)} meses` : 'há mais de 1 ano'; }
 async function abrePrecos(){
-  if (!S.precos) { try { S.precos = JSON.parse(localStorage.getItem('fin_precos') || 'null'); } catch (e) {} }
+  precosGuardados(); if (!S.precos) S.precos = null;
   pintaPrecos();
   if (S.precosOk) return;
-  try { const d = await api('precos'); S.precos = d; S.precosOk = true; try { localStorage.setItem('fin_precos', JSON.stringify(d)); } catch (e) {} pintaPrecos(); }
+  try { await carregaPrecos(); pintaPrecos(); }
   catch (e) { if (!S.precos) $('#prRes').innerHTML = `<div class="err">Não deu para buscar as compras: ${esc(e)}</div>`; }
 }
 function lePreco(txt){
@@ -2764,17 +2777,18 @@ function pintaPrecos(){
   const ord = Object.values(lojas).sort((a, b) => a.un - b.un), min = ord[0];
   let v = '';
   if (preco > 0) {
-    if (preco <= min.un + 0.004) v = `<div class="pr-veredito bom"><b>Bom preço!</b><br>É igual ou menor que o mais barato que vocês já pagaram: ${brl(min.un)}${sufixo(min)} no ${esc(min.loja)} (${ddmm(min.data)}).</div>`;
+    if (preco <= min.un + 0.004) v = `<div class="pr-veredito bom"><b>Bom preço!</b><br>É igual ou menor que o mais barato que vocês já pagaram: ${brl(min.un)}${sufixo(min)} no ${esc(min.loja)} (${ddmm(min.data)}, ${haQuanto(min.data)}).</div>`;
     else { const dif = preco - min.un, pct = Math.round(dif / min.un * 100);
-      v = `<div class="pr-veredito caro"><b>Mais caro.</b><br>No ${esc(min.loja)} vocês pagaram ${brl(min.un)}${sufixo(min)} (${ddmm(min.data)}). Aqui está ${brl(dif)} a mais (${pct}%).</div>`; }
+      v = `<div class="pr-veredito caro"><b>Mais caro.</b><br>No ${esc(min.loja)} vocês pagaram ${brl(min.un)}${sufixo(min)} (${ddmm(min.data)}, ${haQuanto(min.data)}). Aqui está ${brl(dif)} a mais (${pct}%).</div>`; }
     if (porKg) v += '<div class="help">Itens vendidos por peso aparecem pelo preço do quilo. Digite o preço do kg para comparar.</div>';
+    if (-diasAte(min.data) > 60) v += '<div class="help">Esse preço mais barato é antigo, pode ter mudado.</div>';
     if (incerto(min)) v += '<div class="help">Atenção: essa compra não guardou a quantidade. Se foi mais de 1 unidade, cada uma saiu mais barata.</div>';
-  } else v = `<div class="pr-veredito neutro">Mais barato até hoje: <b>${brl(min.un)}${sufixo(min)}</b> no ${esc(min.loja)} (${ddmm(min.data)}).<br><span style="font-size:14px">Coloque no fim o preço que você está vendo (ex.: ${esc(termo)} 5,49).</span></div>`;
+  } else v = `<div class="pr-veredito neutro">Mais barato até hoje: <b>${brl(min.un)}${sufixo(min)}</b> no ${esc(min.loja)} (${ddmm(min.data)}, ${haQuanto(min.data)}).<br><span style="font-size:14px">Coloque no fim o preço que você está vendo (ex.: ${esc(termo)} 5,49).</span></div>`;
   box.innerHTML = v;
   const linha = (x, titulo, sub) => `<div class="row"><div class="mid"><div class="t">${titulo}</div><div class="s">${sub}</div></div><div class="num">${brl(x.un)}${sufixo(x)}${incerto(x) ? ' *' : ''}</div></div>`;
   const qtdTxt = x => x.kg ? ` · ${String(x.q).replace('.', ',')} kg por ${brl(x.valor)}` : x.q > 1 ? ` · ${x.q} un. por ${brl(x.valor)}` : '';
-  $('#prLojas').innerHTML = ord.map(x => linha(x, esc(x.loja), `${ddmm(x.data)} · ${esc(x.nome)}`)).join('');
-  $('#prTodas').innerHTML = achou.slice(0, 40).map(x => linha(x, esc(x.nome), `${ddmm(x.data)} · ${esc(x.loja)}${qtdTxt(x)}`)).join('')
+  $('#prLojas').innerHTML = ord.map(x => linha(x, esc(x.loja), `${ddmm(x.data)} (${haQuanto(x.data)}) · ${esc(x.nome)}`)).join('');
+  $('#prTodas').innerHTML = achou.slice(0, 40).map(x => linha(x, esc(x.nome), `${ddmm(x.data)} (${haQuanto(x.data)}) · ${esc(x.loja)}${qtdTxt(x)}`)).join('')
     + (achou.some(incerto) ? '<div class="help">* Compra sem quantidade guardada (as de antes de 24/11): o valor pode ser de mais de 1 unidade.</div>' : '');
   $('#prLojasCard').classList.remove('hide'); $('#prTodasCard').classList.remove('hide');
 }
