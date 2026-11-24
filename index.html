@@ -2679,7 +2679,7 @@ function pintaNota(){
   const n = S.nota, dentro = n.itens.filter(i => !i.fora), soma = dentro.reduce((a, i) => a + i.valor, 0), faltam = dentro.filter(i => !i.ok).length;
   const precisaLoja = dentro.some(i => tipoDe(i.conta) === 'Mercado'), semLoja = () => precisaLoja && !String(n.loja || '').trim();
   const txtSalvar = () => faltam ? `Falta conferir ${faltam} ${faltam === 1 ? 'item' : 'itens'}` : semLoja() ? 'Falta dizer qual mercado' : `Salvar ${dentro.length} ${dentro.length === 1 ? 'item' : 'itens'}`;
-  const rotLoja = precisaLoja ? 'Qual mercado?' : n.lista ? 'Loja (opcional)' : 'Loja', campoLoja = `<input id="nLoja" list="nLojas" autocomplete="off" value="${esc(n.loja)}"><datalist id="nLojas">${lojasUsadas().map(l => `<option value="${esc(l)}">`).join('')}</datalist>`;
+  const rotLoja = precisaLoja ? 'Qual mercado?' : n.lista ? 'Loja (opcional)' : 'Loja', campoLoja = `<input id="nLoja" autocomplete="off" value="${esc(n.loja)}">`;
   if (!S.precosOk && !S.precosTentou) { S.precosTentou = true; carregaPrecos().catch(() => {}); }
   const bate = n.total == null ? null : Math.abs(soma - n.total) < 0.05;
   $('#nConf').innerHTML = `<h2>Confira os itens</h2>${n.de ? `<div class="help">Nota ${n.pos} de ${n.de} · ${esc(n.arq)}</div>` : ''}
@@ -2706,7 +2706,14 @@ function pintaNota(){
   if ($('#nPago')) chipGroup('#nPago', n.pagoCom, v => { n.pagoCom = v; pintaNota(); });
   if ($('#nConta')) $('#nConta').onchange = e => { n.conta = e.target.value; n.itens.forEach(i => { i.conta = n.conta; }); try { localStorage.setItem('fin_loteConta', n.conta); } catch (x) {} pintaNota(); };
   if ($('#nTipoMudar')) $('#nTipoMudar').onclick = abrirCfg;
-  $('#nLoja').oninput = e => { n.loja = e.target.value; const b = $('#nSalvar'); b.disabled = !!(faltam || !dentro.length || semLoja()); b.textContent = txtSalvar(); };
+  const marcaLoja = () => { const b = $('#nSalvar'); b.disabled = !!(faltam || !dentro.length || semLoja()); b.textContent = txtSalvar();
+    $$('#nLojaSug .chip').forEach(c => c.classList.toggle('on', c.dataset.v === n.loja)); };
+  const sug = lojasUsadas().slice(0, 8);   // mercados já usados: um toque preenche o campo
+  if (precisaLoja || sug.length) $('#nLoja').closest('.two').insertAdjacentHTML('afterend', `<div class="pr-chips" id="nLojaSug" aria-label="Mercados já usados">${sug.map(l => `<button class="chip" type="button" data-v="${esc(l)}">${esc(l)}</button>`).join('')}<button class="chip add" type="button" id="nLojaNova">+ Novo mercado</button></div>`);
+  $$('#nLojaSug .chip[data-v]').forEach(c => c.onclick = () => { n.loja = c.dataset.v; $('#nLoja').value = n.loja; marcaLoja(); });
+  if ($('#nLojaNova')) $('#nLojaNova').onclick = () => { n.loja = ''; const l = $('#nLoja'); l.value = ''; l.placeholder = 'Nome do mercado novo'; marcaLoja(); l.focus(); };
+  marcaLoja();
+  $('#nLoja').oninput = e => { n.loja = e.target.value; marcaLoja(); };
   $('#nLoja').onchange = e => { const l = mesmaLoja(e.target.value); if (l !== e.target.value) { e.target.value = l; n.loja = l; } }; $('#nData').onchange = e => n.data = e.target.value;
   $$('#nConf .nota-it').forEach(el => { const i = n.itens[+el.dataset.k];
     el.querySelectorAll('[data-c]').forEach(f => f.onchange = () => { i[f.dataset.c] = f.dataset.c === 'valor' ? num(f.value) : f.value; i.ok = false; pintaNota(); }); });
@@ -2721,7 +2728,7 @@ function pintaNota(){
     try {
       n.loja = mesmaLoja(n.loja);
       const r = await api('salvarNota', { loja: n.loja, data: n.data, pagoCom: n.pagoCom, itens: n.itens.filter(i => !i.fora).map(i => ({ nome: i.nome, valor: i.valor, conta: i.conta, qtd: i.qtd || '', un: i.un || '' })) });
-      lembraContas(n.itens.filter(i => !i.fora)); S.precosOk = false;
+      lembraContas(n.itens.filter(i => !i.fora)); S.precosOk = false; S.precosTentou = false;
       toast(`Salvo: ${r.itens} itens em ${r.registros} ${r.registros === 1 ? 'conta' : 'contas'}`); fechaNota(); await carregar();
     } catch (e) { $('#nErro2').textContent = 'Não salvou: ' + e; b.disabled = false; b.textContent = 'Tentar de novo'; }
   };
