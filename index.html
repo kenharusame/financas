@@ -2677,7 +2677,7 @@ function proximaNota(){
 }
 function pintaNota(){
   const n = S.nota, dentro = n.itens.filter(i => !i.fora), soma = dentro.reduce((a, i) => a + i.valor, 0), faltam = dentro.filter(i => !i.ok).length;
-  const precisaLoja = dentro.some(i => tipoDe(i.conta) === 'Mercado'), semLoja = () => precisaLoja && !String(n.loja || '').trim();
+  const precisaLoja = dentro.some(i => i.conta === 'Mercado'), semLoja = () => precisaLoja && !String(n.loja || '').trim();
   const txtSalvar = () => faltam ? `Falta conferir ${faltam} ${faltam === 1 ? 'item' : 'itens'}` : semLoja() ? 'Falta dizer qual mercado' : `Salvar ${dentro.length} ${dentro.length === 1 ? 'item' : 'itens'}`;
   const rotLoja = precisaLoja ? 'Qual mercado?' : n.lista ? 'Loja (opcional)' : 'Loja', campoLoja = `<input id="nLoja" autocomplete="off" value="${esc(n.loja)}">`;
   if (!S.precosOk && !S.precosTentou) { S.precosTentou = true; carregaPrecos().catch(() => {}); }
@@ -2709,7 +2709,7 @@ function pintaNota(){
   const marcaLoja = () => { const b = $('#nSalvar'); b.disabled = !!(faltam || !dentro.length || semLoja()); b.textContent = txtSalvar();
     $$('#nLojaSug .chip').forEach(c => c.classList.toggle('on', c.dataset.v === n.loja)); };
   const sug = lojasUsadas().slice(0, 8);   // mercados já usados: um toque preenche o campo
-  if (precisaLoja || sug.length) $('#nLoja').closest('.two').insertAdjacentHTML('afterend', `<div class="pr-chips" id="nLojaSug" aria-label="Mercados já usados">${sug.map(l => `<button class="chip" type="button" data-v="${esc(l)}">${esc(l)}</button>`).join('')}<button class="chip add" type="button" id="nLojaNova">+ Novo mercado</button></div>`);
+  if (precisaLoja) $('#nLoja').closest('.two').insertAdjacentHTML('afterend', `<div class="pr-chips" id="nLojaSug" aria-label="Mercados já usados">${sug.map(l => `<button class="chip" type="button" data-v="${esc(l)}">${esc(l)}</button>`).join('')}<button class="chip add" type="button" id="nLojaNova">+ Novo mercado</button></div>`);
   $$('#nLojaSug .chip[data-v]').forEach(c => c.onclick = () => { n.loja = c.dataset.v; $('#nLoja').value = n.loja; marcaLoja(); });
   if ($('#nLojaNova')) $('#nLojaNova').onclick = () => { n.loja = ''; const l = $('#nLoja'); l.value = ''; l.placeholder = 'Nome do mercado novo'; marcaLoja(); l.focus(); };
   marcaLoja();
