@@ -96,7 +96,8 @@ button:focus-visible,.row.click:focus-visible{outline:2px solid var(--accent);ou
 .tag.fixa{background:var(--primary-soft);color:#BFDBFE} .tag.parc{background:var(--warn-soft);color:var(--warn)}
 .ai p{margin:0 0 12px} .ai ul{margin:0 0 12px;padding-left:20px}
 nav{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));border-radius:24px;max-width:536px;margin:0 auto;z-index:20}
-nav .in{display:grid;grid-template-columns:repeat(5,1fr)}
+nav .in{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:480px){nav button{font-size:11px;margin:4px 1px;letter-spacing:-.2px}}
 nav button{border:0;background:none;font:inherit;font-size:12px;font-weight:700;color:#B4C0D3;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border-radius:20px;margin:4px}
 nav button.on{color:var(--text);background:var(--primary-soft)}
 nav svg{width:24px;height:24px}
@@ -321,7 +322,6 @@ html.pc .pc-topo .hero-txt{flex:0 1 auto;margin:0 auto;text-align:left;padding:1
 .escolha{padding:14px;border-radius:16px;background:rgba(12,18,27,.4);box-shadow:var(--inset)}
 .escolha .s{color:var(--muted);font-size:14px;margin:6px 0 4px}
 .escolha .btn{margin-top:10px;min-height:48px;font-size:15px}
-.rapido .chat-in textarea{min-height:48px}
 .mic.on{background:linear-gradient(160deg,#E0707A,#B02A37);animation:pulsa 1.2s infinite}
 @keyframes pulsa{50%{box-shadow:0 0 0 8px rgba(224,112,122,.25)}}
 @media (prefers-reduced-motion:reduce){.mic.on{animation:none}}
@@ -450,7 +450,11 @@ html.pc .pc-topo .grid3>.mini b{font-size:34px;margin-top:6px}
 html.pc #planejar .pc-topo{grid-template-columns:1fr 1fr}
 html.pc .pc-cols{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px;align-items:start}
 html.pc .pc-cols>div>*{width:100%}
-html.pc #adicionar,html.pc #dicas{max-width:760px;margin:0 auto}
+html.pc #adicionar,html.pc #dicas,html.pc #precos{max-width:760px;margin:0 auto}
+.pr-veredito{border-radius:16px;padding:14px 16px;margin-top:12px;font-size:16px;line-height:1.45}
+.pr-veredito.bom{background:var(--in-soft);color:#C9F2EA} .pr-veredito.caro{background:var(--out-soft);color:#FBD9DE} .pr-veredito.neutro{background:var(--primary-soft);color:#BFDBFE}
+.pr-veredito b{font-size:18px}
+.pr-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 html.pc dialog{border-radius:24px;margin:auto;max-width:620px;max-height:88vh}
 html.pc .toast{bottom:24px}
 .modo-btn{display:none} @media (min-width:1024px){.modo-btn{display:flex}}</style>
@@ -470,9 +474,6 @@ html.pc .toast{bottom:24px}
   </div>
   <div id="cPagto"></div>
   <div id="cLembra"></div>
-  <div id="cRapido"><div class="card"><label for="hTxt" style="margin-top:0">Lançar um gasto</label>
-    <div class="chat-in" style="margin-top:0"><input id="hTxt" autocomplete="off" enterkeyhint="send" placeholder='Ex.: "gastei 45 no mercado"'>
-      <button class="chat-env" id="hOk" aria-label="Lançar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div></div></div>
   <div id="cPassos"></div>
   <div id="cFatura"></div>
   <div id="cSalario"></div>
@@ -522,14 +523,6 @@ html.pc .toast{bottom:24px}
 
 <section id="adicionar" class="hide">
   <header><h1>Adicionar</h1></header>
-  <div class="card rapido">
-    <label for="rTxt" style="margin-top:0">Registro rápido</label>
-    <div class="chat-in" style="margin-top:0"><textarea id="rTxt" rows="1" placeholder='Ex.: "gastei 45 no mercado no pix"'></textarea>
-      <button class="chat-env mic hide" id="rMic" aria-label="Falar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
-      <button class="chat-env" id="rOk" aria-label="Preencher o formulário"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
-    <div class="help" id="rHelp">Escreva ou fale do seu jeito. A IA abre o formulário já preenchido e você confere antes de salvar.</div>
-    <div class="err" id="rErro" role="alert"></div>
-  </div>
   <button class="card quero" id="aQuero" type="button"><span class="ico out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg></span><div><b>Quero comprar uma coisa</b><div class="s">Antes de comprar, veja quanto ela custa de verdade.</div></div></button>
 <div class="card nota-card" id="nCard">
     <div id="nIni">
@@ -616,6 +609,18 @@ html.pc .toast{bottom:24px}
   <div class="filter chips" id="hFiltro"><button class="chip" data-v="Tudo">Tudo</button><button class="chip" data-v="Entrada">Entradas</button><button class="chip" data-v="Despesa">Despesas</button><button class="chip" data-v="Investimento">Investimentos</button></div>
   <div class="card" id="hLista"></div>
   <div class="badge">Toque num registro para corrigir ou apagar</div>
+</section>
+
+<section id="precos" class="hide">
+  <header><h1>Preços</h1></header>
+  <div class="card">
+    <h2>Esse preço está bom?</h2>
+    <p class="s" style="margin:-6px 0 10px;color:var(--muted);font-size:14px">Escreva o produto e o preço que você está vendo. O site compara com tudo o que vocês já compraram.</p>
+    <div class="busca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="prBusca" type="search" placeholder="Ex.: leite 5,49" aria-label="Produto e preço" autocomplete="off"></div>
+    <div id="prRes" aria-live="polite"></div>
+  </div>
+  <div class="card hide" id="prLojasCard"><h2>Menor preço em cada loja</h2><div id="prLojas"></div></div>
+  <div class="card hide" id="prTodasCard"><h2>Todas as compras encontradas</h2><div id="prTodas"></div></div>
 </section>
 
 <section id="dicas" class="hide">
@@ -781,6 +786,7 @@ html.pc .toast{bottom:24px}
   <button data-s="relatorios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Relatórios</button>
   <button data-s="adicionar"><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg></span>Adicionar</button>
   <button data-s="planejar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Planejar</button>
+  <button data-s="precos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>Preços</button>
   <button data-s="dicas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>IA</button>
 </div></nav>
 
@@ -792,7 +798,7 @@ html.pc .toast{bottom:24px}
   const poe = (secao, lista) => { const s = document.getElementById(secao); lista.map(card).filter(Boolean).forEach(el => s.appendChild(el)); };
   const ini = document.getElementById('inicio');
   // Início, nesta ordem
-  ['#iHero', '#cLembra', '.card.saldo', '#cRapido', '#cSemana', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx', '#cDica']
+  ['#iHero', '#cLembra', '.card.saldo', '#cSemana', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx', '#cDica']
     .map(x => ['#iContas', '#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
     .filter(Boolean).forEach(el => ini.appendChild(el));
   ini.insertBefore(document.getElementById('cSalario'), card('#cProx'));
@@ -810,7 +816,7 @@ html.pc .toast{bottom:24px}
   const mq = matchMedia('(min-width:1024px)'); const mqPc = { get matches(){ return document.documentElement.classList.contains('pc'); } };
   const el = sel => { const e = document.querySelector(sel); return e && (e.closest('.card') || e); };
   const P = {
-    inicio:     { topo: ['#iHero', '.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#cLembra', '#cRapido', '#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
+    inicio:     { topo: ['#iHero', '.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#cLembra', '#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
     relatorios: { main: ['#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cPrev', '#cPat'] },
     planejar:   { topo: ['#cFase', '#cFuturo'], main: ['#cLim', '#cMetas', '#cDesejos', '#cAnual', '#iParc'], side: ['#cMesada', '#cGuia', '#cZero'] },
     historico:  { main: ['#hLista'], side: ['#historico .busca', '#hModo', '#hFiltro', '#hCal'] }
@@ -895,10 +901,11 @@ const FAKE = (() => {
       { nome: 'Detergente', valor: 2.79, conta: 'Limpeza' }, { nome: 'Sabão em pó 1,6kg', valor: 24.9, conta: 'Limpeza' }, { nome: 'Pasta de dente', valor: 6.49, conta: 'Higiene' },
       { nome: 'Ração para gatos 3kg', valor: 68.9, conta: 'Higiene e Alimentação - Gatas' }, { nome: 'Banana prata', valor: 15.0, conta: 'Mercado' } ] }),
     salvarNota: n => { const g = {}; n.itens.forEach(i => g[i.conta] = (g[i.conta] || 0) + i.valor); Object.entries(g).forEach(([c, v]) => add(n.data, 'Despesa', c, Math.round(v * 100) / 100, { obs: n.loja })); return { registros: Object.keys(g).length, itens: n.itens.length }; },
+    precos: () => [['2026-11-02', 'Atacadão', 'Leite integral 1L', 29.34, 6, 'un'], ['2026-11-10', 'Pão de Açúcar', 'Leite integral Piracanjuba 1L', 5.99, 1, 'un'], ['2026-11-18', 'Assaí', 'Leite integral 1L', 4.79, '', ''],
+      ['2026-11-02', 'Atacadão', 'Arroz 5kg', 24.9, 1, 'un'], ['2026-11-18', 'Assaí', 'Arroz tipo 1 5kg', 27.5, 1, 'un'], ['2026-11-10', 'Pão de Açúcar', 'Banana prata', 7.18, 0.82, 'kg'], ['2026-11-18', 'Assaí', 'Banana prata', 6.5, 1.3, 'kg']],
     limiteCartao: v => (dados.limiteCartao = Number(v)),
     salvarOrcamento: m => { dados.orcamento = {}; Object.keys(m).forEach(k => { if (m[k] !== '' && m[k] != null && Number(m[k]) >= 0) dados.orcamento[k] = Number(m[k]); }); return JSON.parse(JSON.stringify(dados.orcamento)); },
     definirLimites: m => { Object.keys(m).forEach(c => { if (Number(m[c]) > 0) dados.limites[c] = Number(m[c]); else delete dados.limites[c]; }); return JSON.parse(JSON.stringify(dados.limites)); },
-    interpretar: x => ({ tipo: 'Despesa', valor: 45, conta: 'Cartão de crédito', forma: 'Única', vezes: 1, valorEhTotal: true, data: '2026-11-22', obs: 'pix', meta: '', duvida: '' }),
     salvarAnual: a => { dados.anuais = (dados.anuais || []).filter(x => x.nome !== (a.nomeAntigo || a.nome)).concat([{ nome: a.nome, valor: Number(a.valor), mes: Number(a.mes), dia: Number(a.dia) || 1 }]); return JSON.parse(JSON.stringify(dados.anuais)); },
     apagarAnual: n => { dados.anuais = dados.anuais.filter(x => x.nome !== n); return JSON.parse(JSON.stringify(dados.anuais)); },
     salvarPatrimonio: (c, itens) => { dados.patrimonio = (dados.patrimonio || []).filter(x => x.ciclo !== c).concat(itens.map(i => ({ ciclo: c, item: i.item, tipo: i.tipo, valor: Number(i.valor) }))); return JSON.parse(JSON.stringify(dados.patrimonio)); },
@@ -950,7 +957,7 @@ function chipGroup(sel, val, onPick){ $$(sel + ' .chip').forEach(c => { c.classL
 function totais(i){ const t = { Entrada: 0, Despesa: 0, Investimento: 0 }; S.regs.forEach(r => { if (ciclo(r.data) === i) t[r.tipo] = (t[r.tipo] || 0) + r.valor; }); t.saldo = t.Entrada - t.Despesa - t.Investimento + (t.Retirada || 0); return t; }
 
 /* ---------- Navegação ---------- */
-function ir(sec, doVoltar){ if (!doVoltar) historico('push', sec); $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.s === sec)); $$('section').forEach(s => s.classList.toggle('hide', s.id !== sec)); scrollTo(0, 0); if (sec === 'adicionar') renderForm(); }
+function ir(sec, doVoltar){ if (!doVoltar) historico('push', sec); $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.s === sec)); $$('section').forEach(s => s.classList.toggle('hide', s.id !== sec)); scrollTo(0, 0); if (sec === 'adicionar') renderForm(); if (sec === 'precos') abrePrecos(); }
 $$('nav button').forEach(b => b.onclick = () => ir(b.dataset.s));
 function historico(modo, sec){
   try {
@@ -1004,7 +1011,7 @@ async function carregar(){
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { // abre direto na tela do endereço (ex.: ...#adicionar), senão no Início
-      const h = location.hash.slice(1), sec = ['inicio', 'adicionar', 'relatorios', 'planejar', 'historico', 'dicas'].includes(h) ? h : 'inicio';
+      const h = location.hash.slice(1), sec = ['inicio', 'adicionar', 'relatorios', 'planejar', 'historico', 'dicas', 'precos'].includes(h) ? h : 'inicio';
       historico('replace', sec); ir(sec, true); }
     renderMes(); avisoFila();
     if (!S.offline) enviaFila();
@@ -1616,18 +1623,13 @@ function lembraInicio(){
     lsGrava('fin_pagas', p); lembraInicio(); toast(ids.length > 1 ? 'Contas marcadas como pagas' : 'Marcada como paga'); };
   $$('#cLembra [data-pg]').forEach(b => b.onclick = () => marca([b.dataset.pg]));
   $$('#cLembra [data-lb="todas"]').forEach(b => b.onclick = () => marca(L.filter(x => x.id).map(x => x.id)));
-  $$('#cLembra [data-lb="lancar"]').forEach(b => b.onclick = () => { S.tipo = 'Despesa'; ir('adicionar'); $('#rTxt').focus(); });
+  $$('#cLembra [data-lb="lancar"]').forEach(b => b.onclick = () => { S.tipo = 'Despesa'; ir('adicionar'); renderForm(); $('#aValor').focus(); });
   $$('#cLembra [data-lb="nada"]').forEach(b => b.onclick = () => { lsGrava('fin_semGastoOk', dHoje); lembraInicio(); toast('Certo, contando a partir de hoje'); });
   $$('#cLembra [data-px]').forEach(b => b.onclick = () => { const p = lsLe('fin_prevOk', {}); p[b.dataset.px] = dHoje; lsGrava('fin_prevOk', p); lembraInicio(); });
   $$('#cLembra [data-pl]').forEach(b => b.onclick = () => { const x = L.find(y => y.prev === b.dataset.pl); if (!x) return;
     S.tipo = 'Despesa'; ir('adicionar'); renderForm(); $('#aConta').value = x.conta;
     $('#aValor').value = x.v.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); $('#aValor').dispatchEvent(new Event('input')); resumo(); toast('Confira e toque em Salvar'); });
 }
-/* Lançar um gasto direto do Início: manda o texto para o Registro rápido */
-function lancaDoInicio(){ const t = $('#hTxt').value.trim(); if (!t) { S.tipo = 'Despesa'; ir('adicionar'); $('#rTxt').focus(); return; }
-  S.tipo = 'Despesa'; ir('adicionar'); $('#rTxt').value = t; $('#hTxt').value = ''; interpretarTexto(); }
-$('#hOk').onclick = lancaDoInicio;
-$('#hTxt').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); lancaDoInicio(); } });
 const SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 function diasSemSuperfluo(){
   const dSup = new Set(S.regs.filter(r => r.tipo === 'Despesa' && r.forma !== 'Fixa' && r.forma !== 'Parcelada' && superfluo(r.conta)).map(r => r.data));
@@ -2102,43 +2104,6 @@ function ajustaTxt(){ const t = $('#chatTxt'); t.style.height = 'auto'; t.style.
 $('#chatTxt').addEventListener('input', ajustaTxt);
 $('#chatTxt').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarPergunta($('#chatTxt').value); } });
 $('#chatEnv').onclick = () => enviarPergunta($('#chatTxt').value);
-
-/* ---------- Registro rápido (texto ou voz -> formulário) ---------- */
-const Fala = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (Fala) $('#rMic').classList.remove('hide');
-let ouvindo = null;
-$('#rMic').onclick = () => {
-  if (ouvindo) { ouvindo.stop(); return; }
-  const r = new Fala(); r.lang = 'pt-BR'; r.interimResults = true; ouvindo = r;
-  $('#rMic').classList.add('on'); $('#rHelp').textContent = 'Ouvindo... fale e espere um instante.';
-  r.onresult = e => { $('#rTxt').value = [...e.results].map(x => x[0].transcript).join(' '); };
-  r.onerror = () => { $('#rErro').textContent = 'Não consegui ouvir. Confira se o site pode usar o microfone.'; };
-  r.onend = () => { ouvindo = null; $('#rMic').classList.remove('on'); $('#rHelp').textContent = 'Escreva ou fale do seu jeito. A IA preenche o formulário abaixo e você confere antes de salvar.'; if ($('#rTxt').value.trim()) interpretarTexto(); };
-  r.start();
-};
-async function interpretarTexto(){
-  const txt = $('#rTxt').value.trim(); if (!txt) return;
-  const b = $('#rOk'); b.disabled = true; $('#rErro').textContent = ''; $('#rHelp').textContent = 'Entendendo...';
-  try {
-    let r = await api('interpretar', txt); if (Array.isArray(r)) r = r[0] || {};
-    if (!r.tipo) throw 'Não entendi. Tente de novo, dizendo o valor e onde foi.';
-    S.tipo = r.tipo; S.forma = r.forma; S.ehTotal = r.valorEhTotal === false ? '0' : '1';
-    if (r.tipo === 'Entrada' && r.conta) S.origem = r.conta;
-    renderForm();
-    const v = r.valor ? r.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
-    if (r.tipo === 'Investimento') { $('#aInvValor').value = v; $('#aInvValor').dispatchEvent(new Event('input')); if (r.meta) $('#aMeta').value = r.meta; }
-    else $('#aValor').value = v;
-    if (r.tipo === 'Despesa' && r.conta) $('#aConta').value = r.conta;
-    $('#aVezes').value = r.vezes || 1; $('#aData').value = r.data; $('#aObs').value = r.obs || '';
-    ir('adicionar'); renderForm(); if (r.tipo === 'Despesa' && r.conta) $('#aConta').value = r.conta; resumo();
-    const falta = !r.conta && r.tipo !== 'Investimento' ? ' Escolha a conta, não achei uma parecida.' : '';
-    $('#rHelp').textContent = 'Escreva ou fale do seu jeito. A IA abre o formulário já preenchido e você confere antes de salvar.'; toast('Confira os campos e toque em Salvar.' + falta + (r.duvida ? ' Atenção: ' + r.duvida : ''));
-    $('#rTxt').value = ''; $('#aSalvar').scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-  } catch (e) { $('#rErro').textContent = String(e); $('#rHelp').textContent = ''; }
-  b.disabled = false;
-}
-$('#rOk').onclick = interpretarTexto;
-$('#rTxt').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); interpretarTexto(); } });
 
 /* ---------- Gastos do ano ---------- */
 function proximo(a){
@@ -2749,8 +2714,8 @@ function pintaNota(){
   $('#nSalvar').onclick = async () => {
     const b = $('#nSalvar'); b.disabled = true; b.textContent = 'Salvando...';
     try {
-      const r = await api('salvarNota', { loja: n.loja, data: n.data, pagoCom: n.pagoCom, itens: n.itens.filter(i => !i.fora).map(i => ({ nome: i.nome, valor: i.valor, conta: i.conta })) });
-      lembraContas(n.itens.filter(i => !i.fora));
+      const r = await api('salvarNota', { loja: n.loja, data: n.data, pagoCom: n.pagoCom, itens: n.itens.filter(i => !i.fora).map(i => ({ nome: i.nome, valor: i.valor, conta: i.conta, qtd: i.qtd || '', un: i.un || '' })) });
+      lembraContas(n.itens.filter(i => !i.fora)); S.precosOk = false;
       toast(`Salvo: ${r.itens} itens em ${r.registros} ${r.registros === 1 ? 'conta' : 'contas'}`); fechaNota(); await carregar();
     } catch (e) { $('#nErro2').textContent = 'Não salvou: ' + e; b.disabled = false; b.textContent = 'Tentar de novo'; }
   };
@@ -2760,6 +2725,60 @@ function fechaNota(){
   S.nota = null; S.nFotos = []; pintaFotos(); $('#nConf').classList.add('hide'); $('#nIni').classList.remove('hide');
   if (S.loteErros.length) { $('#nErro').textContent = 'Não consegui ler: ' + S.loteErros.join('; '); S.loteErros = []; }
 }
+
+/* ---------- Preços: compara um preço visto com tudo o que já foi comprado (aba "Itens das notas") ---------- */
+const prNorm = t => semAcento(t).replace(/(\d)[.,](\d)/g, '$1$2').replace(/(\d)\s+(kg|g|ml|l|un)\b/g, '$1$2').replace(/[^a-z0-9 ]/g, ' ');
+const PR_FORA = ['de', 'da', 'do', 'e', 'com', 'o', 'a'];
+async function abrePrecos(){
+  if (!S.precos) { try { S.precos = JSON.parse(localStorage.getItem('fin_precos') || 'null'); } catch (e) {} }
+  pintaPrecos();
+  if (S.precosOk) return;
+  try { const d = await api('precos'); S.precos = d; S.precosOk = true; try { localStorage.setItem('fin_precos', JSON.stringify(d)); } catch (e) {} pintaPrecos(); }
+  catch (e) { if (!S.precos) $('#prRes').innerHTML = `<div class="err">Não deu para buscar as compras: ${esc(e)}</div>`; }
+}
+function lePreco(txt){
+  const m = String(txt || '').trim().match(/^(.*?)[\s:;|–-]*(?:R\$\s*)?(\d{1,3}(?:\.\d{3})+,\d{1,2}|\d+(?:[.,]\d{1,2})?)\s*$/);
+  return m && m[1].trim() ? { termo: m[1].trim(), preco: num(m[2]) } : { termo: String(txt || '').trim(), preco: 0 };
+}
+function pintaPrecos(){
+  const box = $('#prRes'), L = S.precos, { termo, preco } = lePreco($('#prBusca').value);
+  $('#prLojasCard').classList.add('hide'); $('#prTodasCard').classList.add('hide');
+  if (!L) { box.innerHTML = '<div class="empty">Buscando as compras...</div>'; return; }
+  if (!L.length) { box.innerHTML = '<div class="empty">Ainda não há compras com itens. Leia uma nota em Adicionar e os preços começam a aparecer aqui.</div>'; return; }
+  const palavras = prNorm(termo).split(/\s+/).filter(w => w && PR_FORA.indexOf(w) < 0);
+  if (!palavras.length) {
+    const cont = {}; L.forEach(r => { const k = r[2]; cont[k] = (cont[k] || 0) + 1; });
+    const top = Object.keys(cont).sort((a, b) => cont[b] - cont[a]).slice(0, 10);
+    box.innerHTML = `<div class="help">${L.length} compras guardadas. Os mais comprados:</div><div class="pr-chips">${top.map(t => `<button class="chip" data-pr="${esc(t)}">${esc(t)}</button>`).join('')}</div>`;
+    $$('#prRes [data-pr]').forEach(b => b.onclick = () => { $('#prBusca').value = b.dataset.pr + ' '; $('#prBusca').focus(); pintaPrecos(); });
+    return;
+  }
+  const tem = (nome, w) => nome.indexOf(w) >= 0 || (w.length > 3 && /s$/.test(w) && nome.indexOf(w.slice(0, -1)) >= 0);
+  const achou = L.map(r => { const q = Number(r[4]) > 0 ? Number(r[4]) : 0, kg = r[5] === 'kg';
+      return { data: r[0], loja: r[1] || 'Sem loja', nome: r[2], valor: r[3], q, kg, un: q ? r[3] / q : r[3] }; })
+    .filter(x => { const n = prNorm(x.nome); return palavras.every(w => tem(n, w)); })
+    .sort((a, b) => a.data < b.data ? 1 : -1);
+  if (!achou.length) { box.innerHTML = `<div class="empty">Não achei "${esc(termo)}" nas compras. Tente uma palavra só (ex.: leite).</div>`; return; }
+  const porKg = achou.some(x => x.kg), sufixo = x => x.kg ? '/kg' : '', incerto = x => !x.q;
+  const lojas = {}; achou.forEach(x => { const l = lojas[x.loja]; if (!l || x.un < l.un) lojas[x.loja] = x; });
+  const ord = Object.values(lojas).sort((a, b) => a.un - b.un), min = ord[0];
+  let v = '';
+  if (preco > 0) {
+    if (preco <= min.un + 0.004) v = `<div class="pr-veredito bom"><b>Bom preço!</b><br>É igual ou menor que o mais barato que vocês já pagaram: ${brl(min.un)}${sufixo(min)} no ${esc(min.loja)} (${ddmm(min.data)}).</div>`;
+    else { const dif = preco - min.un, pct = Math.round(dif / min.un * 100);
+      v = `<div class="pr-veredito caro"><b>Mais caro.</b><br>No ${esc(min.loja)} vocês pagaram ${brl(min.un)}${sufixo(min)} (${ddmm(min.data)}). Aqui está ${brl(dif)} a mais (${pct}%).</div>`; }
+    if (porKg) v += '<div class="help">Itens vendidos por peso aparecem pelo preço do quilo. Digite o preço do kg para comparar.</div>';
+    if (incerto(min)) v += '<div class="help">Atenção: essa compra não guardou a quantidade. Se foi mais de 1 unidade, cada uma saiu mais barata.</div>';
+  } else v = `<div class="pr-veredito neutro">Mais barato até hoje: <b>${brl(min.un)}${sufixo(min)}</b> no ${esc(min.loja)} (${ddmm(min.data)}).<br><span style="font-size:14px">Coloque no fim o preço que você está vendo (ex.: ${esc(termo)} 5,49).</span></div>`;
+  box.innerHTML = v;
+  const linha = (x, titulo, sub) => `<div class="row"><div class="mid"><div class="t">${titulo}</div><div class="s">${sub}</div></div><div class="num">${brl(x.un)}${sufixo(x)}${incerto(x) ? ' *' : ''}</div></div>`;
+  const qtdTxt = x => x.kg ? ` · ${String(x.q).replace('.', ',')} kg por ${brl(x.valor)}` : x.q > 1 ? ` · ${x.q} un. por ${brl(x.valor)}` : '';
+  $('#prLojas').innerHTML = ord.map(x => linha(x, esc(x.loja), `${ddmm(x.data)} · ${esc(x.nome)}`)).join('');
+  $('#prTodas').innerHTML = achou.slice(0, 40).map(x => linha(x, esc(x.nome), `${ddmm(x.data)} · ${esc(x.loja)}${qtdTxt(x)}`)).join('')
+    + (achou.some(incerto) ? '<div class="help">* Compra sem quantidade guardada (as de antes de 24/11): o valor pode ser de mais de 1 unidade.</div>' : '');
+  $('#prLojasCard').classList.remove('hide'); $('#prTodasCard').classList.remove('hide');
+}
+$('#prBusca').oninput = pintaPrecos;
 
 /* ---------- Histórico ---------- */
 function renderHist(){
