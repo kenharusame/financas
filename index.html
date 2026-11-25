@@ -96,7 +96,7 @@ button:focus-visible,.row.click:focus-visible{outline:2px solid var(--accent);ou
 .tag.fixa{background:var(--primary-soft);color:#BFDBFE} .tag.parc{background:var(--warn-soft);color:var(--warn)}
 .ai p{margin:0 0 12px} .ai ul{margin:0 0 12px;padding-left:20px}
 nav{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));border-radius:24px;max-width:536px;margin:0 auto;z-index:20}
-nav .in{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+nav .in{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
 @media (max-width:480px){nav button{font-size:11px;margin:4px 1px;letter-spacing:-.2px}}
 nav button{border:0;background:none;font:inherit;font-size:12px;font-weight:700;color:#B4C0D3;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border-radius:20px;margin:4px}
 nav button.on{color:var(--text);background:var(--primary-soft)}
@@ -458,6 +458,20 @@ html.pc #adicionar,html.pc #dicas,html.pc #precos{max-width:760px;margin:0 auto}
 html.pc dialog{border-radius:24px;margin:auto;max-width:620px;max-height:88vh}
 html.pc .toast{bottom:24px}
 .modo-btn{display:none} @media (min-width:1024px){.modo-btn{display:flex}}</style>
+<style>
+/* Prévia UX: um destaque só */
+.grid3 .mini.in,.grid3 .mini.out,.grid3 .mini.inv{background:rgba(255,255,255,.07);color:inherit}
+.grid3 .mini.out.estourou{background:linear-gradient(160deg,#8E4C56,#673039);color:#FBE3E6}
+.mais-links{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px}
+.mais-links .btn{margin:0}
+.parc-bar{height:6px;margin-top:6px;max-width:220px}
+.sec-tit{margin:24px 4px 10px;font-size:18px}
+.rapido .rap-linha{display:flex;gap:8px;margin-top:8px}
+.rapido .rap-linha input{flex:1;min-width:0}
+.rapido .rap-linha .btn{width:auto;margin:0;padding:0 18px}
+.rap-ok{margin-top:10px;font-weight:700}
+.toast{width:max-content;max-width:min(92%,420px)} .toast span{flex:1;min-width:180px}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -523,6 +537,10 @@ html.pc .toast{bottom:24px}
 
 <section id="adicionar" class="hide">
   <header><h1>Adicionar</h1></header>
+  <div class="card rapido"><label for="rTxt"><b>Lançamento rápido</b></label>
+    <div class="rap-linha"><input id="rTxt" placeholder="Ex.: mercado 230" autocomplete="off" enterkeyhint="go"><button class="btn" id="rOk" type="button">Lançar</button></div>
+    <div class="help">Escreva do seu jeito: o nome da conta e o valor. Entra como despesa de hoje.</div>
+    <div id="rRes" role="status"></div></div>
   <button class="card quero" id="aQuero" type="button"><span class="ico out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg></span><div><b>Quero comprar uma coisa</b><div class="s">Antes de comprar, veja quanto ela custa de verdade.</div></div></button>
 <div class="card nota-card" id="nCard">
     <div id="nIni">
@@ -611,20 +629,10 @@ html.pc .toast{bottom:24px}
   <div class="badge">Toque num registro para corrigir ou apagar</div>
 </section>
 
-<section id="precos" class="hide">
-  <header><h1>Preços</h1></header>
-  <div class="card">
-    <h2>Esse preço está bom?</h2>
-    <p class="s" style="margin:-6px 0 10px;color:var(--muted);font-size:14px">Escreva o produto e o preço que você está vendo. O site compara com tudo o que vocês já compraram.</p>
-    <div class="busca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="prBusca" type="search" placeholder="Ex.: leite 5,49" aria-label="Produto e preço" autocomplete="off"></div>
-    <div id="prRes" aria-live="polite"></div>
-  </div>
-  <div class="card hide" id="prLojasCard"><h2>Menor preço em cada loja</h2><div id="prLojas"></div></div>
-  <div class="card hide" id="prTodasCard"><h2>Todas as compras encontradas</h2><div id="prTodas"></div></div>
-</section>
+
 
 <section id="dicas" class="hide">
-  <header><h1>IA</h1></header>
+  <header><h1>IA e preços</h1></header>
   <div class="card chat-card">
     <h2>Pergunte</h2>
     <p class="s" style="margin:-6px 0 10px;color:var(--muted);font-size:14px">A IA responde com os números de vocês e com o guia de gestão financeira que vocês escolheram.</p>
@@ -668,6 +676,15 @@ html.pc .toast{bottom:24px}
     <div class="err" id="dErro" role="alert"></div>
   </div>
   <div class="card ai hide" id="dRes"></div>
+  <h2 class="sec-tit">Preços</h2>
+  <div class="card">
+    <h2>Esse preço está bom?</h2>
+    <p class="s" style="margin:-6px 0 10px;color:var(--muted);font-size:14px">Escreva o produto e o preço que você está vendo. O site compara com tudo o que vocês já compraram.</p>
+    <div class="busca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="prBusca" type="search" placeholder="Ex.: leite 5,49" aria-label="Produto e preço" autocomplete="off"></div>
+    <div id="prRes" aria-live="polite"></div>
+  </div>
+  <div class="card hide" id="prLojasCard"><h2>Menor preço em cada loja</h2><div id="prLojas"></div></div>
+  <div class="card hide" id="prTodasCard"><h2>Todas as compras encontradas</h2><div id="prTodas"></div></div>
   <button class="link" id="bSair">Sair deste aparelho</button>
 </section>
 </div>
@@ -811,8 +828,7 @@ html.pc .toast{bottom:24px}
   <button data-s="relatorios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Relatórios</button>
   <button data-s="adicionar"><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg></span>Adicionar</button>
   <button data-s="planejar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Planejar</button>
-  <button data-s="precos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>Preços</button>
-  <button data-s="dicas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>IA</button>
+  <button data-s="dicas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Extras</button>
 </div></nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -823,27 +839,29 @@ html.pc .toast{bottom:24px}
   const poe = (secao, lista) => { const s = document.getElementById(secao); lista.map(card).filter(Boolean).forEach(el => s.appendChild(el)); };
   const ini = document.getElementById('inicio');
   // Início, nesta ordem
-  ['#iHero', '#cLembra', '.card.saldo', '#cSemana', '#inicio .grid3', '#cFila', '#cCheck', '#cPague', '#cAlertas', '#cResumo', '#iContas', '#cProx', '#cDica']
-    .map(x => ['#iContas', '#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
+  ['#iHero', '.card.saldo', '#inicio .grid3', '#cLembra', '#cFila', '#cCheck', '#cPague', '#cProx']
+    .map(x => ['#cProx', '#iHero', '.card.saldo'].includes(x) ? card(x) : document.querySelector(x))
     .filter(Boolean).forEach(el => ini.appendChild(el));
-  ini.insertBefore(document.getElementById('cSalario'), card('#cProx'));
   const g3 = document.querySelector('#inicio .grid3'); g3.after(document.getElementById('cRevLink'));
-  card('#iContas').after(document.getElementById('cResiste'));
   ini.appendChild(document.getElementById('cFatura'));
+  const mais = document.createElement('div'); mais.id = 'cMais'; mais.className = 'mais-links';
+  mais.innerHTML = '<button class="btn ghost" data-ir="relatorios">Ver relatórios</button><button class="btn ghost" data-ir="planejar">Ver metas e planos</button>';
+  ini.appendChild(mais);
   document.getElementById('adicionar').appendChild(document.getElementById('nCard'));
-  poe('relatorios', ['#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
-  poe('planejar', ['#cFase', '#cFuturo', '#cLim', '#cMetas', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cZero']);
+  ['#cResumo', '#cAlertas'].forEach(x => document.getElementById('relatorios').appendChild(document.querySelector(x)));
+  poe('relatorios', ['#iContas', '#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat']);
+  poe('planejar', ['#cFase', '#cFuturo', '#cSemana', '#cLim', '#cSalario', '#cMetas', '#cResiste', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cDica', '#cZero']);
   const rel = document.getElementById('relatorios'), rv = document.getElementById('cRevisao'); rel.insertBefore(rv, rel.querySelector('header').nextSibling);
-  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo') && !el.querySelector('#iContas')) el.classList.add('hide'); });
+  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!['iHero', 'cProx'].includes(el.id) && !el.matches('.saldo')) el.classList.add('hide'); });
 })();
 /* ---------- Computador: cartões em coluna principal (analisar) e lateral (fazer) ---------- */
 (function(){
   const mq = matchMedia('(min-width:1024px)'); const mqPc = { get matches(){ return document.documentElement.classList.contains('pc'); } };
   const el = sel => { const e = document.querySelector(sel); return e && (e.closest('.card') || e); };
   const P = {
-    inicio:     { topo: ['#iHero', '.card.saldo', '#inicio .grid3', '#cResumo'], main: ['#cAlertas', '#iContas', '#cSalario'], side: ['#cLembra', '#cPagto', '#cSemana', '#cResiste', '#cRevLink', '#cFila', '#cCheck', '#cPague', '#cProx', '#cDica'] },
-    relatorios: { main: ['#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cPrev', '#cPat'] },
-    planejar:   { topo: ['#cFase', '#cFuturo'], main: ['#cLim', '#cMetas', '#cDesejos', '#cAnual', '#iParc'], side: ['#cMesada', '#cGuia', '#cZero'] },
+    inicio:     { topo: ['#iHero', '.card.saldo', '#inicio .grid3'], main: ['#cProx', '#cFatura', '#cMais'], side: ['#cLembra', '#cPagto', '#cRevLink', '#cFila', '#cCheck', '#cPague'] },
+    relatorios: { main: ['#cResumo', '#cAlertas', '#iContas', '#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cPrev', '#cPat'] },
+    planejar:   { topo: ['#cFase', '#cFuturo'], main: ['#cLim', '#cMetas', '#cDesejos', '#cAnual', '#iParc'], side: ['#cSemana', '#cResiste', '#cSalario', '#cMesada', '#cGuia', '#cDica', '#cZero'] },
     historico:  { main: ['#hLista'], side: ['#historico .busca', '#hModo', '#hFiltro', '#hCal'] }
   };
   const orig = {};
@@ -984,7 +1002,7 @@ function chipGroup(sel, val, onPick){ $$(sel + ' .chip').forEach(c => { c.classL
 function totais(i){ const t = { Entrada: 0, Despesa: 0, Investimento: 0 }; S.regs.forEach(r => { if (ciclo(r.data) === i) t[r.tipo] = (t[r.tipo] || 0) + r.valor; }); t.saldo = t.Entrada - t.Despesa - t.Investimento + (t.Retirada || 0); return t; }
 
 /* ---------- Navegação ---------- */
-function ir(sec, doVoltar){ if (!doVoltar) historico('push', sec); $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.s === sec)); $$('section').forEach(s => s.classList.toggle('hide', s.id !== sec)); scrollTo(0, 0); if (sec === 'adicionar') renderForm(); if (sec === 'precos') abrePrecos(); }
+function ir(sec, doVoltar){ if (sec === 'precos') sec = 'dicas'; if (!doVoltar) historico('push', sec); $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.s === sec)); $$('section').forEach(s => s.classList.toggle('hide', s.id !== sec)); scrollTo(0, 0); if (sec === 'adicionar') renderForm(); if (sec === 'dicas') abrePrecos(); }
 $$('nav button').forEach(b => b.onclick = () => ir(b.dataset.s));
 function historico(modo, sec){
   try {
@@ -1073,7 +1091,7 @@ function renderInicio(){
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl(t.Investimento - (t.Retirada || 0)); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); separadosInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); lembraInicio(); faturaInicio(); salarioInicio(i, t); revisaoInicio(); resisteInicio(i); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); document.querySelector('.mini.out').classList.toggle('estourou', t.Despesa > t.Entrada); $('#iInv').textContent = brl(t.Investimento - (t.Retirada || 0)); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); separadosInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); lembraInicio(); faturaInicio(); salarioInicio(i, t); revisaoInicio(); resisteInicio(i); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1096,7 +1114,7 @@ function renderInicio(){
   const grupos = {}; S.regs.forEach(r => { if (r.forma === 'Parcelada' && r.grupo) (grupos[r.grupo] = grupos[r.grupo] || []).push(r); });
   const parc = Object.values(grupos).map(g => { g.sort((a, b) => a.data < b.data ? -1 : 1); const rest = g.filter(r => ciclo(r.data) >= i); return { g, rest }; })
     .filter(x => x.rest.length && ciclo(x.g[0].data) <= i);
-  $('#iParc').innerHTML = parc.length ? parc.map(({ g, rest }) => `<div class="row"><div><div class="t">${esc(g[0].conta)}</div><div class="s">faltam ${rest.length} de ${g.length} · até ${nomeCiclo(Math.min(11, ciclo(g[g.length - 1].data))).toLowerCase()}</div></div><div class="num out">${brl0(rest[0].valor)}</div></div>`).join('')
+  $('#iParc').innerHTML = parc.length ? parc.map(({ g, rest }) => `<div class="row"><div><div class="t">${esc(g[0].conta)}</div><div class="s">faltam ${rest.length} de ${g.length} · até ${nomeCiclo(Math.min(11, ciclo(g[g.length - 1].data))).toLowerCase()}</div><div class="gasto-bar parc-bar" role="progressbar" aria-label="Parcelas pagas" aria-valuemin="0" aria-valuemax="${g.length}" aria-valuenow="${g.length - rest.length}"><i class="ok" style="width:${Math.max(4, (g.length - rest.length) / g.length * 100)}%"></i></div></div><div class="num out">${brl0(rest[0].valor)}</div></div>`).join('')
     : '<div class="empty">Nenhuma parcela em aberto.</div>';
 
   const ano = { Entrada: 0, Despesa: 0, Investimento: 0 }; for (let k = 0; k < 12; k++) { const tt = totais(k); ano.Entrada += tt.Entrada; ano.Despesa += tt.Despesa; ano.Investimento += tt.Investimento; }
@@ -2655,9 +2673,9 @@ $('#aSalvar').onclick = async () => {
     const n = await api('salvar', r);
     if (daMeta) await api('salvar', { tipo: 'Retirada', data, conta: daMeta.meta, valor: daMeta.v, meta: daMeta.meta, obs: 'Para: ' + r.conta + (r.obs ? ' - ' + r.obs : '') });
     const c0 = ciclo(r.data), ex0 = r.tipo === 'Entrada' ? entradaExtra(c0) : 0;
-    toast(n > 1 ? `Salvo em ${n} meses` : 'Salvo');
+    const fimBom = () => { const sd = saldoTela(); toast((n > 1 ? `Salvo em ${n} meses. ` : 'Salvo! ') + (sd >= 0 ? `Ainda sobram ${brl0(sd)} em ${nomeCiclo(c0).toLowerCase()}.` : `${nomeCiclo(c0)} está ${brl0(-sd)} no vermelho.`)); };
     ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); $('#aCartao').checked = false; $('#aDaMeta').checked = false; $('#aDaMetaV').value = ''; $('#aDaMetaBox').classList.add('hide');
-    carregar().then(() => { renderForm();
+    carregar().then(() => { renderForm(); fimBom();
     if (r.tipo === 'Entrada') { const ex = entradaExtra(c0) - ex0; if (ex > 50) toast('Entrou ' + brl0(ex) + ' a mais que o normal. Guardar a metade?', 'Guardar ' + brl0(ex / 2), () => { const m = metaDaSemana(); guardarPara(m ? m.nome : '', ex / 2); }); } });
   } catch (e) {
     if (/Sem conexão/.test(String(e)) || !navigator.onLine) {
@@ -2667,6 +2685,34 @@ $('#aSalvar').onclick = async () => {
   }
   b.disabled = false; b.textContent = 'Salvar';
 };
+
+/* ---------- Lançamento rápido ("mercado 230") ---------- */
+function entendeRapido(txt){
+  const m = String(txt).match(/(?:r\$\s*)?(\d[\d.]*(?:,\d{1,2})?)\s*(?:reais|real|conto|pila)?\s*$/i) || String(txt).match(/(?:r\$\s*)?(\d[\d.]*(?:,\d{1,2})?)/i);
+  if (!m) return null;
+  const valor = num(m[1]), nome = semAcento(String(txt).replace(m[0], ' ').replace(/(^|\s)(gastei|paguei|recebi|entrou|caiu|com|no|na|de|em)(?=\s|$)/gi, ' ').replace(/\s+/g, ' ')).trim();
+  const acha = l => { const L = (l || []).map(c => [c, semAcento(c)]);
+    return (L.find(([, n]) => n === nome) || L.find(([, n]) => nome && n.startsWith(nome)) || L.find(([, n]) => nome && (n.includes(nome) || nome.includes(n))) || [])[0]; };
+  const origem = /^(recebi|entrou|caiu)(\s|$)/i.test(String(txt).trim()) ? acha(S.origens) : null;
+  return { valor, nome, conta: origem || acha(S.contas), tipo: origem ? 'Entrada' : 'Despesa' };
+}
+function saldoTela(){ return num($('#iSaldo').textContent); }
+async function lancaRapido(){
+  const x = entendeRapido($('#rTxt').value), box = $('#rRes');
+  if (!x || !(x.valor > 0)) { box.innerHTML = '<div class="err">Não achei o valor. Tente assim: mercado 230</div>'; return; }
+  if (!x.conta) { S.tipo = 'Despesa'; renderForm(); $('#aValor').value = x.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }); $('#aObs').value = $('#rTxt').value;
+    box.innerHTML = `<div class="note">Não achei a conta "${esc(x.nome)}". Coloquei o valor no formulário abaixo: é só escolher a conta.</div>`; $('#aConta').focus(); return; }
+  const r = x.tipo === 'Entrada' ? { tipo: 'Entrada', data: hoje(), conta: x.conta, valor: x.valor, obs: '' } : { tipo: 'Despesa', data: hoje(), conta: x.conta, valor: x.valor, forma: 'Única', vezes: 1, cartao: false, obs: '' };
+  const b = $('#rOk'); b.disabled = true; b.textContent = '...';
+  try { await api('salvar', r); $('#rTxt').value = ''; await carregar(); renderForm();
+    const c0 = ciclo(r.data), sd = saldoTela();
+    box.innerHTML = `<div class="rap-ok">${r.tipo} de <b>${brl(x.valor)}</b> em <b>${esc(x.conta)}</b> lançada.</div>`;
+    toast(sd >= 0 ? `Salvo! Ainda sobram ${brl0(sd)} em ${nomeCiclo(c0).toLowerCase()}.` : `Salvo. ${nomeCiclo(c0)} está ${brl0(-sd)} no vermelho.`, 'Desfazer', async () => { const u = S.regs.filter(y => y.conta === r.conta && y.valor === r.valor && y.data === r.data).pop(); if (u) { await api('apagar', u.id); await carregar(); box.innerHTML = ''; toast('Desfeito'); } });
+  } catch (e) { box.innerHTML = `<div class="err">Não salvou: ${esc(e)}</div>`; }
+  b.disabled = false; b.textContent = 'Lançar';
+}
+$('#rOk').onclick = lancaRapido;
+$('#rTxt').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); lancaRapido(); } };
 
 /* ---------- Ler nota com IA ---------- */
 S.nFotos = []; S.nota = null;
