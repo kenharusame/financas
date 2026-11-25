@@ -473,7 +473,8 @@ html.pc .toast{bottom:24px}
 .toast{width:max-content;max-width:min(92%,420px)} .toast span{flex:1;min-width:180px}
 #oqAtalhos:not(:empty){margin-top:10px} #oqAtalhos .chip{margin:0}
 #oqMsg .help,#oqMsg .err{margin-top:10px}
-.oq-vazio .s{color:var(--muted);font-size:14px;margin-top:4px}
+.oq-vazio .s,.oq-era .s{color:var(--muted);font-size:14px;margin-top:4px}
+.oq-era{border:1px solid var(--accent)} .oq-era select{margin-top:10px}
 html.pc #inicio .pc-topo{grid-template-columns:1fr} html.pc #inicio .pc-topo>#iHero,html.pc #inicio .pc-topo>.saldo,html.pc #inicio .pc-topo>#cTotais{grid-column:1;grid-row:auto}
 html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
 </style>
@@ -986,6 +987,7 @@ const FAKE = (() => {
         { tipo: 'parcelar', texto: 'Parcelar em 4x de R$ 750,00. Isso pesa 8,8% das entradas, um impacto pequeno.' },
         { tipo: 'esperar', texto: 'A parcela de iPhone (R$ 350,00) acaba antes de Novembro do ano que vem. A partir daí, dá para parcelar em 9x de R$ 333,33 sem aumentar os gastos do mês.' } ] } }),
     rotear: f => /\?/.test(f) ? ['chat'] : ['resumo', 'prev'],
+    aprender: (f, ids) => { dados.aprendido = (dados.aprendido || []).filter(x => x.frase.toLowerCase() !== f.toLowerCase()).concat([{ frase: f, ids }]); return JSON.parse(JSON.stringify(dados.aprendido)); },
     analisar: () => ({ quando: '22/11 10:00', texto: '**O cartão subiu em relação ao mês passado.** A maior parte foi mercado.\n- Juntar as compras em 1 ou 2 idas por semana.\n\n**A água está alta.** Vale procurar vazamento.' }),
   };
 })();
@@ -1066,7 +1068,7 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.orc = d.orcamento || {}; S.limiteCartao = d.limiteCartao || 500; S.metas = d.metas || []; S.anuais = d.anuais || []; S.separados = d.separados || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.par = d.partilha || {};
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.orc = d.orcamento || {}; S.limiteCartao = d.limiteCartao || 500; S.metas = d.metas || []; S.anuais = d.anuais || []; S.separados = d.separados || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.par = d.partilha || {}; S.aprendido = d.aprendido || [];
     Object.keys(PAR).forEach(k => { if (S.par[PAR[k]] == null) { let loc = null; try { loc = JSON.parse(localStorage.getItem(k)); } catch (e) {}
       if (loc != null && (Array.isArray(loc) ? loc.length : typeof loc === 'object' ? Object.keys(loc).length : loc)) lsGrava(k, loc); } }); S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
@@ -3187,10 +3189,12 @@ const MANUAL = [
 const OQ_FORA = new Set('o a os as de do da dos das e em no na nos nas um uma uns umas para pra pro com que eu meu minha meus minhas me quero queria ver mostrar mostra mostre abrir abre abra como esta este essa esse isso qual quais por favor ai tem ter fazer sei saber nosso nossa nossos nossas'.split(' '));
 const oqNorm = s => semAcento(s).replace(/[^a-z0-9%\s-]/g, ' ').replace(/\s+/g, ' ').trim();
 function oqPontos(frase){
-  const f = ' ' + oqNorm(frase) + ' ', ws = f.trim().split(' ').filter(w => w.length >= 4 && !OQ_FORA.has(w));
+  const nf = oqNorm(frase), f = ' ' + nf + ' ', ws = nf.split(' ').filter(w => w.length >= 4 && !OQ_FORA.has(w)), apr = S.aprendido || [];
   return MANUAL.map(m => {
     let p = 0;
     m.pal.concat([m.nome]).forEach(k => { const n = oqNorm(k); if (f.includes(' ' + n + ' ')) p = Math.max(p, 1 + n.split(' ').length); });
+    // frases que a IA acertou e você confirmou (aba "Aprendido" da planilha)
+    apr.forEach(a => { if (!(a.ids || []).includes(m.id)) return; const n = oqNorm(a.frase); if (n === nf) p = 99; else if (n && f.includes(' ' + n + ' ')) p = Math.max(p, 1 + n.split(' ').length); });
     if (!p) ws.forEach(w => { if (m.pal.some(k => oqNorm(k).split(' ').some(t => t.length >= 4 && (t.startsWith(w) || w.startsWith(t))))) p += 0.5; });
     return { m, p };
   }).filter(x => x.p > 0).sort((a, b) => b.p - a.p);
@@ -3210,14 +3214,34 @@ function perguntaChat(f){
   ir('dicas');
   setTimeout(() => { const t = $('#chatTxt'); t.closest('.card').scrollIntoView({ block: 'start' }); if (f) { t.value = f; $('#chatEnv').click(); } else t.focus(); }, 60);
 }
-function oqAbre(l, frase, daIA){
+async function oqAprende(frase, ids){
+  try { S.aprendido = await api('aprender', frase, ids); return true; }
+  catch (e) { toast('Não deu para guardar: ' + e); return false; }
+}
+function oqEra(frase, l){
+  const box = document.createElement('div'); box.className = 'card oq-era'; box.id = 'oqEra';
+  box.innerHTML = `<b>Era isso que você queria?</b><div class="s">Se for, eu guardo a frase e da próxima vez abro direto, sem IA.</div>
+    <div class="lb-bt"><button class="btn" id="eraSim" type="button">Sim, era isso</button><button class="link" id="eraNao" type="button">Não era</button></div>`;
+  $('#fCorpo').prepend(box);
+  $('#eraSim').onclick = async () => { box.innerHTML = '<div class="s">Guardando…</div>'; if (await oqAprende(frase, l.map(m => m.id))) box.innerHTML = '<b>Guardado.</b><div class="s">Da próxima vez abro direto.</div>'; else box.remove(); };
+  $('#eraNao').onclick = () => {
+    box.innerHTML = `<b>O que você queria?</b><select id="eraQual" aria-label="O que você queria">${MANUAL.filter(m => m.id !== 'chat').map(m => `<option value="${m.id}">${esc(m.nome)}</option>`).join('')}</select>
+      <div class="lb-bt"><button class="btn" id="eraOk" type="button">Abrir e guardar</button><button class="link" id="eraNada" type="button">Nenhum desses</button></div>`;
+    $('#eraNada').onclick = () => box.remove();
+    $('#eraOk').onclick = async () => { const m = MANUAL.find(x => x.id === $('#eraQual').value); $('#eraOk').disabled = true; if (await oqAprende(frase, [m.id])) { oqAbre([m], frase, false, true); toast('Guardado. Da próxima vez abro direto.'); } else $('#eraOk').disabled = false; };
+  };
+}
+function oqAbre(l, frase, daIA, aprendido){
   oqUso(l); $('#oqTxt').value = ''; $('#oqMsg').innerHTML = ''; oqAtalhos();
-  const quadros = l.filter(m => m.el), acoes = l.filter(m => m.vai);
-  if (!quadros.length) return acoes[0].vai(daIA && acoes[0].id === 'chat' ? frase : '');
+  const quadros = l.filter(m => m.el), acoes = l.filter(m => m.vai), ehChat = !quadros.length && acoes[0].id === 'chat';
+  if (!quadros.length) { acoes[0].vai(ehChat && (daIA || aprendido) ? frase : '');
+    if (daIA && !ehChat) setTimeout(() => toast('Era isso que você queria?', 'Sim, guardar', () => oqAprende(frase, l.map(m => m.id)).then(ok => ok && toast('Guardado. Da próxima vez abro direto.'))), 300);
+    return; }
   devolveFoco();
   $('#fTit').textContent = quadros.length === 1 ? quadros[0].nome : 'O que você pediu';
   $('#fAcoes').innerHTML = acoes.map(m => `<button class="chip acao" data-oqv="${m.id}" type="button" style="margin:0">${esc(m.nome)}</button>`).join('');
   $$('#fAcoes [data-oqv]').forEach(b => b.onclick = () => MANUAL.find(m => m.id === b.dataset.oqv).vai(b.dataset.oqv === 'chat' ? frase : ''));
+  if (daIA) oqEra(frase, l);
   const corpo = $('#fCorpo');
   quadros.forEach(m => { const n = oqCard(m.el); if (!n) return; FOCO.push({ n, pai: n.parentNode, prox: n.nextSibling, sec: n.closest('section') || $('#guardado') }); corpo.appendChild(n); });
   ir('foco');
@@ -3227,7 +3251,7 @@ function oqAbre(l, frase, daIA){
 async function oqIr(){
   const frase = $('#oqTxt').value.trim(), msg = $('#oqMsg'); if (!frase) { $('#oqTxt').focus(); return; }
   const r = oqPontos(frase), top = r.length ? r[0].p : 0;
-  if (top >= 2) return oqAbre(r.filter(x => x.p >= 2 && x.p >= top / 2).slice(0, 4).map(x => x.m), frase);
+  if (top >= 2) return oqAbre(r.filter(x => x.p >= 2 && x.p >= top / 2).slice(0, 4).map(x => x.m), frase, false, top >= 99);
   const b = $('#oqOk'); b.disabled = true; msg.innerHTML = '<div class="help">Não tenho certeza. Perguntando à IA…</div>';
   try {
     const ids = await api('rotear', frase, MANUAL.map(m => ({ id: m.id, nome: m.nome, para: m.para })));
