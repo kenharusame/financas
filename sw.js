@@ -1,7 +1,7 @@
 /* Guarda a página no celular para abrir sem internet.
    Página: tenta a internet primeiro (para pegar versões novas) e, sem conexão, usa a cópia guardada.
    Os dados NÃO passam por aqui: os pedidos ao Google (script.google.com) seguem direto. */
-const CACHE = 'financas-v97';
+const CACHE = 'financas-v98';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './apple-touch-icon.png', './icone-192.png', './icone-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'];
 
