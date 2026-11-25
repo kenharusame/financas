@@ -42,6 +42,7 @@ h2{font-family:Sora,system-ui,sans-serif;font-size:19px;line-height:1.2;margin:0
 .card{border-radius:var(--radius);padding:20px;margin-bottom:16px}
 .saldo{text-align:center;padding:16px 18px}
 .s-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:4px} #iSep{display:contents}
+.s-dois{display:flex;justify-content:center;align-items:flex-end;gap:6px 16px;flex-wrap:wrap} .s-dois>div{min-width:0} .saldo .s-dois .val{font-size:clamp(20px,5.8vw,28px);white-space:nowrap} .saldo .val.conta{color:var(--text,#fff)} .saldo .val.conta.neg{color:var(--out)}
 .s-chips .sc{font-size:12.5px;color:var(--muted);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:3px 10px;white-space:nowrap} .s-chips .sc b{color:var(--text)} .s-chips .sc:empty{display:none}
 .sep-box{margin-top:12px;text-align:left} .sep-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:var(--muted)}
 .sep-box .link{width:auto;min-height:34px;padding:0 4px;font-size:13px}
@@ -549,7 +550,7 @@ html.pc nav button.centro{min-height:112px} html.pc nav .fab{width:112px;height:
 <section id="inicio" class="hide">
   <header><h1>Nossas finanças</h1><div class="topo-dir"><button class="ico-topo modo-btn" id="modoBtn" type="button" onclick="trocaModo()"></button><button class="ico-topo" data-ir="historico" aria-label="Abrir o histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></div></header>
   <div class="card hero pc-fixo" id="iHero"><div class="hero-av" id="hAv"></div><div class="hero-txt"><div class="hero-ola" id="iOla"></div><div class="hero-hum" id="iHum"></div></div><button class="hero-aviso" id="iAviso" type="button"></button></div>
-  <div class="card saldo"><div class="lbl">Saldo do mês</div><div class="val" id="iSaldo"></div><div class="falta hide" id="iFalta"></div><div class="s-chips"><span class="sc" id="iPeriodo"></span><span class="sc" id="iNaFatura" title="Já comprometido na fatura do cartão"></span><span id="iSep"></span></div><div id="cSeparado"></div><div class="gasto" id="iGasto"></div><div id="iProxPg"></div></div>
+  <div class="card saldo"><div class="s-dois"><div><div class="lbl" title="O que dá para gastar: tirando o cartão e o separado">Livre para gastar</div><div class="val" id="iLivre"></div></div><div><div class="lbl" title="Dinheiro que está na conta agora">Na conta</div><div class="val conta" id="iSaldo"></div></div></div><div class="falta hide" id="iFalta"></div><div class="s-chips"><span class="sc" id="iPeriodo"></span><span class="sc" id="iNaFatura" title="Já comprometido na fatura do cartão"></span><span id="iSep"></span></div><div id="cSeparado"></div><div class="gasto" id="iGasto"></div><div id="iProxPg"></div></div>
   <div class="grid3" id="cTotais" style="margin-bottom:12px">
     <div class="mini in"><small>Entradas</small><b id="iEnt"></b><span class="var" id="vEnt"></span></div>
     <div class="mini out"><small>Despesas</small><b id="iDes"></b><span class="var" id="vDes"></span></div>
@@ -1172,7 +1173,9 @@ function renderInicio(){
   $('#iSaldo').textContent = brl(saldo); $('#iSaldo').classList.toggle('neg', saldo < 0); $('#iFalta').textContent = 'Faltou ' + brl(-saldo); $('#iFalta').classList.toggle('hide', saldo >= 0);
   $('#iNaFatura').innerHTML = faltaFat > 0 ? `Cartão <b>${brl(faltaFat)}</b>` : '';
   const sepS = ciclo(hoje()) === i ? separadoDe('Saldo do mês') : 0;
-  $('#iSep').innerHTML = sepS > 0 ? `<span class="sc" title="Separado para gastar">Separado <b>${brl(sepS)}</b></span><span class="sc" title="O que sobra tirando o cartão e o separado">Livre <b>${brl(saldo - faltaFat - sepS)}</b></span>` : '';
+  $('#iSep').innerHTML = sepS > 0 ? `<span class="sc" title="Separado para gastar">Separado <b>${brl(sepS)}</b></span>` : '';
+  const livre = Math.round((saldo - faltaFat - sepS) * 100) / 100 || 0;
+  $('#iLivre').textContent = brl(livre); $('#iLivre').classList.toggle('neg', livre < 0);
   const dias = Math.ceil((p.fim - new Date()) / 864e5), atual = ciclo(hoje()) === i && dias >= 0;
   $('#iPeriodo').textContent = atual ? 'faltam ' + dias + (dias === 1 ? ' dia' : ' dias') : p.txt; $('#iPeriodo').title = p.txt;
   let dia = '', aviso = '';
@@ -3273,7 +3276,7 @@ $('#dBtn').onclick = async () => {
    Quadro novo no site = ficha nova aqui (com 'el' = seletor do quadro, ou 'vai' = abre uma tela). */
 const MANUAL = [
   // Início
-  { id: 'saldo', nome: 'Saldo do mês', el: '.card.saldo', para: 'Quanto dinheiro tem na conta no mês, quanto dá para gastar por dia, dinheiro separado para gastar e o próximo pagamento.', pal: ['saldo', 'quanto tenho', 'quanto sobra', 'sobrou', 'gastar por dia', 'dinheiro na conta', 'separar para gastar', 'separado', 'banco'] },
+  { id: 'saldo', nome: 'Saldo do mês', el: '.card.saldo', para: 'Quanto dinheiro tem na conta no mês, quanto dá para gastar por dia, dinheiro separado para gastar e o próximo pagamento.', pal: ['saldo', 'quanto tenho', 'quanto sobra', 'sobrou', 'gastar por dia', 'dinheiro na conta', 'separar para gastar', 'separado', 'banco', 'livre', 'livre para gastar', 'na conta'] },
   { id: 'totais', nome: 'Entradas, despesas e investido', el: '#cTotais', para: 'Total que entrou, que saiu e que foi investido no mês.', pal: ['entradas', 'entrou', 'despesas', 'quanto gastei', 'gastei', 'investido', 'investi', 'total do mes', 'recebi'] },
   { id: 'lembra', nome: 'Não esquecer', el: '#cLembra', para: 'Contas fixas e parcelas que vencem hoje, já venceram ou vencem nos próximos 3 dias, gastos do ano (IPVA, IPTU) em até 30 dias, dias sem lançar gasto e custo fixo do mês passado não lançado.', pal: ['nao esquecer', 'lembrete', 'lembretes', 'vence hoje', 'venceu', 'vencidas', 'vence amanha', 'ipva', 'iptu', 'atrasada', 'atrasadas', 'paguei', 'contas a pagar', 'conta para pagar', 'esqueci'] },
   { id: 'metas', nome: 'Metas', el: '#cMetas', para: 'Metas de dinheiro guardado (reserva de emergência, viagem, carro, caixinhas): quanto falta, prazo, guardar ou retirar.', pal: ['metas', 'meta', 'reserva', 'reserva de emergencia', 'guardar', 'guardei', 'juntar', 'retirar', 'caixinha', 'caixinhas', 'objetivo', 'objetivos', 'viagem'] },
