@@ -474,7 +474,7 @@ html.pc .toast{bottom:24px}
 #oqAtalhos:not(:empty){margin-top:10px} #oqAtalhos .chip{margin:0}
 #oqMsg .help,#oqMsg .err{margin-top:10px}
 .oq-vazio .s{color:var(--muted);font-size:14px;margin-top:4px}
-html.pc #inicio .pc-topo{grid-template-columns:1fr} html.pc #inicio .pc-topo>.saldo,html.pc #inicio .pc-topo>#cTotais{grid-column:1;grid-row:auto}
+html.pc #inicio .pc-topo{grid-template-columns:1fr} html.pc #inicio .pc-topo>#iHero,html.pc #inicio .pc-topo>.saldo,html.pc #inicio .pc-topo>#cTotais{grid-column:1;grid-row:auto}
 html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
 </style>
 </head>
@@ -862,8 +862,8 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
   poe('relatorios', ['#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat', '#cProx', '#cFatura']);
   poe('planejar', ['#cFase', '#cFuturo', '#cSemana', '#cLim', '#cSalario', '#cResiste', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cDica', '#cZero']);
   const rel = document.getElementById('relatorios'), rv = document.getElementById('cRevisao'); rel.insertBefore(rv, rel.querySelector('header').nextSibling);
-  poe('guardado', ['#iHero', '#cRevLink', '#cPague']);
-  const fica = ['.card.saldo', '#cTotais', '#cLembra', '#cFila', '#cCheck', '#cMetas', '#iContas'].map(card).filter(Boolean);
+  poe('guardado', ['#cRevLink', '#cPague']);
+  const fica = ['#iHero', '.card.saldo', '#cTotais', '#cLembra', '#cFila', '#cCheck', '#cMetas', '#iContas'].map(card).filter(Boolean);
   [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (el.id !== 'oqBox' && !fica.includes(el)) el.classList.add('hide'); });
   fica.forEach(el => ini.appendChild(el));
 })();
@@ -872,7 +872,7 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
   const mq = matchMedia('(min-width:1024px)'); const mqPc = { get matches(){ return document.documentElement.classList.contains('pc'); } };
   const el = sel => { const e = document.querySelector(sel); return e && (e.closest('.card') || e); };
   const P = {
-    inicio:     { topo: ['.card.saldo', '#cTotais'], main: ['#cMetas', '#iContas'], side: ['#cLembra', '#cPagto', '#cPassos', '#cPar', '#cFila', '#cCheck'] },
+    inicio:     { topo: ['#iHero', '.card.saldo', '#cTotais'], main: ['#cMetas', '#iContas'], side: ['#cLembra', '#cPagto', '#cPassos', '#cPar', '#cFila', '#cCheck'] },
     relatorios: { main: ['#cResumo', '#cAlertas', '#cFatura', '#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cProx', '#cPrev', '#cPat'] },
     planejar:   { topo: ['#cFase', '#cFuturo'], main: ['#cLim', '#cDesejos', '#cAnual', '#iParc'], side: ['#cSemana', '#cResiste', '#cSalario', '#cMesada', '#cGuia', '#cDica', '#cZero'] },
     historico:  { main: ['#hLista'], side: ['#historico .busca', '#hModo', '#hFiltro', '#hCal'] }
