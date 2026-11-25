@@ -1,7 +1,7 @@
 /* Guarda a página no celular para abrir sem internet.
    Página: tenta a internet primeiro (para pegar versões novas) e, sem conexão, usa a cópia guardada.
    Os dados NÃO passam por aqui: os pedidos ao Google (script.google.com) seguem direto. */
-const CACHE = 'financas-v96';
+const CACHE = 'financas-v97';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './apple-touch-icon.png', './icone-192.png', './icone-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'];
 
@@ -21,7 +21,8 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
-  e.respondWith(fetch(req).then(res => {
+  // no-cache: sempre confere com o GitHub se tem versão nova (sem isso o celular reaproveita a cópia velha por até 10 min)
+  e.respondWith(fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then(res => {
     if (res.ok) { const c = res.clone(); caches.open(CACHE).then(k => k.put(req, c)); }
     return res;
   }).catch(() => caches.match(req).then(r => r || caches.match('./index.html'))));
