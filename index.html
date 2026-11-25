@@ -466,7 +466,7 @@ html.pc .toast{bottom:24px}
 <section id="inicio" class="hide">
   <header><h1>Nossas finanças</h1><div class="topo-dir"><button class="ico-topo modo-btn" id="modoBtn" type="button" onclick="trocaModo()"></button><button class="ico-topo" data-ir="historico" aria-label="Abrir o histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></div></header>
   <div class="card hero" id="iHero"><div class="hero-av" id="hAv"></div><div class="hero-txt"><div class="hero-ola" id="iOla"></div><div class="hero-hum" id="iHum"></div></div></div>
-  <div class="card saldo"><div class="lbl">Saldo do mês</div><div class="val" id="iSaldo"></div><div class="falta hide" id="iFalta"></div><div class="sub" id="iPeriodo"></div><div class="dia" id="iNaFatura"></div><div class="dia" id="iDia"></div><div class="gasto" id="iGasto"></div><div id="iProxPg"></div></div>
+  <div class="card saldo"><div class="lbl">Saldo do mês</div><div class="val" id="iSaldo"></div><div class="falta hide" id="iFalta"></div><div class="sub" id="iPeriodo"></div><div class="dia" id="iNaFatura"></div><div class="dia" id="iSep"></div><div id="cSeparado"></div><div class="dia" id="iDia"></div><div class="gasto" id="iGasto"></div><div id="iProxPg"></div></div>
   <div class="grid3" style="margin-bottom:12px">
     <div class="mini in"><small>Entradas</small><b id="iEnt"></b><span class="var" id="vEnt"></span></div>
     <div class="mini out"><small>Despesas</small><b id="iDes"></b><span class="var" id="vDes"></span></div>
@@ -707,6 +707,29 @@ html.pc .toast{bottom:24px}
   <button class="btn" id="patSalvar">Salvar</button>
   <button class="link" id="patFechar">Cancelar</button>
 </dialog>
+<dialog id="dlgSep">
+  <h2 id="spTit">Separar dinheiro</h2>
+  <label for="spNome">Para quê?</label><input id="spNome" placeholder="Ex.: Passagem da viagem">
+  <label for="spValor">Quanto separar</label><input id="spValor" inputmode="decimal" placeholder="R$ 0,00">
+  <div class="help">Use o valor mais alto que imaginar. O que sobrar volta sozinho para o disponível quando vocês pagarem.</div>
+  <label for="spOrigem">De onde sai</label><select id="spOrigem"></select>
+  <div class="help">Não conta como gasto: o dinheiro só fica travado até vocês pagarem.</div>
+  <div class="err" id="spErro" role="alert"></div>
+  <button class="btn" id="spSalvar">Separar</button>
+  <button class="btn danger hide" id="spCancelar">Não vai mais acontecer (devolver tudo)</button>
+  <button class="link" id="spFechar">Fechar</button>
+</dialog>
+<dialog id="dlgSepPg">
+  <h2 id="sgTit">Paguei</h2>
+  <div class="help" id="sgInfo"></div>
+  <label for="sgValor">Quanto custou de verdade</label><input id="sgValor" inputmode="decimal">
+  <label for="sgConta">Conta</label><select id="sgConta"></select>
+  <label class="des-p" style="margin-top:12px"><input type="checkbox" id="sgCartao"><span>Paguei no cartão de crédito</span></label>
+  <div class="dia" id="sgDif"></div>
+  <div class="err" id="sgErro" role="alert"></div>
+  <button class="btn" id="sgSalvar">Lançar o gasto</button>
+  <button class="link" id="sgFechar">Cancelar</button>
+</dialog>
 <dialog id="dlgAnual">
   <h2 id="anTit">Novo gasto do ano</h2>
   <label for="anNome">Nome</label><input id="anNome" placeholder="Ex.: IPVA">
@@ -907,6 +930,8 @@ const FAKE = (() => {
     salvarOrcamento: m => { dados.orcamento = {}; Object.keys(m).forEach(k => { if (m[k] !== '' && m[k] != null && Number(m[k]) >= 0) dados.orcamento[k] = Number(m[k]); }); return JSON.parse(JSON.stringify(dados.orcamento)); },
     definirLimites: m => { Object.keys(m).forEach(c => { if (Number(m[c]) > 0) dados.limites[c] = Number(m[c]); else delete dados.limites[c]; }); return JSON.parse(JSON.stringify(dados.limites)); },
     salvarAnual: a => { dados.anuais = (dados.anuais || []).filter(x => x.nome !== (a.nomeAntigo || a.nome)).concat([{ nome: a.nome, valor: Number(a.valor), mes: Number(a.mes), dia: Number(a.dia) || 1 }]); return JSON.parse(JSON.stringify(dados.anuais)); },
+    salvarSeparado: x => { dados.separados = dados.separados || []; const e = dados.separados.find(y => y.id === x.id); if (e) Object.assign(e, { nome: x.nome, valor: Number(x.valor), origem: x.origem }); else dados.separados.push({ id: 's' + Date.now(), criado: '2026-11-25', nome: x.nome, valor: Number(x.valor), origem: x.origem, situacao: 'Separado', real: '', fechado: '' }); return JSON.parse(JSON.stringify(dados.separados)); },
+    fecharSeparado: (id, sit, real) => { const e = (dados.separados || []).find(y => y.id === id); if (e) Object.assign(e, { situacao: sit === 'Pago' ? 'Pago' : 'Cancelado', real: sit === 'Pago' ? Number(real) : '' }); return JSON.parse(JSON.stringify(dados.separados)); },
     apagarAnual: n => { dados.anuais = dados.anuais.filter(x => x.nome !== n); return JSON.parse(JSON.stringify(dados.anuais)); },
     salvarPatrimonio: (c, itens) => { dados.patrimonio = (dados.patrimonio || []).filter(x => x.ciclo !== c).concat(itens.map(i => ({ ciclo: c, item: i.item, tipo: i.tipo, valor: Number(i.valor) }))); return JSON.parse(JSON.stringify(dados.patrimonio)); },
     salvarConfigContas: m => { dados.configContas = dados.configContas || {}; Object.keys(m).forEach(c => dados.configContas[c] = { ...(dados.configContas[c] || {}), ...m[c] }); return JSON.parse(JSON.stringify(dados.configContas)); },
@@ -1005,7 +1030,7 @@ async function carregar(){
       d = c; S.offline = true;
     }
     d.registros = d.registros.concat(filaComoRegistros());
-    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.orc = d.orcamento || {}; S.limiteCartao = d.limiteCartao || 500; S.metas = d.metas || []; S.anuais = d.anuais || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.par = d.partilha || {};
+    S.regs = d.registros; S.conversas = d.conversas || S.conversas || []; renderChat(); S.limites = d.limites || {}; S.orc = d.orcamento || {}; S.limiteCartao = d.limiteCartao || 500; S.metas = d.metas || []; S.anuais = d.anuais || []; S.separados = d.separados || []; S.patrimonio = d.patrimonio || []; S.cfg = d.configContas || {}; S.quem = d.quem || null; S.avisos = d.avisos || []; S.desejos = d.desejos || []; S.par = d.partilha || {};
     Object.keys(PAR).forEach(k => { if (S.par[PAR[k]] == null) { let loc = null; try { loc = JSON.parse(localStorage.getItem(k)); } catch (e) {}
       if (loc != null && (Array.isArray(loc) ? loc.length : typeof loc === 'object' ? Object.keys(loc).length : loc)) lsGrava(k, loc); } }); S.perguntas = d.perguntas || S.perguntas || []; renderPerg(); S.contas = d.contas; preencheTipos(); S.origens = d.origens; S.ini = parse(d.inicio);
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
@@ -1032,19 +1057,21 @@ function renderInicio(){
   const adi = t.Adiantamento || 0, saldo = Math.round((t.saldo + naFatura - adi) * 100) / 100 || 0, faltaFat = Math.max(0, naFatura - adi);
   $('#iSaldo').textContent = brl(saldo); $('#iSaldo').classList.toggle('neg', saldo < 0); $('#iFalta').textContent = 'Faltou ' + brl(-saldo); $('#iFalta').classList.toggle('hide', saldo >= 0);
   $('#iNaFatura').innerHTML = faltaFat > 0 ? `Já comprometido na fatura do cartão: <b>${brl(faltaFat)}</b>` : '';
+  const sepS = ciclo(hoje()) === i ? separadoDe('Saldo do mês') : 0;
+  $('#iSep').innerHTML = sepS > 0 ? `Separado para gastar: <b>${brl(sepS)}</b> · livre: <b>${brl(saldo - faltaFat - sepS)}</b>` : '';
   let sub = p.txt; const dias = Math.ceil((p.fim - new Date()) / 864e5);
   if (ciclo(hoje()) === i && dias >= 0) sub += ' · faltam ' + dias + (dias === 1 ? ' dia' : ' dias');
   $('#iPeriodo').textContent = sub;
-  { const el = $('#iDia'); if (ciclo(hoje()) === i && dias > 0 && t.Entrada > 0) { const pd = Math.max(0, saldo - faltaFat) / dias;
+  { const el = $('#iDia'); if (ciclo(hoje()) === i && dias > 0 && t.Entrada > 0) { const pd = Math.max(0, saldo - faltaFat - sepS) / dias;
       const hd = new Date().getDate(), pe = PAGTOS.map(x => ({ ...x, f: (x.dia - hd + 31) % 31 })).filter(x => x.f > 0).sort((a, b) => a.f - b.f)[0];
-      el.innerHTML = saldo - faltaFat > 0 ? `Dá para gastar <b>${brl(pd)} por dia</b> até o dia 14` : '<b>Sem folga:</b> qualquer gasto agora sai do vermelho' + (pe ? `. Esperem a próxima entrada (${esc(pe.nome)}, dia ${pe.dia}).` : ''); el.className = 'dia' + (pd < 20 ? ' ruim' : ''); }
+      el.innerHTML = saldo - faltaFat - sepS > 0 ? `Dá para gastar <b>${brl(pd)} por dia</b> até o dia 14` : '<b>Sem folga:</b> qualquer gasto agora sai do vermelho' + (pe ? `. Esperem a próxima entrada (${esc(pe.nome)}, dia ${pe.dia}).` : ''); el.className = 'dia' + (pd < 20 ? ' ruim' : ''); }
     else el.innerHTML = ''; }
   proximasContas(i, faltaFat);
   { const g = t.Entrada ? (t.Despesa - naFatura + adi) / t.Entrada : null, nivel = g == null ? '' : g > 1 ? 'alto' : g >= .8 ? 'medio' : 'ok';
     $('#iGasto').innerHTML = g == null ? '<div class="gasto-txt">Nenhuma entrada registrada neste mês.</div>'
       : `<div class="gasto-txt"><span>Já foi gasto <b>${Math.round(g * 100)}%</b> do que entrou</span><span class="gasto-tag ${nivel}">${nivel === 'alto' ? 'Passou' : nivel === 'medio' ? 'Atenção' : 'Tranquilo'}</span></div>
          <div class="gasto-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g * 100)}" aria-label="Quanto da entrada já foi gasto"><i class="${nivel}" style="width:${Math.min(100, g * 100)}%"></i></div>`; }
-  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl(t.Investimento - (t.Retirada || 0)); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); lembraInicio(); faturaInicio(); salarioInicio(i, t); revisaoInicio(); resisteInicio(i); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
+  $('#iEnt').textContent = brl0(t.Entrada); $('#iDes').textContent = brl0(t.Despesa); $('#iInv').textContent = brl(t.Investimento - (t.Retirada || 0)); extrasInicio(i, t); limitesInicio(i); metasInicio(); checkinInicio(); anuaisInicio(); separadosInicio(); comparar(); acaoInicio(i, t); mesadaInicio(i); dicaInicio(); faseInicio(); futuroInicio(); renderDesejos(); passosInicio(i, t); pagtoInicio(); lembraInicio(); faturaInicio(); salarioInicio(i, t); revisaoInicio(); resisteInicio(i); guiaInicio(i); patrimonioInicio(); previsaoInicio(i); fluxoInicio(i);
 
   const porConta = {}; S.regs.forEach(r => { if (r.tipo === 'Despesa' && ciclo(r.data) === i) { const tp = tipoDe(r.conta); porConta[tp] = (porConta[tp] || 0) + r.valor; } });
   const lista = Object.entries(porConta).sort((a, b) => b[1] - a[1]);
@@ -1974,7 +2001,7 @@ function metasInicio(){
     return `<button class="meta${m.espera ? ' espera' : ''}" data-k="${k}" aria-label="Editar meta ${esc(m.nome)}"><div class="lim-top"><span class="t">${fotoHtml(m)}${esc(m.nome)}${m.espera ? ' <small>(em espera)</small>' : ''}</span><b class="meta-p">${Math.round(g.p * 100)}%</b></div>
       <div class="gasto-bar meta-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
       <div class="lim-num"><span>${brl(g.guardado)} de ${brl(m.alvo)}${g.rendeu ? ` <small style="color:var(--in)">(+${brl(g.rendeu)} de rendimento)</small>` : ''}</span><span>${g.falta ? 'faltam ' + brl0(g.falta) : ''}</span></div>
-      <div class="meta-prev">${esc(g.previsao)}${g.prazo ? '<br>' + esc(g.prazo) : ''}</div>${degrau(m)}</button>`; }).join('')
+      <div class="meta-prev">${esc(g.previsao)}${g.prazo ? '<br>' + esc(g.prazo) : ''}</div>${separadoDe(m.nome) > 0 ? `<div class="meta-prev">Separado para gastar: <b>${brl(separadoDe(m.nome))}</b> · livre: ${brl(g.guardado - separadoDe(m.nome))}</div>` : ''}${degrau(m)}</button>`; }).join('')
     : '<div class="empty" style="padding-top:0">Crie uma meta (reserva de emergência, carro, viagem) e marque os investimentos para ela.</div>')
     + '<button class="link" id="metaNova">+ Nova meta</button>';
   $$('#iMetas .meta').forEach(b => b.onclick = () => abrirMeta(S.metas[+b.dataset.k]));
@@ -2124,6 +2151,66 @@ function anuaisInicio(){
   $$('#iAnual .anual').forEach(b => b.onclick = () => abrirAnual(S.anuais.find(a => a.nome === b.dataset.n)));
   $('#anNovo').onclick = () => abrirAnual(null);
 }
+/* ---------- Separado para gastar: dinheiro que já existe, travado para um gasto sem valor certo ---------- */
+const sepAbertos = () => (S.separados || []).filter(x => x.situacao === 'Separado');
+const separadoDe = origem => sepAbertos().filter(x => x.origem === origem).reduce((a, x) => a + x.valor, 0);
+function separadosInicio(){
+  const L = sepAbertos(), el = $('#cSeparado');
+  el.innerHTML = L.map(x => `
+      <div class="meta" style="margin-top:8px"><div class="lim-top"><span class="t">${esc(x.nome)}</span><b>até ${brl(x.valor)}</b></div>
+      <div class="lim-num"><span>Separado · sai de: ${esc(x.origem)}</span><span style="display:flex;gap:8px;align-items:center;white-space:nowrap"><button class="chip acao" data-sp-pg="${esc(x.id)}">Paguei</button> <button class="link" data-sp-ed="${esc(x.id)}">Editar</button></span></div></div>`).join('')
+    + '<button class="link" id="spNovo" title="Para um gasto que ainda não tem preço certo">+ Separar dinheiro para um gasto</button>';
+  $$('#cSeparado [data-sp-pg]').forEach(b => b.onclick = () => abrirSepPg(L.find(x => x.id === b.dataset.spPg)));
+  $$('#cSeparado [data-sp-ed]').forEach(b => b.onclick = () => abrirSep(L.find(x => x.id === b.dataset.spEd)));
+  $('#spNovo').onclick = () => abrirSep(null);
+}
+function abrirSep(x){
+  S.sepEd = x ? x.id : null;
+  const M = (S.metas || []).slice().sort((a, b) => (ehReserva(b) ? 1 : 0) - (ehReserva(a) ? 1 : 0));
+  $('#spOrigem').innerHTML = ['Saldo do mês'].concat(M.map(m => m.nome)).map(o => `<option ${x && x.origem === o ? 'selected' : ''}>${esc(o)}</option>`).join('');
+  $('#spTit').textContent = x ? 'Editar separado' : 'Separar dinheiro'; $('#spSalvar').textContent = x ? 'Salvar' : 'Separar';
+  $('#spNome').value = x ? x.nome : ''; $('#spValor').value = x ? x.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
+  $('#spCancelar').classList.toggle('hide', !x); $('#spErro').textContent = ''; $('#dlgSep').showModal();
+}
+$('#spFechar').onclick = () => $('#dlgSep').close();
+$('#spSalvar').onclick = async () => {
+  const x = { id: S.sepEd, nome: $('#spNome').value.trim(), valor: num($('#spValor').value), origem: $('#spOrigem').value };
+  if (!x.nome || !(x.valor > 0)) { $('#spErro').textContent = 'Preencha para quê e quanto.'; return; }
+  const b = $('#spSalvar'); b.disabled = true;
+  try { S.separados = await api('salvarSeparado', x); $('#dlgSep').close(); toast(brl(x.valor) + ' separados'); renderMes(); } catch (e) { $('#spErro').textContent = 'Não salvou: ' + e; }
+  b.disabled = false;
+};
+$('#spCancelar').onclick = async () => {
+  if (!confirm('Devolver todo o valor para o disponível?')) return;
+  try { S.separados = await api('fecharSeparado', S.sepEd, 'Cancelado'); $('#dlgSep').close(); toast('Devolvido'); renderMes(); } catch (e) { $('#spErro').textContent = String(e); }
+};
+function abrirSepPg(x){
+  S.sepPg = x;
+  $('#sgTit').textContent = 'Paguei: ' + x.nome; $('#sgInfo').textContent = `Separado: ${brl(x.valor)} (de ${x.origem}).`;
+  $('#sgValor').value = x.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+  const c = S.contas.find(c => semAcento(x.nome).includes(semAcento(c))) || S.contas.find(c => /viagem/i.test(c) && /viagem|passagem/i.test(x.nome)) || S.contas[0];
+  opcoesContas($('#sgConta'), c); $('#sgCartao').checked = false; $('#sgErro').textContent = ''; difSep(); $('#dlgSepPg').showModal();
+}
+function difSep(){ const v = num($('#sgValor').value), x = S.sepPg; if (!x || !(v > 0)) { $('#sgDif').textContent = ''; return; }
+  const d = x.valor - v; $('#sgDif').innerHTML = d > .005 ? `Sobram <b>${brl(d)}</b>, que voltam para o disponível.` : d < -.005 ? `Passou <b>${brl(-d)}</b> da estimativa. A diferença sai do disponível.` : 'Exatamente o separado.';
+  $('#sgDif').className = 'dia' + (d < -.005 ? ' ruim' : ''); }
+$('#sgValor').oninput = difSep;
+$('#sgFechar').onclick = () => $('#dlgSepPg').close();
+$('#sgSalvar').onclick = async () => {
+  const x = S.sepPg, v = num($('#sgValor').value), conta = $('#sgConta').value, data = hoje();
+  if (!(v > 0)) { $('#sgErro').textContent = 'Digite quanto custou.'; return; }
+  if (!conta || conta === '__nova') { $('#sgErro').textContent = 'Escolha a conta.'; return; }
+  const b = $('#sgSalvar'); b.disabled = true; b.textContent = 'Salvando...';
+  try {
+    await api('salvar', { tipo: 'Despesa', data, conta, valor: v, forma: 'Única', obs: x.nome, cartao: $('#sgCartao').checked });
+    if (x.origem !== 'Saldo do mês') await api('salvar', { tipo: 'Retirada', data, conta: x.origem, valor: v, meta: x.origem, obs: 'Para: ' + conta + ' - ' + x.nome });
+    S.separados = await api('fecharSeparado', x.id, 'Pago', v);
+    $('#dlgSepPg').close(); const d = x.valor - v;
+    toast(d > .005 ? 'Lançado. ' + brl(d) + ' voltaram para o disponível' : d < -.005 ? 'Lançado. Passou ' + brl(-d) + ' da estimativa' : 'Lançado');
+    await carregar();
+  } catch (e) { $('#sgErro').textContent = 'Não salvou: ' + e; }
+  b.disabled = false; b.textContent = 'Lançar o gasto';
+};
 $('#anMes').innerHTML = MESES.map((m, k) => `<option value="${k + 1}">${m}</option>`).join('');
 function abrirAnual(a){
   S.anualEd = a ? a.nome : null;
