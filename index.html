@@ -482,7 +482,6 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
 .ajustes>summary{cursor:pointer;display:flex;align-items:center;gap:8px;list-style:none;min-height:28px} .ajustes>summary::-webkit-details-marker{display:none}
 .ajustes>summary .s{color:var(--muted);font-size:14px;margin-left:auto} .ajustes>summary::after{content:"\203A";font-size:22px;color:var(--muted);transition:transform .2s} .ajustes[open]>summary::after{transform:rotate(90deg)}
 .ajustes>.card{margin:12px 0 0;padding:0;background:none;border:0;box-shadow:none}
-/* Botão + do topo abre "O que eu quero fazer?" debaixo do Bom dia */
 .oq-mais{background:linear-gradient(160deg,#4FA6B1,#286F7B);color:#fff;border:0;box-shadow:4px 6px 14px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.3)} .oq-mais svg{transition:transform .3s ease} .oq-mais[aria-expanded="true"] svg{transform:rotate(45deg)}
 #oqBox.oq-anim{overflow:hidden;transition:max-height .35s ease,opacity .3s ease,transform .35s ease,margin .35s ease,padding .35s ease,border-width .35s ease}
 #oqBox.oq-fechado{max-height:0;opacity:0;transform:translateY(-12px);padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;border-width:0;visibility:hidden}
@@ -496,6 +495,18 @@ button:active:not(:disabled),.btn:active:not(:disabled),.chip:active{scale:.95;f
 .num.warn{color:var(--warn)}
 #aContaChips:not(:empty){display:flex;flex-wrap:wrap;gap:6px;margin-top:8px} #aContaChips .chip{margin:0}
 details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center} details.mais>summary span{color:var(--muted);font-weight:600;margin-left:6px}
+/* Botão + grande no centro da barra: abre a página "O que eu quero fazer?" (25/11/2026) */
+nav{overflow:visible} nav button.centro{margin:0;padding:0;background:none!important;box-shadow:none!important;position:relative}
+nav .fab{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:74px;height:74px;border-radius:50%;background:linear-gradient(160deg,#6CC4CE,#2A7581);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 7px 10px -3px rgba(0,0,0,.5),0 2px 3px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 6px rgba(0,0,0,.18);transition:transform .2s;z-index:2}
+nav .fab svg{width:34px;height:34px} nav button.centro.on .fab{box-shadow:0 0 0 3px rgba(108,196,206,.45),0 7px 10px -3px rgba(0,0,0,.5),0 2px 3px rgba(0,0,0,.3),inset 0 2px 0 rgba(255,255,255,.4)}
+nav button.centro:active .fab{transform:translate(-50%,-50%) scale(.93)}
+html.pc nav button.centro{min-height:96px} html.pc nav .fab{width:68px;height:68px}
+#oqHero{transition:max-height .4s ease,opacity .3s ease,margin .4s ease,padding .4s ease,min-height .4s ease;max-height:320px}
+#oq.res #oqHero{max-height:0;min-height:0;opacity:0;margin:0;padding-top:0;padding-bottom:0;border-width:0}
+#oqHero.procura #oqAv img{animation:oqBalanca 1.2s ease-in-out infinite} @keyframes oqBalanca{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@media (prefers-reduced-motion:reduce){#oqHero{transition:none} #oqHero.procura #oqAv img{animation:none}}
+#oqHero .hero-ola{font-size:18px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
 <body>
@@ -503,10 +514,7 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
 <div id="carregando" aria-busy="true" aria-label="Carregando"><div class="sk" style="height:40px;width:60%;margin:8px 0 24px"></div><div class="sk" style="height:140px;margin-bottom:16px"></div><div class="sk" style="height:72px;margin-bottom:16px"></div><div class="sk" style="height:240px"></div></div>
 
 <section id="inicio" class="hide">
-  <header><h1>Nossas finanças</h1><div class="topo-dir"><button class="ico-topo modo-btn" id="modoBtn" type="button" onclick="trocaModo()"></button><button class="ico-topo oq-mais" id="oqMais" type="button" aria-label="O que eu quero fazer?" aria-expanded="false" aria-controls="oqBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button class="ico-topo" data-ir="historico" aria-label="Abrir o histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></div></header>
-  <div class="card rapido oq pc-fixo oq-anim oq-fechado" id="oqBox" aria-hidden="true"><label for="oqTxt"><b>O que eu quero fazer?</b></label>
-    <div class="rap-linha"><input id="oqTxt" placeholder="Ex.: ver a fatura" autocomplete="off" enterkeyhint="go"><button class="btn" id="oqOk" type="button">Ir</button></div>
-    <div class="pr-chips" id="oqAtalhos"></div><div id="oqMsg" role="status"></div></div>
+  <header><h1>Nossas finanças</h1><div class="topo-dir"><button class="ico-topo modo-btn" id="modoBtn" type="button" onclick="trocaModo()"></button><button class="ico-topo" data-ir="historico" aria-label="Abrir o histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></div></header>
   <div class="card hero pc-fixo" id="iHero"><div class="hero-av" id="hAv"></div><div class="hero-txt"><div class="hero-ola" id="iOla"></div><div class="hero-hum" id="iHum"></div></div></div>
   <div class="card saldo"><div class="lbl">Saldo do mês</div><div class="val" id="iSaldo"></div><div class="falta hide" id="iFalta"></div><div class="sub" id="iPeriodo"></div><div class="dia" id="iNaFatura"></div><div class="dia" id="iSep"></div><div id="cSeparado"></div><div class="dia" id="iDia"></div><div class="gasto" id="iGasto"></div><div id="iProxPg"></div></div>
   <div class="grid3" id="cTotais" style="margin-bottom:12px">
@@ -563,11 +571,15 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
   <div class="card"><h2>Como foi o ano</h2><div id="iAno"></div></div>
 </section>
 
-<section id="foco" class="hide">
-  <header><button class="link" id="fVoltar" type="button" style="margin:0;padding:0">&#8249; Início</button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></header>
-  <h1 id="fTit" style="margin:0 4px 14px"></h1>
+<section id="oq" class="hide">
+  <header><h1>O que fazer?</h1><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></header>
+  <div class="card hero" id="oqHero"><div class="hero-av" id="oqAv"></div><div class="hero-txt"><div class="hero-ola" id="oqOla">Me diga o que precisa</div><div class="hero-hum" id="oqHum"></div></div></div>
+  <div class="card rapido oq" id="oqBox"><label for="oqTxt" class="sr">O que eu quero fazer?</label>
+    <div class="rap-linha"><input id="oqTxt" placeholder="Ex.: lançar um gasto" autocomplete="off" enterkeyhint="go"><button class="btn" id="oqOk" type="button">Ir</button></div>
+    <div class="pr-chips" id="oqAtalhos"></div><div id="oqMsg" role="status"></div></div>
+  <div id="oqRes" class="hide"><h2 id="fTit" style="margin:4px 4px 14px"></h2>
   <div class="pr-chips" id="fAcoes" style="margin:0 0 14px"></div>
-  <div id="fCorpo"></div>
+  <div id="fCorpo"></div></div>
 </section>
 <div id="guardado" class="hide"></div>
 
@@ -867,7 +879,7 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
 <nav><div class="in">
   <button data-s="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
   <button data-s="relatorios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Relatórios</button>
-  <button data-s="adicionar"><span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg></span>Adicionar</button>
+  <button data-s="oq" class="centro" aria-label="O que eu quero fazer?"><span class="fab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></button>
   <button data-s="planejar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Planejar</button>
   <button data-s="dicas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Extras</button>
 </div></nav>
@@ -895,9 +907,9 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
   const rel = document.getElementById('relatorios'), rv = document.getElementById('cRevisao'); rel.insertBefore(rv, rel.querySelector('header').nextSibling);
   poe('guardado', ['#cRevLink', '#cPague']);
   const fica = ['#iHero', '.card.saldo', '#cTotais', '#cLembra', '#cFila', '#cCheck', '#iContas'].map(card).filter(Boolean);
-  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (el.id !== 'oqBox' && !fica.includes(el)) el.classList.add('hide'); });
+  [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (!fica.includes(el)) el.classList.add('hide'); });
   fica.forEach(el => ini.appendChild(el));
-  ini.insertBefore(document.getElementById('iHero'), document.getElementById('oqBox')); // Bom dia acima de tudo
+  ini.insertBefore(document.getElementById('iHero'), ini.querySelector(':scope > header').nextSibling); // Bom dia acima de tudo
 })();
 /* ---------- Computador: cartões em coluna principal (analisar) e lateral (fazer) ---------- */
 (function(){
@@ -915,16 +927,16 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
     Object.keys(P).forEach(id => {
       const sec = document.getElementById(id), c = P[id];
       sec.querySelectorAll('.pc-topo,.pc-cols').forEach(w => w.remove());
-      orig[id].forEach(e => { if (!e.closest('#foco')) sec.appendChild(e); });
+      orig[id].forEach(e => { if (!e.closest('#oq')) sec.appendChild(e); });
       if (!ehPc()) return;
       const novo = cls => { const d = document.createElement('div'); d.className = cls; return d; };
       const usados = new Set();
-      const enche = (box, l) => l.map(el).filter(e => e && !e.closest('#foco')).forEach(e => { usados.add(e); box.appendChild(e); });
+      const enche = (box, l) => l.map(el).filter(e => e && !e.closest('#oq')).forEach(e => { usados.add(e); box.appendChild(e); });
       const fixos = orig[id].filter(e => e.classList && e.classList.contains('pc-fixo')); fixos.forEach(e => usados.add(e));
       let topo; if (c.topo) { topo = novo('pc-topo'); enche(topo, c.topo); }
       const cols = novo('pc-cols'), m = novo('pc-main'), sd = novo('pc-side');
       enche(m, c.main); enche(sd, c.side);
-      orig[id].forEach(e => { if (!usados.has(e) && e.tagName !== 'HEADER' && !e.contains(m) && !e.closest('#foco')) m.appendChild(e); });
+      orig[id].forEach(e => { if (!usados.has(e) && e.tagName !== 'HEADER' && !e.contains(m) && !e.closest('#oq')) m.appendChild(e); });
       cols.append(m, sd);
       const h = sec.querySelector(':scope > header');
       if (topo) h.after(...fixos, topo, cols); else h.after(...fixos, cols);
@@ -1050,7 +1062,7 @@ function chipGroup(sel, val, onPick){ $$(sel + ' .chip').forEach(c => { c.classL
 function totais(i){ const t = { Entrada: 0, Despesa: 0, Investimento: 0 }; S.regs.forEach(r => { if (ciclo(r.data) === i) t[r.tipo] = (t[r.tipo] || 0) + r.valor; }); t.saldo = t.Entrada - t.Despesa - t.Investimento + (t.Retirada || 0); return t; }
 
 /* ---------- Navegação ---------- */
-function ir(sec, doVoltar){ if (sec === 'precos') sec = 'dicas'; if (sec !== 'foco' && typeof FOCO !== 'undefined' && FOCO.length) devolveFoco(); if (!doVoltar) historico('push', sec); $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.s === sec)); $$('section').forEach(s => s.classList.toggle('hide', s.id !== sec)); scrollTo(0, 0); if (sec === 'adicionar') renderForm(); if (sec === 'dicas') abrePrecos(); }
+function ir(sec, doVoltar){ if (sec === 'precos') sec = 'dicas'; const temRes = typeof FOCO !== 'undefined' && (FOCO.length || $('#fAcoes').innerHTML); if (sec === 'foco' && !temRes) sec = 'oq'; if (sec !== 'foco' && temRes) devolveFoco(); if (sec === 'oq' || sec === 'foco') oqModo(sec === 'foco'); if (!doVoltar) historico('push', sec); const vis = sec === 'foco' ? 'oq' : sec; $$('nav button').forEach(b => b.classList.toggle('on', b.dataset.s === vis)); $$('section').forEach(s => s.classList.toggle('hide', s.id !== vis)); scrollTo(0, 0); if (sec === 'adicionar') renderForm(); if (sec === 'dicas') abrePrecos(); }
 $$('nav button').forEach(b => b.onclick = () => ir(b.dataset.s));
 function historico(modo, sec){
   try {
@@ -1104,7 +1116,7 @@ async function carregar(){
     if (S.edit === null) { S.mes = Math.min(11, Math.max(0, ciclo(hoje()))); S.edit = undefined; }
     $('#carregando').classList.add('hide');
     if ($$('section:not(.hide)').length === 0) { // abre direto na tela do endereço (ex.: ...#adicionar), senão no Início
-      const h = location.hash.slice(1), sec = ['inicio', 'adicionar', 'relatorios', 'planejar', 'historico', 'dicas', 'precos'].includes(h) ? h : 'inicio';
+      const h = location.hash.slice(1), sec = ['inicio', 'oq', 'adicionar', 'relatorios', 'planejar', 'historico', 'dicas', 'precos'].includes(h) ? h : 'inicio';
       historico('replace', sec); ir(sec, true); }
     renderMes(); avisoFila();
     if (!S.offline) enviaFila();
@@ -2815,17 +2827,6 @@ function lePdf(arq){
     fr.readAsDataURL(arq);
   });
 }
-function oqMostra(abre){
-  const b = $('#oqBox'), m = $('#oqMais'); if (!b || !m) return;
-  m.setAttribute('aria-expanded', abre ? 'true' : 'false'); m.setAttribute('aria-label', abre ? 'Fechar "O que eu quero fazer?"' : 'O que eu quero fazer?');
-  b.setAttribute('aria-hidden', abre ? 'false' : 'true');
-  if (abre) {
-    b.style.maxHeight = '0px'; b.classList.remove('oq-fechado'); const alvo = b.scrollHeight + 40; void b.offsetHeight; b.style.maxHeight = alvo + 'px';
-    const fim = e => { if (e.propertyName !== 'max-height') return; b.removeEventListener('transitionend', fim); if (!b.classList.contains('oq-fechado')) b.style.maxHeight = 'none'; };
-    b.addEventListener('transitionend', fim); setTimeout(() => $('#oqTxt').focus({ preventScroll: true }), 200);
-  } else { b.style.maxHeight = b.scrollHeight + 'px'; void b.offsetHeight; b.style.maxHeight = '0px'; b.classList.add('oq-fechado'); }
-}
-$('#oqMais').onclick = () => oqMostra($('#oqBox').classList.contains('oq-fechado'));
 $('#nAbre').onclick = () => { $('#nOpc').classList.remove('hide'); $('#nAbre').classList.add('hide'); $('#nAbre').setAttribute('aria-expanded', 'true'); $('#nFoto').focus(); };
 $('#nFoto').onclick = () => $('#nArq').click();
 $('#nEnviar').onclick = () => $('#nArq2').click();
@@ -3246,6 +3247,7 @@ const MANUAL = [
   { id: 'checkin', nome: 'Check-in do mês', el: '#cCheck', para: 'Conversa do fim do mês: planejado x gasto de verdade. Só aparece no começo do mês.', pal: ['check-in', 'checkin', 'fechamento do mes', 'planejado x real'] },
   { id: 'boneco', nome: 'Recado dos bonecos', el: '#iHero', para: 'Recado do Ken e da Sam felizes ou tristes, conforme o mês.', pal: ['bonecos', 'boneco', 'humor'] },
   // Ações (abrem uma tela)
+  { id: 'oq', nome: 'O que eu quero fazer?', vai: () => ir('oq'), para: 'Página do botão + do meio: escrever o que quer fazer e o site acha a tela certa.', pal: ['o que da para fazer', 'ajuda', 'menu', 'botao mais'] },
   { id: 'lancar', nome: 'Lançar gasto ou entrada', vai: () => ir('adicionar'), para: 'Registrar um gasto, uma entrada de dinheiro ou um investimento.', pal: ['lancar', 'lancar gasto', 'adicionar', 'registrar', 'anotar', 'novo gasto', 'gasto novo', 'pix'] },
   { id: 'nota', nome: 'Ler nota fiscal', vai: () => { ir('adicionar'); setTimeout(() => $('#nCard').scrollIntoView({ block: 'start' }), 60); }, para: 'Tirar foto ou mandar PDF da nota do mercado, ou colar uma lista de itens.', pal: ['nota', 'nota fiscal', 'cupom', 'foto da nota', 'colar lista'] },
   { id: 'historico', nome: 'Histórico', vai: () => ir('historico'), para: 'Lista de todos os lançamentos, com busca e calendário; corrigir ou apagar um lançamento.', pal: ['historico', 'lancamentos', 'extrato', 'corrigir', 'apagar lancamento', 'buscar', 'calendario', 'editar'] },
@@ -3269,12 +3271,19 @@ function oqPontos(frase){
 let FOCO = [];
 function devolveFoco(){
   FOCO.slice().reverse().forEach(({ n, pai, prox, sec }) => { if (pai.isConnected) pai.insertBefore(n, prox && prox.parentNode === pai ? prox : null); else sec.appendChild(n); });
-  FOCO = []; $('#fCorpo').innerHTML = ''; $('#fAcoes').innerHTML = '';
+  FOCO = []; $('#fCorpo').innerHTML = ''; $('#fAcoes').innerHTML = ''; $('#fTit').textContent = '';
 }
+// Página "O que eu quero fazer?": telinha + caixa; com resultado a telinha some e fica só o que foi pedido
+const OQ_IMG = q => (AV[S.quem] ? [S.quem] : ['Ken', 'Sam']).map(n => `<img src="bonecos/oq-${q}-${n.toLowerCase()}.png" alt="${q === 'parado' ? '' : n + ' procurando'}" width="178" height="178">`).join('');
+const OQ_TXT = 'Escreva do seu jeito, tipo "quanto gastei no mercado".';
+function oqImg(q){ const b = $('#oqAv'); b.innerHTML = OQ_IMG(q); if (q === 'parado') OQ_IMG('pesquisando').replace(/src="([^"]+)"/g, (x, u) => { new Image().src = u; }); b.classList.toggle('dois', !AV[S.quem]); }
+function oqPesquisa(on){ $('#oqHero').classList.toggle('procura', on); oqImg(on ? 'pesquisando' : 'parado');
+  $('#oqOla').textContent = on ? 'Procurando…' : 'Me diga o que precisa'; $('#oqHum').textContent = on ? 'Já já eu acho.' : OQ_TXT; }
+function oqModo(res){ $('#oq').classList.toggle('res', res); $('#oqRes').classList.toggle('hide', !res); if (!res) { oqPesquisa(false); $('#oqMsg').innerHTML = ''; } }
 const oqCard = sel => { const e = document.querySelector(sel); return e && (e.closest('.card') || e); };
 function oqUso(l){ let u = {}; try { u = JSON.parse(localStorage.getItem('fin_oqUso') || '{}'); } catch (e) {} if (l) { l.forEach(m => u[m.id] = (u[m.id] || 0) + 1); try { localStorage.setItem('fin_oqUso', JSON.stringify(u)); } catch (e) {} } return u; }
 function oqAtalhos(){
-  const u = oqUso(), l = Object.keys(u).filter(k => u[k] >= 2 && MANUAL.some(m => m.id === k)).sort((a, b) => u[b] - u[a]).slice(0, 4);
+  const u = oqUso(), l = ['lancar'].concat(Object.keys(u).filter(k => k !== 'lancar' && u[k] >= 2 && MANUAL.some(m => m.id === k)).sort((a, b) => u[b] - u[a]).slice(0, 3));
   $('#oqAtalhos').innerHTML = l.map(k => `<button class="chip" data-oq="${k}" type="button">${esc(MANUAL.find(m => m.id === k).nome)}</button>`).join('');
 }
 function perguntaChat(f){
@@ -3311,21 +3320,22 @@ function oqAbre(l, frase, daIA, aprendido){
   if (daIA) oqEra(frase, l);
   const corpo = $('#fCorpo');
   quadros.forEach(m => { const n = oqCard(m.el); if (!n) return; FOCO.push({ n, pai: n.parentNode, prox: n.nextSibling, sec: n.closest('section') || $('#guardado') }); corpo.appendChild(n); });
-  ir('foco');
+  oqPesquisa(false); ir('foco');
   quadros.forEach(m => { const n = oqCard(m.el); if (n && !n.offsetHeight) { const v = document.createElement('div'); v.className = 'card oq-vazio';
     v.innerHTML = `<b>${esc(m.nome)}</b><div class="s">Nada para mostrar agora${S.mes !== ciclo(hoje()) ? ' neste mês' : ''}. ${esc(m.para)}</div>`; n.after(v); } });
 }
 async function oqIr(){
   const frase = $('#oqTxt').value.trim(), msg = $('#oqMsg'); if (!frase) { $('#oqTxt').focus(); return; }
   const r = oqPontos(frase), top = r.length ? r[0].p : 0;
+  oqPesquisa(true); await new Promise(ok => setTimeout(ok, 700)); // mostra o desenho de "procurando"
   if (top >= 2) return oqAbre(r.filter(x => x.p >= 2 && x.p >= top / 2).slice(0, 4).map(x => x.m), frase, false, top >= 99);
   const b = $('#oqOk'); b.disabled = true; msg.innerHTML = '<div class="help">Não tenho certeza. Perguntando à IA…</div>';
   try {
     const ids = await api('rotear', frase, MANUAL.map(m => ({ id: m.id, nome: m.nome, para: m.para })));
     const l = (ids || []).map(id => MANUAL.find(m => m.id === id)).filter(Boolean);
     if (l.length) oqAbre(l, frase, true);
-    else msg.innerHTML = '<div class="help">Não achei nada sobre isso no site. <button class="link" id="oqChat" type="button" style="margin:0;padding:0">Perguntar à IA no chat</button></div>';
-  } catch (e) {
+    else { oqPesquisa(false); msg.innerHTML = '<div class="help">Não achei nada sobre isso no site. <button class="link" id="oqChat" type="button" style="margin:0;padding:0">Perguntar à IA no chat</button></div>'; }
+  } catch (e) { oqPesquisa(false);
     if (r.length) oqAbre(r.slice(0, 3).map(x => x.m), frase);
     else msg.innerHTML = `<div class="err">Não entendi e não deu para perguntar à IA: ${esc(e)}</div>`;
   }
@@ -3334,9 +3344,8 @@ async function oqIr(){
 }
 $('#oqOk').onclick = oqIr;
 $('#oqTxt').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); oqIr(); } });
-$('#fVoltar').onclick = () => ir('inicio');
 document.addEventListener('click', e => { const b = e.target.closest('[data-oq]'); if (b) oqAbre([MANUAL.find(m => m.id === b.dataset.oq)]); });
-oqAtalhos();
+oqAtalhos(); oqPesquisa(false);
 
 S.edit = null;
 carregar();
