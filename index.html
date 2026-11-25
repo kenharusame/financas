@@ -487,6 +487,14 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
 #oqBox.oq-anim{overflow:hidden;transition:max-height .35s ease,opacity .3s ease,transform .35s ease,margin .35s ease,padding .35s ease,border-width .35s ease}
 #oqBox.oq-fechado{max-height:0;opacity:0;transform:translateY(-12px);padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;border-width:0;visibility:hidden}
 @media (prefers-reduced-motion:reduce){#oqBox.oq-anim,.oq-mais svg{transition:none}}
+/* Cantos iguais, botão que reage, amarelo de atenção (25/11/2026) */
+.card{border-radius:20px} .mini{border-radius:20px}
+.btn,.seg,.seg button,.toast button,.rev-bt button,.busca,.tag,.chip{border-radius:999px}
+.note,.alerta,.dica,.pz-det,.escolha,.plano,.peso,.res-grid div,.fu-grid div,.resp-nums div,.sal-res,.pr-veredito,.row.click,.bar,.lb-item{border-radius:14px}
+.pz-ico,.row .ico,.resp-ico,.pl-ico,.pg-top .ico,.quero .ico,.nota-chk{border-radius:12px}
+button:active:not(:disabled),.btn:active:not(:disabled),.chip:active{scale:.95;filter:brightness(1.12)}
+.num.warn{color:var(--warn)}
+#aContaChips:not(:empty){display:flex;flex-wrap:wrap;gap:6px;margin-top:8px} #aContaChips .chip{margin:0}
 details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center} details.mais>summary span{color:var(--muted);font-weight:600;margin-left:6px}
 </style>
 </head>
@@ -607,7 +615,7 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
     </div>
 
     <div id="f-out">
-      <label for="aConta">Conta</label><select id="aConta"></select><div class="tipo-conta" id="aTipoConta"></div>
+      <label for="aConta">Conta</label><select id="aConta"></select><div id="aContaChips" role="group" aria-label="Contas mais usadas"></div><div class="tipo-conta" id="aTipoConta"></div>
       <label>Como é essa despesa</label>
       <div class="chips" id="aForma"><button class="chip" data-v="Única">Única</button><button class="chip" data-v="Parcelada">Parcelada</button><button class="chip" data-v="Fixa">Fixa (todo mês)</button></div>
       <div id="f-parc">
@@ -745,7 +753,7 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
   <p class="s" style="color:var(--muted);font-size:14px;margin:-6px 0 8px">Tipo (muda o ícone), grupo do guia e se é supérfluo. Os que estavam vazios eu preenchi pelo nome: confiram.</p>
   <div id="cfgLista"></div>
   <div class="err" id="cfgErro" role="alert"></div>
-  <button class="btn" id="cfgSalvar">Salvar</button>
+  <button class="btn" id="cfgSalvar">Salvar tipos</button>
   <button class="link" id="cfgFechar">Cancelar</button>
 </dialog>
 <dialog id="dlgPat">
@@ -754,7 +762,7 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
   <div id="patLista"></div>
   <button class="link" id="patMais">+ Adicionar item</button>
   <div class="err" id="patErro" role="alert"></div>
-  <button class="btn" id="patSalvar">Salvar</button>
+  <button class="btn" id="patSalvar">Salvar patrimônio</button>
   <button class="link" id="patFechar">Cancelar</button>
 </dialog>
 <dialog id="dlgSep">
@@ -787,7 +795,7 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
   <div class="two"><div><label for="anMes">Mês</label><select id="anMes"></select></div><div><label for="anDia">Dia</label><input id="anDia" inputmode="numeric" value="10"></div></div>
   <div class="help">O site avisa quando estiver chegando e mostra quanto guardar por mês até lá.</div>
   <div class="err" id="anErro" role="alert"></div>
-  <button class="btn" id="anSalvar">Salvar</button>
+  <button class="btn" id="anSalvar">Salvar gasto do ano</button>
   <button class="btn danger hide" id="anApagar">Apagar</button>
   <button class="link" id="anFechar">Cancelar</button>
 </dialog>
@@ -837,7 +845,7 @@ details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:70
   <div id="adLimBox" class="hide"><label for="adLim">Limite total do cartão</label><input id="adLim" class="money" inputmode="decimal" autocomplete="off"></div>
   <div class="help" id="adHelp"></div>
   <div class="err" id="adErro" role="alert"></div>
-  <button class="btn" id="adSalvar">Salvar</button>
+  <button class="btn" id="adSalvar">Salvar adiantamento</button>
   <button class="link" id="adFechar">Cancelar</button>
 </dialog>
 <dialog id="dlg">
@@ -1705,6 +1713,14 @@ function lembraInicio(){
         return `<div class="lb-conta"><div><div>${esc(x.conta)}${x.parc ? ` <span class="tag parc">${esc(x.parc)}</span>` : ''}</div><div class="s">${q} · ${brl(x.v)}${x.prev ? ' · ainda não lançada' : ''}</div></div>`
           + (x.id ? `<button class="chip" data-pg="${esc(x.id)}">Paguei</button>` : `<button class="chip" data-pl="${esc(x.prev)}">Lançar</button><button class="x" data-px="${esc(x.prev)}" aria-label="Não teve ${esc(x.conta)} este mês">Não teve</button>`) + '</div>'; }).join('')}
       ${reais.length > 1 ? `<button class="link" data-lb="todas">Paguei todas (${reais.length})</button>` : ''}</div>`); }
+  { // 3) contas fixas e parcelas que vencem nos próximos 3 dias (fora do cartão)
+    const P = S.regs.filter(r => r.tipo === 'Despesa' && (r.forma === 'Fixa' || r.forma === 'Parcelada') && !r.cartao && !pagas[r.id] && diasAte(r.data) >= 1 && diasAte(r.data) <= 3).sort((a, b) => a.data < b.data ? -1 : 1);
+    if (P.length) partes.push(`<div class="lb-item"><b>Vence${P.length > 1 ? 'm' : ''} nos próximos dias</b>${P.map(r => { const n = diasAte(r.data);
+      return `<div class="lb-conta"><div><div>${esc(r.conta)}</div><div class="s">${n === 1 ? 'vence amanhã' : 'vence em ' + n + ' dias'} · ${brl(r.valor)}</div></div></div>`; }).join('')}</div>`); }
+  { // 4) gastos do ano (IPVA, IPTU...) em até 30 dias
+    const A = (S.anuais || []).map(a => Object.assign({ a }, proximo(a))).filter(x => x.dias <= 30).sort((x, y) => x.dias - y.dias);
+    if (A.length) partes.push(`<div class="lb-item"><b>Gasto do ano chegando</b>${A.map(({ a, dias }) =>
+      `<div class="lb-conta"><div><div>${esc(a.nome)}</div><div class="s">${dias === 0 ? 'é hoje' : dias === 1 ? 'é amanhã' : 'em ' + dias + ' dias'} · ${brl(a.valor)}</div></div></div>`).join('')}</div>`); }
   box.innerHTML = partes.length ? `<div class="card lembra"><h2>Não esquecer</h2>${partes.join('')}</div>` : '';
   const marca = ids => { const p = lsLe('fin_pagas', {}); ids.forEach(id => p[id] = dHoje); const ks = Object.keys(p); if (ks.length > 200) ks.slice(0, ks.length - 200).forEach(k => delete p[k]);
     lsGrava('fin_pagas', p); lembraInicio(); toast(ids.length > 1 ? 'Contas marcadas como pagas' : 'Marcada como paga'); };
@@ -1867,7 +1883,7 @@ function abrirAdi(lim){
   $('#adHelp').textContent = lim ? 'O limite total que o banco dá para o cartão.' : 'Não conta como gasto (as compras já foram lançadas). Só libera o limite e diminui o que falta pagar.';
   $('#adValor').value = ''; $('#adData').value = hoje();
   $('#adLim').value = (S.limiteCartao || 500).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
-  $('#adSalvar').disabled = false; $('#adSalvar').textContent = 'Salvar';
+  $('#adSalvar').disabled = false; $('#adSalvar').textContent = 'Salvar adiantamento';
   $('#dlgAdi').showModal(); (lim ? $('#adLim') : $('#adValor')).focus();
 }
 $('#adFechar').onclick = () => $('#dlgAdi').close();
@@ -1879,7 +1895,7 @@ $('#adSalvar').onclick = async () => {
   try {
     if (S.adiLim) { S.limiteCartao = await api('limiteCartao', v); $('#dlgAdi').close(); toast('Limite salvo'); renderMes(); }
     else { await api('salvar', { tipo: 'Adiantamento', conta: 'Cartão de crédito', valor: v, data, obs: '' }); $('#dlgAdi').close(); toast('Adiantamento salvo'); await carregar(); }
-  } catch (e) { $('#adErro').textContent = 'Não salvou: ' + e; b.disabled = false; b.textContent = 'Salvar'; }
+  } catch (e) { $('#adErro').textContent = 'Não salvou: ' + e; b.disabled = false; b.textContent = 'Salvar adiantamento'; }
 };
 /* Salário da família: 80% da média do que entra. Os outros 20% vão para investimento. */
 function salarioInicio(i, t){
@@ -1915,6 +1931,7 @@ function salarioInicio(i, t){
 function passosInicio(i, t){
   if (lsLe('fin_passosOk', '')) { $('#cPassos').innerHTML = ''; return; }
   const cfg = S.cfg || {}, L = [
+    ['Entrar no site da família', true, ''],
     ['Registrar a entrada do mês (salário)', t.Entrada > 0, 'adicionar'],
     ['Lançar os gastos do dia a dia (pode falar ou tirar foto da nota)', t.Despesa > 0, 'adicionar'],
     ['Conferir o tipo de cada conta (mercado, restaurante...)', (S.contas || []).length > 0 && (S.contas || []).every(c => (cfg[c] || {}).tipo), 'planejar'],
@@ -1946,6 +1963,7 @@ function faseInicio(){
   const res = (S.metas || []).find(ehReserva), guard = res ? progressoMeta(res).guardado : 0, D = degraus();
   const inv = fechados.length ? fechados.reduce((a, k) => a + totais(k).Investimento / totais(k).Entrada, 0) / fechados.length : (t.Entrada ? t.Investimento / t.Entrada : 0);
   const passos = [
+    { f: 'Estabilizar', txt: 'Começar a organizar o dinheiro da família', ok: true, det: 'Feito: vocês já começaram.' },
     { f: 'Estabilizar', txt: 'Parar de gastar mais do que entra', ok: fechados.length >= 1 && !faltou,
       det: !fechados.length ? 'Precisa de um mês fechado para avaliar.' : faltou ? `Faltou dinheiro em ${faltou} dos últimos ${fechados.length} meses.` : 'Nos últimos meses sobrou dinheiro.' },
     { f: 'Construir', txt: 'Reserva de R$ 10 mil', ok: guard >= D[0], det: `${brl0(guard)} de ${brl0(D[0])}` },
@@ -1969,7 +1987,7 @@ function mesadaInicio(i){
     return;
   }
   $('#iMesada').innerHTML = nomes.map(n => { const l = limEfetivo(n, i), g = gastoConta(n, i);
-    return `<div class="row"><span class="t">${n.replace('Mesada ', '')}</span><span class="num ${l - g < 0 ? 'out' : 'in'}">${l - g < 0 ? 'passou ' + brl0(g - l) : 'sobram ' + brl0(l - g)}</span></div>`; }).join('')
+    return `<div class="row"><span class="t">${n.replace('Mesada ', '')}</span><span class="num ${l - g < 0 ? 'out' : g >= l * .8 ? 'warn' : 'in'}">${l - g < 0 ? 'passou ' + brl0(g - l) : 'sobram ' + brl0(l - g)}</span></div>`; }).join('')
     + '<div class="help">Só mostra quanto sobra, não em que foi gasto. Registrem os gastos na conta "Mesada" de cada um.</div>';
 }
 const DICAS = [
@@ -2613,6 +2631,15 @@ function grafico(saldos, atual){
 $$('.seg button').forEach(b => b.onclick = () => { S.tipo = b.dataset.tipo; renderForm(); });
 $('#aData').value = hoje();
 function opcoesContas(sel, atual){ sel.innerHTML = S.contas.map(c => `<option ${c === atual ? 'selected' : ''}>${esc(c)}</option>`).join('') + '<option value="__nova">+ Adicionar nova conta</option>'; }
+const rotSalvar = () => ({ Entrada: 'Salvar entrada', Despesa: 'Salvar gasto', Investimento: 'Salvar investimento' })[S.tipo] || 'Salvar';
+function contaChips(){ // as 5 contas mais usadas nos últimos 60 dias viram botões
+  const box = $('#aContaChips'); if (!box) return;
+  const lim = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10), n = {};
+  S.regs.forEach(r => { if (r.tipo === 'Despesa' && r.forma !== 'Fixa' && r.forma !== 'Parcelada' && r.data >= lim && S.contas.includes(r.conta)) n[r.conta] = (n[r.conta] || 0) + 1; });
+  const top = Object.keys(n).sort((a, b) => n[b] - n[a]).slice(0, 5), atual = $('#aConta').value;
+  box.innerHTML = top.map(c => `<button type="button" class="chip ${c === atual ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
+  $$('#aContaChips [data-c]').forEach(b => b.onclick = () => { $('#aConta').value = b.dataset.c; contaChips(); resumo(); });
+}
 function renderForm(){
   const tp = S.tipo;
   $$('.seg button').forEach(b => b.classList.toggle('on', b.dataset.tipo === tp));
@@ -2622,8 +2649,9 @@ function renderForm(){
   $('#aOrigens').innerHTML = S.origens.map(o => `<button class="chip" data-v="${esc(o)}">${icoRede(o) ? `<svg class="chip-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icoRede(o)}</svg>` : ''}${esc(o)}</button>`).join('') + '<button class="chip add" id="aNovaOrigem">+ Nova</button>';
   chipGroup('#aOrigens', S.origem, v => { S.origem = v; renderForm(); });
   $('#aNovaOrigem').onclick = async () => { const n = prompt('Nome da nova origem:'); if (!n) return; try { const nome = await api('addLista', 'origem', n); if (!S.origens.includes(nome)) S.origens.push(nome); S.origem = nome; renderForm(); } catch (e) { toast(e); } };
-  const contaAtual = $('#aConta').value && $('#aConta').value !== '__nova' ? $('#aConta').value : S.contas[0];
-  opcoesContas($('#aConta'), contaAtual);
+  const ult = lsLe('fin_ultConta', ''), contaAtual = $('#aConta').value && $('#aConta').value !== '__nova' ? $('#aConta').value : (S.contas.includes(ult) ? ult : S.contas[0]);
+  opcoesContas($('#aConta'), contaAtual); contaChips();
+  if (!$('#aSalvar').disabled) $('#aSalvar').textContent = rotSalvar();
   chipGroup('#aForma', S.forma, v => { S.forma = v; renderForm(); });
   chipGroup('#aEhTotal', S.ehTotal, v => { S.ehTotal = v; renderForm(); });
   $('#f-parc').classList.toggle('hide', S.forma !== 'Parcelada');
@@ -2692,7 +2720,7 @@ function avisoDaMeta(){ const n = $('#aDaMetaQual').value, m = (S.metas || []).f
     ? '<b>Será que é uma boa ideia?</b> A reserva é para emergência: perder renda, saúde, conserto urgente. Se esse gasto pode esperar, melhor não mexer nela.'
     : `<b>Será que é uma boa ideia?</b> Esse dinheiro estava guardado para <b>${esc(m.nome)}</b>. Tirar agora atrasa essa meta.`; }
 $('#aDaMetaQual').onchange = avisoDaMeta;
-$('#aConta').onchange = e => { if (e.target.value === '__nova') novaConta(e.target); else resumo(); };
+$('#aConta').onchange = e => { if (e.target.value === '__nova') novaConta(e.target); else { contaChips(); resumo(); } };
 
 $('#aSalvar').onclick = async () => {
   $('#aErro').textContent = '';
@@ -2711,11 +2739,15 @@ $('#aSalvar').onclick = async () => {
   const b = $('#aSalvar'); b.disabled = true; b.textContent = 'Salvando...';
   try {
     const n = await api('salvar', r);
+    if (r.tipo === 'Despesa') lsGrava('fin_ultConta', r.conta);
+    const ja = n === 1 && !daMeta;
+    if (ja) { S.regs.push(Object.assign({ id: 'tmp' + Date.now(), forma: 'Única' }, r)); renderMes(); }
     if (daMeta) await api('salvar', { tipo: 'Retirada', data, conta: daMeta.meta, valor: daMeta.v, meta: daMeta.meta, obs: 'Para: ' + r.conta + (r.obs ? ' - ' + r.obs : '') });
     const c0 = ciclo(r.data), ex0 = r.tipo === 'Entrada' ? entradaExtra(c0) : 0;
     const fimBom = () => { const sd = saldoTela(); toast((n > 1 ? `Salvo em ${n} meses. ` : 'Salvo! ') + (sd >= 0 ? `Ainda sobram ${brl0(sd)} em ${nomeCiclo(c0).toLowerCase()}.` : `${nomeCiclo(c0)} está ${brl0(-sd)} no vermelho.`)); };
     ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); $('#aCartao').checked = false; $('#aDaMeta').checked = false; $('#aDaMetaV').value = ''; $('#aDaMetaBox').classList.add('hide');
-    carregar().then(() => { renderForm(); fimBom();
+    if (ja) fimBom();
+    carregar().then(() => { renderForm(); if (!ja) fimBom();
     if (r.tipo === 'Entrada') { const ex = entradaExtra(c0) - ex0; if (ex > 50) toast('Entrou ' + brl0(ex) + ' a mais que o normal. Guardar a metade?', 'Guardar ' + brl0(ex / 2), () => { const m = metaDaSemana(); guardarPara(m ? m.nome : '', ex / 2); }); } });
   } catch (e) {
     if (/Sem conexão/.test(String(e)) || !navigator.onLine) {
@@ -2723,7 +2755,7 @@ $('#aSalvar').onclick = async () => {
       ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); renderForm();
     } else $('#aErro').textContent = 'Não salvou: ' + e;
   }
-  b.disabled = false; b.textContent = 'Salvar';
+  b.disabled = false; b.textContent = rotSalvar();
 };
 
 /* ---------- Lançamento rápido ("mercado 230") ---------- */
@@ -3181,7 +3213,7 @@ const MANUAL = [
   // Início
   { id: 'saldo', nome: 'Saldo do mês', el: '.card.saldo', para: 'Quanto dinheiro tem na conta no mês, quanto dá para gastar por dia, dinheiro separado para gastar e o próximo pagamento.', pal: ['saldo', 'quanto tenho', 'quanto sobra', 'sobrou', 'gastar por dia', 'dinheiro na conta', 'separar para gastar', 'separado', 'banco'] },
   { id: 'totais', nome: 'Entradas, despesas e investido', el: '#cTotais', para: 'Total que entrou, que saiu e que foi investido no mês.', pal: ['entradas', 'entrou', 'despesas', 'quanto gastei', 'gastei', 'investido', 'investi', 'total do mes', 'recebi'] },
-  { id: 'lembra', nome: 'Não esquecer', el: '#cLembra', para: 'Contas fixas e parcelas que vencem hoje ou já venceram, dias sem lançar gasto e custo fixo do mês passado não lançado.', pal: ['nao esquecer', 'lembrete', 'lembretes', 'vence hoje', 'venceu', 'vencidas', 'atrasada', 'atrasadas', 'paguei', 'contas a pagar', 'conta para pagar', 'esqueci'] },
+  { id: 'lembra', nome: 'Não esquecer', el: '#cLembra', para: 'Contas fixas e parcelas que vencem hoje, já venceram ou vencem nos próximos 3 dias, gastos do ano (IPVA, IPTU) em até 30 dias, dias sem lançar gasto e custo fixo do mês passado não lançado.', pal: ['nao esquecer', 'lembrete', 'lembretes', 'vence hoje', 'venceu', 'vencidas', 'vence amanha', 'ipva', 'iptu', 'atrasada', 'atrasadas', 'paguei', 'contas a pagar', 'conta para pagar', 'esqueci'] },
   { id: 'metas', nome: 'Metas', el: '#cMetas', para: 'Metas de dinheiro guardado (reserva de emergência, viagem, carro, caixinhas): quanto falta, prazo, guardar ou retirar.', pal: ['metas', 'meta', 'reserva', 'reserva de emergencia', 'guardar', 'guardei', 'juntar', 'retirar', 'caixinha', 'caixinhas', 'objetivo', 'objetivos', 'viagem'] },
   { id: 'contas', nome: 'Para onde foi o dinheiro', el: '#iContas', para: 'Gastos do mês separados por conta (mercado, luz, cartão, farmácia...).', pal: ['para onde foi', 'onde gastei', 'com o que gastei', 'categoria', 'categorias', 'por conta', 'mercado', 'luz', 'agua', 'farmacia', 'gatas'] },
   // Relatórios
