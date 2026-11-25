@@ -477,6 +477,17 @@ html.pc .toast{bottom:24px}
 .oq-era{border:1px solid var(--accent)} .oq-era select{margin-top:10px}
 html.pc #inicio .pc-topo{grid-template-columns:1fr} html.pc #inicio .pc-topo>#iHero,html.pc #inicio .pc-topo>.saldo,html.pc #inicio .pc-topo>#cTotais{grid-column:1;grid-row:auto}
 html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
+/* Leis de UX (25/11/2026) */
+.meta-bar.quase i{background:linear-gradient(90deg,#2FB37A,#7BE3B0)}
+.ajustes>summary{cursor:pointer;display:flex;align-items:center;gap:8px;list-style:none;min-height:28px} .ajustes>summary::-webkit-details-marker{display:none}
+.ajustes>summary .s{color:var(--muted);font-size:14px;margin-left:auto} .ajustes>summary::after{content:"\203A";font-size:22px;color:var(--muted);transition:transform .2s} .ajustes[open]>summary::after{transform:rotate(90deg)}
+.ajustes>.card{margin:12px 0 0;padding:0;background:none;border:0;box-shadow:none}
+/* Botão + do topo abre "O que eu quero fazer?" debaixo do Bom dia */
+.oq-mais{background:linear-gradient(160deg,#4FA6B1,#286F7B);color:#fff;border:0;box-shadow:4px 6px 14px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.3)} .oq-mais svg{transition:transform .3s ease} .oq-mais[aria-expanded="true"] svg{transform:rotate(45deg)}
+#oqBox.oq-anim{overflow:hidden;transition:max-height .35s ease,opacity .3s ease,transform .35s ease,margin .35s ease,padding .35s ease,border-width .35s ease}
+#oqBox.oq-fechado{max-height:0;opacity:0;transform:translateY(-12px);padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;border-width:0;visibility:hidden}
+@media (prefers-reduced-motion:reduce){#oqBox.oq-anim,.oq-mais svg{transition:none}}
+details.mais{margin-top:12px} details.mais>summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center} details.mais>summary span{color:var(--muted);font-weight:600;margin-left:6px}
 </style>
 </head>
 <body>
@@ -484,8 +495,8 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
 <div id="carregando" aria-busy="true" aria-label="Carregando"><div class="sk" style="height:40px;width:60%;margin:8px 0 24px"></div><div class="sk" style="height:140px;margin-bottom:16px"></div><div class="sk" style="height:72px;margin-bottom:16px"></div><div class="sk" style="height:240px"></div></div>
 
 <section id="inicio" class="hide">
-  <header><h1>Nossas finanças</h1><div class="topo-dir"><button class="ico-topo modo-btn" id="modoBtn" type="button" onclick="trocaModo()"></button><button class="ico-topo" data-ir="historico" aria-label="Abrir o histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></div></header>
-  <div class="card rapido oq pc-fixo" id="oqBox"><label for="oqTxt"><b>O que eu quero fazer?</b></label>
+  <header><h1>Nossas finanças</h1><div class="topo-dir"><button class="ico-topo modo-btn" id="modoBtn" type="button" onclick="trocaModo()"></button><button class="ico-topo oq-mais" id="oqMais" type="button" aria-label="O que eu quero fazer?" aria-expanded="false" aria-controls="oqBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button class="ico-topo" data-ir="historico" aria-label="Abrir o histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></div></header>
+  <div class="card rapido oq pc-fixo oq-anim oq-fechado" id="oqBox" aria-hidden="true"><label for="oqTxt"><b>O que eu quero fazer?</b></label>
     <div class="rap-linha"><input id="oqTxt" placeholder="Ex.: ver a fatura" autocomplete="off" enterkeyhint="go"><button class="btn" id="oqOk" type="button">Ir</button></div>
     <div class="pr-chips" id="oqAtalhos"></div><div id="oqMsg" role="status"></div></div>
   <div class="card hero pc-fixo" id="iHero"><div class="hero-av" id="hAv"></div><div class="hero-txt"><div class="hero-ola" id="iOla"></div><div class="hero-hum" id="iHum"></div></div></div>
@@ -566,12 +577,15 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
       <div class="nota-fotos" id="nFotos"></div>
       <input type="file" id="nArq" accept="image/*" capture="environment" multiple class="hide">
       <input type="file" id="nArq2" accept="image/*,application/pdf" multiple class="hide">
+      <button class="btn ghost" id="nAbre" type="button" aria-expanded="false">Enviar a nota</button>
+      <div id="nOpc" class="hide">
       <button class="btn ghost" id="nFoto">Tirar foto da nota</button>
       <button class="btn ghost" id="nEnviar">Enviar foto ou PDF</button>
       <input type="file" id="nArq3" accept="application/pdf" multiple class="hide">
       <button class="btn ghost" id="nLote">Várias notas em PDF (uma por arquivo)</button>
       <button class="btn ghost" id="nColar">Colar lista de itens (sem IA)</button>
       <div class="help" id="nColarDica">No computador, é só apertar Ctrl+V em qualquer tela.</div>
+      </div>
       <div id="nColarBox" class="hide"><label for="nTexto">Cole a lista: um item por linha, com o valor no fim</label>
         <textarea id="nTexto" class="nota-txt" rows="8" placeholder="Leite 1L R$ 5,99&#10;Pano de copa R$ 4,90"></textarea>
         <button class="btn" id="nColarOk">Separar os itens</button></div>
@@ -639,17 +653,17 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
 <section id="historico" class="hide">
   <header><h1>Histórico</h1><div class="month"><button data-mes="-1" aria-label="Mês anterior">&#8249;</button><span class="mesNome"></span><button data-mes="1" aria-label="Próximo mês">&#8250;</button></div></header>
   <div class="busca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hBusca" type="search" placeholder="Buscar em todos os meses (ex.: farmácia)" aria-label="Buscar no histórico"></div>
+  <div class="badge" style="margin:-4px 0 12px">Toque num registro para corrigir ou apagar</div>
   <div class="seg modo" id="hModo"><button data-m="lista">Lista</button><button data-m="cal">Calendário</button></div>
   <div id="hCal"></div>
   <div class="filter chips" id="hFiltro"><button class="chip" data-v="Tudo">Tudo</button><button class="chip" data-v="Entrada">Entradas</button><button class="chip" data-v="Despesa">Despesas</button><button class="chip" data-v="Investimento">Investimentos</button></div>
   <div class="card" id="hLista"></div>
-  <div class="badge">Toque num registro para corrigir ou apagar</div>
 </section>
 
 
 
 <section id="dicas" class="hide">
-  <header><h1>IA e preços</h1></header>
+  <header><h1>Extras</h1></header>
   <div class="card chat-card">
     <h2>Pergunte</h2>
     <p class="s" style="margin:-6px 0 10px;color:var(--muted);font-size:14px">A IA responde com os números de vocês e com o guia de gestão financeira que vocês escolheram.</p>
@@ -665,7 +679,8 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
     <label>Como vão pagar?</label>
     <div class="chips" id="qForma"><button class="chip" data-v="À vista">À vista</button><button class="chip" data-v="Parcelado">Parcelado</button></div>
     <div id="qVezesBox" class="hide"><label for="qVezes">Em quantas vezes?</label><input id="qVezes" inputmode="numeric" value="10"></div>
-    <label>É necessidade ou desejo? <span style="color:var(--muted);font-weight:600">(opcional)</span></label>
+    <details class="mais"><summary>Mais detalhes <span>(opcional)</span></summary>
+    <label>É necessidade ou desejo?</label>
     <div class="chips" id="qTipo"><button class="chip" data-v="Necessidade">Necessidade</button><button class="chip" data-v="Desejo">Desejo</button><button class="chip" data-v="">Não sei</button></div>
     <div id="qPeso"></div>
     <label>Como você está agora?</label>
@@ -673,6 +688,7 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
     <label>Já tem algo parecido em casa?</label>
     <div class="chips" id="qParec"><button class="chip" data-v="Não">Não</button><button class="chip" data-v="Sim">Sim</button></div>
     <label for="qCtx">Quer contar mais alguma coisa? <span style="color:var(--muted);font-weight:600">(opcional)</span></label><input id="qCtx" placeholder="Ex.: a nossa quebrou">
+    </details>
     <div class="err" id="qErro" role="alert"></div>
     <button class="btn" id="qBtn">Perguntar para a IA</button>
   </div>
@@ -858,13 +874,19 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
   // Início, nesta ordem
   // Início só para olhar: a caixa "O que eu quero fazer?" + saldo, totais, Não esquecer, metas e para onde foi o dinheiro.
   // O resto fica nas outras abas ou guardado, e aparece quando pedir na caixa (ver MANUAL).
-  document.getElementById('adicionar').appendChild(document.getElementById('nCard'));
+  // Adicionar: formulário no alto; nota e "Quero comprar" depois (Lei de Hick)
+  const adic = document.getElementById('adicionar');
+  adic.appendChild(document.getElementById('nCard')); adic.appendChild(document.getElementById('aQuero'));
   ['#cResumo', '#cAlertas'].forEach(x => document.getElementById('relatorios').appendChild(document.querySelector(x)));
   poe('relatorios', ['#cComp', '#cPrev', '#iFluxo', '#cBar', '#iChart', '#iAno', '#cPat', '#cProx', '#cFatura']);
-  poe('planejar', ['#cFase', '#cFuturo', '#cSemana', '#cLim', '#cSalario', '#cResiste', '#cDesejos', '#cMesada', '#cGuia', '#cAnual', '#iParc', '#cDica', '#cZero']);
+  // Planejar termina com algo bom (Desejos); "Começar do zero" fica fechado em Ajustes (regra do pico-fim)
+  poe('planejar', ['#cFase', '#cMetas', '#cFuturo', '#cSemana', '#cLim', '#cSalario', '#cResiste', '#cAnual', '#iParc', '#cMesada', '#cGuia', '#cDica', '#cDesejos']);
+  const aj = document.createElement('details'); aj.className = 'card ajustes'; aj.id = 'cAjustes';
+  aj.innerHTML = '<summary><b>Ajustes</b><span class="s">Começar do zero</span></summary>';
+  document.getElementById('planejar').appendChild(aj); aj.appendChild(card('#cZero'));
   const rel = document.getElementById('relatorios'), rv = document.getElementById('cRevisao'); rel.insertBefore(rv, rel.querySelector('header').nextSibling);
   poe('guardado', ['#cRevLink', '#cPague']);
-  const fica = ['#iHero', '.card.saldo', '#cTotais', '#cLembra', '#cFila', '#cCheck', '#cMetas', '#iContas'].map(card).filter(Boolean);
+  const fica = ['#iHero', '.card.saldo', '#cTotais', '#cLembra', '#cFila', '#cCheck', '#iContas'].map(card).filter(Boolean);
   [...ini.querySelectorAll(':scope > .card')].forEach(el => { if (el.id !== 'oqBox' && !fica.includes(el)) el.classList.add('hide'); });
   fica.forEach(el => ini.appendChild(el));
   ini.insertBefore(document.getElementById('iHero'), document.getElementById('oqBox')); // Bom dia acima de tudo
@@ -874,9 +896,9 @@ html.pc #inicio .pc-topo .grid3>.mini{padding:14px 10px}
   const mq = matchMedia('(min-width:1024px)'); const mqPc = { get matches(){ return document.documentElement.classList.contains('pc'); } };
   const el = sel => { const e = document.querySelector(sel); return e && (e.closest('.card') || e); };
   const P = {
-    inicio:     { topo: ['.card.saldo', '#cTotais'], main: ['#cMetas', '#iContas'], side: ['#cLembra', '#cPagto', '#cPassos', '#cPar', '#cFila', '#cCheck'] },
+    inicio:     { topo: ['.card.saldo', '#cTotais'], main: ['#iContas'], side: ['#cLembra', '#cPagto', '#cPassos', '#cPar', '#cFila', '#cCheck'] },
     relatorios: { main: ['#cResumo', '#cAlertas', '#cFatura', '#iFluxo', '#cBar', '#iChart', '#cComp', '#iAno'], side: ['#cRevisao', '#cProx', '#cPrev', '#cPat'] },
-    planejar:   { topo: ['#cFase', '#cFuturo'], main: ['#cLim', '#cDesejos', '#cAnual', '#iParc'], side: ['#cSemana', '#cResiste', '#cSalario', '#cMesada', '#cGuia', '#cDica', '#cZero'] },
+    planejar:   { topo: ['#cFase', '#cFuturo'], main: ['#cMetas', '#cLim', '#cAnual', '#iParc', '#cDesejos'], side: ['#cSemana', '#cResiste', '#cSalario', '#cMesada', '#cGuia', '#cDica', '#cAjustes'] },
     historico:  { main: ['#hLista'], side: ['#historico .busca', '#hModo', '#hFiltro', '#hCal'] }
   };
   const orig = {};
@@ -1551,7 +1573,7 @@ function acaoInicio(i, t){
     const outras = minhas().filter(x => progressoMeta(x).falta > 0);
     h = `<div class="card semana ${feito ? 'feito' : ''}">${m.foto ? `<img class="sem-foto" onerror="this.remove()" loading="lazy" referrerpolicy="no-referrer" src="${esc(m.foto)}" alt="${esc(m.nome)}">` : ''}<div class="lim-top"><span class="t">Meta da semana</span>${outras.length > 1 ? '<button class="link" id="semTroca" style="margin:0">Trocar</button>' : ''}</div>
       <div class="sem-txt">${feito ? `Esta semana já foi: <b>${brl0(semana)}</b> para ${esc(m.nome)}.` : `Faltam <b>${brl0(g.falta)}</b> para ${esc(m.nome)}. Guarde <b>${brl0(sem - semana)}</b> esta semana.`}</div>
-      <div class="gasto-bar meta-bar" role="progressbar" aria-label="${esc(m.nome)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
+      <div class="gasto-bar meta-bar${g.p >= .75 && g.p < 1 ? ' quase' : ''}" role="progressbar" aria-label="${esc(m.nome)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${feito ? '' : btn('semGuardei', 'Guardei')}<button class="chip acao" id="semFoto">${m.foto ? 'Trocar foto' : 'Pôr foto do que quer comprar'}</button><button class="chip acao" id="semLink">Colar link da foto</button><input type="file" id="semArq" accept="image/*" class="hide"></div></div>`;
   }
   $('#cSemana').innerHTML = h;
@@ -2039,8 +2061,8 @@ function metasInicio(){
     const tit = m.tipo === 'Gasto' && (j === 0 || L[j - 1].tipo !== 'Gasto') ? '<h3 style="margin:16px 0 4px">Gastos previstos (caixinhas)</h3><div class="help" style="margin:0 0 8px">Dinheiro guardado aos poucos para algo que vai acontecer. Quando souberem o preço, toquem em "Chegou a hora".</div>' : '';
     return tit + (() => {
     return `<button class="meta${m.espera ? ' espera' : ''}" data-k="${k}" aria-label="Editar meta ${esc(m.nome)}"><div class="lim-top"><span class="t">${fotoHtml(m)}${esc(m.nome)}${m.espera ? ' <small>(em espera)</small>' : ''}</span><b class="meta-p">${Math.round(g.p * 100)}%</b></div>
-      <div class="gasto-bar meta-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
-      <div class="lim-num"><span>${brl(g.guardado)} de ${brl(m.alvo)}${g.rendeu ? ` <small style="color:var(--in)">(+${brl(g.rendeu)} de rendimento)</small>` : ''}</span><span>${g.falta ? 'faltam ' + brl0(g.falta) : ''}</span></div>
+      <div class="gasto-bar meta-bar${g.p >= .75 && g.p < 1 ? ' quase' : ''}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(g.p * 100)}"><i style="width:${Math.max(2, g.p * 100)}%"></i></div>
+      <div class="lim-num"><span>${brl(g.guardado)} de ${brl(m.alvo)}${g.rendeu ? ` <small style="color:var(--in)">(+${brl(g.rendeu)} de rendimento)</small>` : ''}</span><span>${g.falta ? 'faltam ' + brl0(g.falta) + (g.p >= .75 ? ' · quase lá' : '') : ''}</span></div>
       <div class="meta-prev">${esc(g.previsao)}${g.prazo ? '<br>' + esc(g.prazo) : ''}</div>${separadoDe(m.nome) > 0 ? `<div class="meta-prev">Separado para gastar: <b>${brl(separadoDe(m.nome))}</b> · livre: ${brl(g.guardado - separadoDe(m.nome))}</div>` : ''}${degrau(m)}</button>`
       + (m.tipo === 'Gasto' && g.guardado > separadoDe(m.nome) + .005 ? `<button class="chip acao" data-hora="${k}" style="margin:-4px 0 14px;display:block">Chegou a hora</button>` : ''); })(); }).join('')
     : '<div class="empty" style="padding-top:0">Crie uma meta (reserva de emergência, carro, viagem) e marque os investimentos para ela.</div>')
@@ -2761,6 +2783,18 @@ function lePdf(arq){
     fr.readAsDataURL(arq);
   });
 }
+function oqMostra(abre){
+  const b = $('#oqBox'), m = $('#oqMais'); if (!b || !m) return;
+  m.setAttribute('aria-expanded', abre ? 'true' : 'false'); m.setAttribute('aria-label', abre ? 'Fechar "O que eu quero fazer?"' : 'O que eu quero fazer?');
+  b.setAttribute('aria-hidden', abre ? 'false' : 'true');
+  if (abre) {
+    b.style.maxHeight = '0px'; b.classList.remove('oq-fechado'); const alvo = b.scrollHeight + 40; void b.offsetHeight; b.style.maxHeight = alvo + 'px';
+    const fim = e => { if (e.propertyName !== 'max-height') return; b.removeEventListener('transitionend', fim); if (!b.classList.contains('oq-fechado')) b.style.maxHeight = 'none'; };
+    b.addEventListener('transitionend', fim); setTimeout(() => $('#oqTxt').focus({ preventScroll: true }), 200);
+  } else { b.style.maxHeight = b.scrollHeight + 'px'; void b.offsetHeight; b.style.maxHeight = '0px'; b.classList.add('oq-fechado'); }
+}
+$('#oqMais').onclick = () => oqMostra($('#oqBox').classList.contains('oq-fechado'));
+$('#nAbre').onclick = () => { $('#nOpc').classList.remove('hide'); $('#nAbre').classList.add('hide'); $('#nAbre').setAttribute('aria-expanded', 'true'); $('#nFoto').focus(); };
 $('#nFoto').onclick = () => $('#nArq').click();
 $('#nEnviar').onclick = () => $('#nArq2').click();
 $('#nArq').onchange = $('#nArq2').onchange = async e => {
@@ -3175,6 +3209,7 @@ const MANUAL = [
   { id: 'anual', nome: 'Gastos do ano', el: '#cAnual', para: 'Gastos que vêm uma vez por ano: IPVA, IPTU, material escolar.', pal: ['gastos do ano', 'ipva', 'iptu', 'material escolar', 'anuais'] },
   { id: 'parcelas', nome: 'Parcelas que faltam', el: '#iParc', para: 'Compras parceladas e quantas parcelas ainda faltam.', pal: ['parcelas', 'parcela', 'parcelado', 'parcelamento', 'prestacao'] },
   { id: 'dica', nome: 'Dica da semana', el: '#cDica', para: 'Uma dica de finanças da semana.', pal: ['dica', 'dicas'] },
+  { id: 'ajustes', nome: 'Ajustes', vai: () => { ir('planejar'); setTimeout(() => { const a = $('#cAjustes'); a.open = true; a.scrollIntoView({ block: 'start' }); }, 60); }, para: 'Área fechada no fim do Planejar com o Começar do zero.', pal: ['ajustes', 'configuracoes', 'configurar', 'opcoes'] },
   { id: 'zero', nome: 'Começar do zero', el: '#cZero', para: 'Apagar todos os lançamentos e começar de novo.', pal: ['comecar do zero', 'apagar tudo', 'zerar', 'recomecar'] },
   { id: 'checkin', nome: 'Check-in do mês', el: '#cCheck', para: 'Conversa do fim do mês: planejado x gasto de verdade. Só aparece no começo do mês.', pal: ['check-in', 'checkin', 'fechamento do mes', 'planejado x real'] },
   { id: 'boneco', nome: 'Recado dos bonecos', el: '#iHero', para: 'Recado do Ken e da Sam felizes ou tristes, conforme o mês.', pal: ['bonecos', 'boneco', 'humor'] },
