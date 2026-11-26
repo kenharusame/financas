@@ -43,7 +43,7 @@ h2{font-family:Sora,system-ui,sans-serif;font-size:19px;line-height:1.2;margin:0
 .saldo{text-align:center;padding:16px 18px}
 .s-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:4px} #iSep{display:contents}
 .s-dois{display:flex;justify-content:center;align-items:flex-end;gap:6px 16px;flex-wrap:wrap} .s-dois>div{min-width:0} .saldo .s-dois .val{font-size:clamp(20px,5.8vw,28px);white-space:nowrap} .saldo .val.conta{color:var(--text,#fff)} .saldo .val.conta.neg{color:var(--out)}
-.s-chips .sc{font-size:12.5px;color:var(--muted);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:3px 10px;white-space:nowrap} .s-chips .sc b{color:var(--text)} .s-chips .sc:empty{display:none} .s-donos{margin-top:6px} .s-donos:empty{display:none}
+.s-chips .sc{font-size:12.5px;color:var(--muted);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:3px 10px;white-space:nowrap} .s-chips .sc b{color:var(--text)} .s-chips .sc:empty{display:none} .s-donos{margin-top:6px} .nota-link{margin-left:6px;text-decoration:none;font-size:14px} .s-donos:empty{display:none}
 .sep-box{margin-top:12px;text-align:left} .sep-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:var(--muted)}
 .sep-box .link{width:auto;min-height:34px;padding:0 4px;font-size:13px}
 .sep-l{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px solid rgba(255,255,255,.06);font-size:14px} .sep-l .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .sep-l .o{color:var(--muted);font-size:12.5px}
@@ -676,6 +676,9 @@ html.pc nav button.centro{min-height:112px} html.pc nav .fab{width:112px;height:
         </div>
       </div>
       <label class="des-p" style="margin-top:12px"><input type="checkbox" id="aCartao"><span>Paguei no cartão de crédito</span></label>
+      <div id="aNotaBox" style="margin-top:12px"><label>Foto da nota fiscal <span style="color:var(--muted);font-weight:600">(opcional)</span></label>
+        <div class="nota-fotos" id="aFotos"></div><button class="btn ghost" type="button" id="aFotoBtn">Anexar foto ou print da nota</button>
+        <input type="file" id="aArq" accept="image/*,application/pdf" multiple class="hide"><div class="err" id="aFotoErro" role="alert"></div></div>
       <label class="des-p" style="margin-top:8px"><input type="checkbox" id="aDaMeta"><span>Usei dinheiro guardado (meta ou reserva)</span></label>
       <div id="aDaMetaBox" class="hide"><div class="two"><div><label for="aDaMetaQual">De qual</label><select id="aDaMetaQual"></select></div>
         <div><label for="aDaMetaV">Quanto saiu de lá</label><input id="aDaMetaV" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"></div></div><div class="alerta medio" id="aDaMetaAviso" style="margin-top:10px"></div></div>
@@ -1456,7 +1459,8 @@ function linhaReg(r, comTag){
   if (r.tipo === 'Adiantamento') return `<div class="row click" role="button" tabindex="0" data-id="${r.id}">${icoReg(r)}<div class="mid"><div class="t">Adiantamento do cartão</div><div class="s">${ddmm(r.data)} · ${r.obs ? esc(r.obs) : 'não conta como gasto'}</div></div><div class="num inv">${brl(r.valor)}</div></div>`;
   const sub = r.tipo === 'Investimento' ? (r.pct !== '' ? `${String(r.pct).replace('.', ',')}% de ${esc(r.conta)}` : 'de ' + esc(r.conta)) : r.obs ? esc(r.obs) : r.tipo;
   const titulo = r.tipo === 'Investimento' ? 'Investimento' : esc(r.conta);
-  return `<div class="row click" role="button" tabindex="0" data-id="${r.id}">${icoReg(r)}<div class="mid"><div class="t">${titulo} ${tag}</div><div class="s">${ddmm(r.data)} · ${sub}</div></div><div class="num ${cls}">${sinal}${brl(r.valor)}</div></div>`;
+  const clip = r.nota ? `<a class="nota-link" href="${esc(r.nota)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver a foto da nota" aria-label="Ver a foto da nota">📎</a>` : '';
+  return `<div class="row click" role="button" tabindex="0" data-id="${r.id}">${icoReg(r)}<div class="mid"><div class="t">${titulo} ${tag}${clip}</div><div class="s">${ddmm(r.data)} · ${sub}</div></div><div class="num ${cls}">${sinal}${brl(r.valor)}</div></div>`;
 }
 function ligaLinhas(sel){ $$(sel + ' .row.click').forEach(el => { el.onclick = () => abrir(el.dataset.id); el.onkeydown = e => { if (e.key === 'Enter') abrir(el.dataset.id); }; }); }
 document.addEventListener('click', e => { const b = e.target.closest('[data-ir]'); if (b) { S.conta = null; S.filtro = 'Tudo'; ir(b.dataset.ir); renderHist(); } });
@@ -2825,6 +2829,7 @@ $('#aSalvar').onclick = async () => {
   const tp = S.tipo, data = $('#aData').value;
   const r = { tipo: tp, data, obs: $('#aObs').value.trim() };
   r.dono = S.dono === 'Sam' ? 'Sam' : 'Ken';
+  if (tp === 'Despesa' && S.aFotos.length) r.fotos = S.aFotos.map(f => ({ mime: f.mime, b64: f.b64 }));
   if (tp === 'Entrada') { r.valor = num($('#aValor').value); r.conta = S.origem; }
   if (tp === 'Transferência') { r.valor = num($('#aValor').value); r.conta = r.dono === 'Sam' ? 'Ken' : 'Sam'; }
   if (tp === 'Despesa') { r.valor = num($('#aValor').value); r.conta = $('#aConta').value; r.forma = S.forma; r.vezes = parseInt($('#aVezes').value) || 1; r.valorEhTotal = S.ehTotal === '1'; r.cartao = $('#aCartao').checked; }
@@ -2845,7 +2850,7 @@ $('#aSalvar').onclick = async () => {
     if (daMeta) await api('salvar', { tipo: 'Retirada', data, conta: daMeta.meta, valor: daMeta.v, meta: daMeta.meta, obs: 'Para: ' + r.conta + (r.obs ? ' - ' + r.obs : '') });
     const c0 = ciclo(r.data), ex0 = r.tipo === 'Entrada' ? entradaExtra(c0) : 0;
     const fimBom = () => { const sd = saldoTela(); toast((n > 1 ? `Salvo em ${n} meses. ` : 'Salvo! ') + (sd >= 0 ? `Ainda sobram ${brl0(sd)} em ${nomeCiclo(c0).toLowerCase()}.` : `${nomeCiclo(c0)} está ${brl0(-sd)} no vermelho.`)); };
-    ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); $('#aCartao').checked = false; $('#aDaMeta').checked = false; $('#aDaMetaV').value = ''; $('#aDaMetaBox').classList.add('hide');
+    ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); $('#aCartao').checked = false; S.aFotos = []; pintaAFotos(); $('#aDaMeta').checked = false; $('#aDaMetaV').value = ''; $('#aDaMetaBox').classList.add('hide');
     if (ja) fimBom();
     carregar().then(() => { renderForm(); if (!ja) fimBom();
     if (r.tipo === 'Entrada') { const ex = entradaExtra(c0) - ex0; if (ex > 50) toast('Entrou ' + brl0(ex) + ' a mais que o normal. Guardar a metade?', 'Guardar ' + brl0(ex / 2), () => { const m = metaDaSemana(); guardarPara(m ? m.nome : '', ex / 2); }); } });
@@ -2888,6 +2893,22 @@ $('#rTxt').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); lanca
 
 /* ---------- Ler nota com IA ---------- */
 S.nFotos = []; S.nota = null;
+/* Foto da nota no lançamento de despesa: vai para o Drive (pasta "Notas fiscais") junto com o gasto. */
+S.aFotos = [];
+function pintaAFotos(){
+  $('#aFotos').innerHTML = S.aFotos.map((f, k) => `<span class="nota-th">${f.pdf ? '<span class="nota-pdf">PDF</span>' : `<img src="${f.url}" alt="Foto ${k + 1} da nota">`}<button type="button" aria-label="Tirar parte ${k + 1}" data-atira="${k}">×</button></span>`).join('');
+  $$('#aFotos [data-atira]').forEach(b => b.onclick = () => { S.aFotos.splice(+b.dataset.atira, 1); pintaAFotos(); });
+  $('#aFotoBtn').textContent = S.aFotos.length ? 'Anexar outra parte' : 'Anexar foto ou print da nota';
+}
+$('#aFotoBtn').onclick = () => $('#aArq').click();
+$('#aArq').onchange = async e => {
+  $('#aFotoErro').textContent = '';
+  for (const f of e.target.files) {
+    if (S.aFotos.length >= 6) { $('#aFotoErro').textContent = 'No máximo 6 partes por nota.'; break; }
+    try { S.aFotos.push(f.type === 'application/pdf' || /\.pdf$/i.test(f.name) ? await lePdf(f) : await reduzFoto(f)); } catch (er) { $('#aFotoErro').textContent = er; }
+  }
+  e.target.value = ''; pintaAFotos();
+};
 function reduzFoto(arq){
   return new Promise((ok, falha) => {
     const fr = new FileReader();
@@ -3058,7 +3079,7 @@ function pintaNota(){
     const b = $('#nSalvar'); b.disabled = true; b.textContent = 'Salvando...';
     try {
       n.loja = mesmaLoja(n.loja);
-      const r = await api('salvarNota', { loja: n.loja, data: n.data, pagoCom: n.pagoCom, itens: n.itens.filter(i => !i.fora).map(i => ({ nome: i.nome, valor: i.valor, conta: i.conta, qtd: i.qtd || '', un: i.un || '' })) });
+      const r = await api('salvarNota', { loja: n.loja, data: n.data, pagoCom: n.pagoCom, dono: S.dono === 'Sam' || S.dono === 'Ken' ? S.dono : '', fotos: (S.nFotos || []).filter(f => f.b64).map(f => ({ mime: f.mime, b64: f.b64 })), itens: n.itens.filter(i => !i.fora).map(i => ({ nome: i.nome, valor: i.valor, conta: i.conta, qtd: i.qtd || '', un: i.un || '' })) });
       lembraContas(n.itens.filter(i => !i.fora)); S.precosOk = false; S.precosTentou = false;
       toast(`Salvo: ${r.itens} itens em ${r.registros} ${r.registros === 1 ? 'conta' : 'contas'}`); fechaNota(); await carregar();
     } catch (e) { $('#nErro2').textContent = 'Não salvou: ' + e; b.disabled = false; b.textContent = 'Tentar de novo'; }
@@ -3301,6 +3322,7 @@ $('#dBtn').onclick = async () => {
 const MANUAL = [
   // Início
   { id: 'saldo', nome: 'Saldo do mês', el: '.card.saldo', para: 'Quanto dinheiro tem na conta no mês, quanto dá para gastar por dia, dinheiro separado para gastar e o próximo pagamento.', pal: ['saldo', 'quanto tenho', 'quanto sobra', 'sobrou', 'gastar por dia', 'dinheiro na conta', 'separar para gastar', 'separado', 'banco', 'livre', 'livre para gastar', 'na conta'] },
+  { id: 'notafoto', nome: 'Foto da nota fiscal', el: '#aNotaBox', para: 'Ao lançar uma despesa, anexe a foto ou print da nota. Ela vai para a pasta Notas fiscais no Drive (uma pasta por mês) e o lançamento ganha um clipe para abrir a foto.', pal: ['foto da nota', 'nota fiscal', 'anexar nota', 'print da nota', 'comprovante', 'cupom', 'guardar nota', 'drive', 'pasta de notas', 'clipe'] },
   { id: 'donos', nome: 'Conta do Ken e conta da Sam', el: '#iDonos', para: 'Quanto tem agora em cada conta: Ken (Banco do Brasil) e Sam (Mercado Pago), mais o guardado. Pix entre vocês se lança como Transferir.', pal: ['conta do ken', 'conta da sam', 'quanto tem em cada', 'cada conta', 'banco do brasil', 'mercado pago', 'separar contas', 'transferencia', 'transferir', 'pix pra sam', 'pix pro ken', 'de quem'] },
   { id: 'totais', nome: 'Entradas, despesas e investido', el: '#cTotais', para: 'Total que entrou, que saiu e que foi investido no mês.', pal: ['entradas', 'entrou', 'despesas', 'quanto gastei', 'gastei', 'investido', 'investi', 'total do mes', 'recebi'] },
   { id: 'lembra', nome: 'Não esquecer', el: '#cLembra', para: 'Contas fixas e parcelas que vencem hoje, já venceram ou vencem nos próximos 3 dias, gastos do ano (IPVA, IPTU) em até 30 dias, dias sem lançar gasto e custo fixo do mês passado não lançado.', pal: ['nao esquecer', 'lembrete', 'lembretes', 'vence hoje', 'venceu', 'vencidas', 'vence amanha', 'ipva', 'iptu', 'atrasada', 'atrasadas', 'paguei', 'contas a pagar', 'conta para pagar', 'esqueci'] },
