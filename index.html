@@ -655,7 +655,7 @@ html.pc nav button.centro{min-height:112px} html.pc nav .fab{width:112px;height:
     <button class="inv" data-tipo="Transferência" title="Pix entre a conta do Ken e a da Sam">Transferir</button>
   </div>
   <div class="card">
-    <div id="f-dono"><label id="aDonoLbl">De qual conta</label><div class="chips" id="aDono" role="group" aria-label="De qual conta"><button class="chip" data-v="Ken">Ken (BB)</button><button class="chip" data-v="Sam">Sam (Mercado Pago)</button></div></div>
+    <div id="f-dono"><label id="aDonoLbl">De qual conta</label><div class="chips" id="aDono" role="group" aria-label="De qual conta"><button class="chip" data-v="Ken">Ken (BB)</button><button class="chip" data-v="Sam">Sam (Mercado Pago)</button><button class="chip hide" data-v="Guardado" id="aDonoG">Guardado</button></div></div>
     <div id="f-trf" class="note hide"></div>
     <div id="f-valor"><label for="aValor">Valor</label><input id="aValor" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"></div>
 
@@ -679,9 +679,9 @@ html.pc nav button.centro{min-height:112px} html.pc nav .fab{width:112px;height:
       <div id="aNotaBox" style="margin-top:12px"><label>Foto da nota fiscal <span style="color:var(--muted);font-weight:600">(opcional)</span></label>
         <div class="nota-fotos" id="aFotos"></div><button class="btn ghost" type="button" id="aFotoBtn">Anexar foto ou print da nota</button>
         <input type="file" id="aArq" accept="image/*,application/pdf" multiple class="hide"><div class="err" id="aFotoErro" role="alert"></div></div>
-      <label class="des-p" style="margin-top:8px"><input type="checkbox" id="aDaMeta"><span>Usei dinheiro guardado (meta ou reserva)</span></label>
+      <label class="des-p" style="margin-top:8px" id="aDaMetaLbl"><input type="checkbox" id="aDaMeta"><span>Usei dinheiro guardado (meta ou reserva)</span></label>
       <div id="aDaMetaBox" class="hide"><div class="two"><div><label for="aDaMetaQual">De qual</label><select id="aDaMetaQual"></select></div>
-        <div><label for="aDaMetaV">Quanto saiu de lá</label><input id="aDaMetaV" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"></div></div><div class="alerta medio" id="aDaMetaAviso" style="margin-top:10px"></div></div>
+        <div id="aDaMetaVBox"><label for="aDaMetaV">Quanto saiu de lá</label><input id="aDaMetaV" class="money" inputmode="decimal" placeholder="R$ 0,00" autocomplete="off"></div></div><div class="alerta medio" id="aDaMetaAviso" style="margin-top:10px"></div></div>
       <div class="note" id="aResumo"></div>
     </div>
 
@@ -834,6 +834,11 @@ html.pc nav button.centro{min-height:112px} html.pc nav .fab{width:112px;height:
   <div class="help" id="sgInfo"></div>
   <label for="sgValor">Quanto custou de verdade</label><input id="sgValor" inputmode="decimal">
   <label for="sgConta">Conta</label><select id="sgConta"></select>
+  <label>De onde saiu o dinheiro</label><div class="chips" id="sgDono" role="group" aria-label="De onde saiu o dinheiro"><button class="chip" data-v="Ken">Ken (BB)</button><button class="chip" data-v="Sam">Sam (Mercado Pago)</button><button class="chip" data-v="Guardado">Guardado</button></div>
+  <div id="sgMetaBox" class="hide"><label for="sgMeta">De qual guardado</label><select id="sgMeta"></select></div>
+  <div style="margin-top:12px"><label>Comprovante <span style="color:var(--muted);font-weight:600">(opcional)</span></label>
+    <div class="nota-fotos" id="sgFotos"></div><button class="btn ghost" type="button" id="sgFotoBtn">Anexar foto ou print do comprovante</button>
+    <input type="file" id="sgArq" accept="image/*,application/pdf" multiple class="hide"><div class="err" id="sgFotoErro" role="alert"></div></div>
   <label class="des-p" style="margin-top:12px"><input type="checkbox" id="sgCartao"><span>Paguei no cartão de crédito</span></label>
   <div class="dia" id="sgDif"></div>
   <div class="err" id="sgErro" role="alert"></div>
@@ -1173,7 +1178,7 @@ function renderMes(){ $$('.mesNome').forEach(s => s.textContent = nomeCiclo(S.me
    Transferência: sai de quem lançou (dono) e entra em quem está em "conta". Não é gasto. */
 function saldosDonos(i, venc){
   const s = { Ken: 0, Sam: 0 }, de = r => r.dono === 'Sam' ? 'Sam' : 'Ken';
-  S.regs.forEach(r => { if (ciclo(r.data) !== i) return; const q = de(r), v = r.valor;
+  S.regs.forEach(r => { if (ciclo(r.data) !== i || r.dono === 'Guardado') return; const q = de(r), v = r.valor;
     if (r.tipo === 'Entrada' || r.tipo === 'Retirada') s[q] += v;
     else if (r.tipo === 'Investimento' || r.tipo === 'Adiantamento') s[q] -= v;
     else if (r.tipo === 'Despesa') { if (!(r.cartao && venc(r.data) > hoje())) s[q] -= v; }
@@ -2384,8 +2389,28 @@ function abrirSepPg(x){
   $('#sgTit').textContent = 'Paguei: ' + x.nome; $('#sgInfo').textContent = `Separado: ${brl(x.valor)} (de ${x.origem}).`;
   $('#sgValor').value = x.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
   const c = S.contas.find(c => semAcento(x.nome).includes(semAcento(c))) || S.contas.find(c => /viagem/i.test(c) && /viagem|passagem/i.test(x.nome));
-  opcoesContas($('#sgConta'), c); if (!c) { $('#sgConta').insertAdjacentHTML('afterbegin', '<option value="" selected>Escolha a conta</option>'); $('#sgConta').value = ''; } $('#sgCartao').checked = false; $('#sgErro').textContent = ''; difSep(); $('#dlgSepPg').showModal();
+  opcoesContas($('#sgConta'), c); if (!c) { $('#sgConta').insertAdjacentHTML('afterbegin', '<option value="" selected>Escolha a conta</option>'); $('#sgConta').value = ''; } $('#sgCartao').checked = false; $('#sgErro').textContent = '';
+  S.sgDono = x.origem !== 'Saldo do mês' ? 'Guardado' : S.quem === 'Sam' ? 'Sam' : 'Ken'; S.gFotos = []; pintaGFotos(); pintaSgDono(); difSep(); $('#dlgSepPg').showModal();
 }
+/* De onde saiu o dinheiro do Paguei: Ken, Sam ou Guardado (meta/reserva). Guardado não mexe nas contas do Ken e da Sam. */
+function pintaSgDono(){ const x = S.sepPg;
+  chipGroup('#sgDono', S.sgDono, v => { S.sgDono = v; pintaSgDono(); });
+  const pede = S.sgDono === 'Guardado' && x.origem === 'Saldo do mês'; $('#sgMetaBox').classList.toggle('hide', !pede);
+  if (pede) { const ms = (S.metas || []).filter(m => progressoMeta(m).guardado > 0); $('#sgMeta').innerHTML = ms.length ? ms.map(m => `<option value="${esc(m.nome)}">${esc(m.nome)} (${brl0(progressoMeta(m).guardado)})</option>`).join('') : '<option value="">Nenhuma meta com dinheiro</option>'; } }
+function pintaGFotos(){
+  $('#sgFotos').innerHTML = S.gFotos.map((f, k) => `<span class="nota-th">${f.pdf ? '<span class="nota-pdf">PDF</span>' : `<img src="${f.url}" alt="Foto ${k + 1} do comprovante">`}<button type="button" aria-label="Tirar parte ${k + 1}" data-atira="${k}">×</button></span>`).join('');
+  $$('#sgFotos [data-atira]').forEach(b => b.onclick = () => { S.gFotos.splice(+b.dataset.atira, 1); pintaGFotos(); });
+  $('#sgFotoBtn').textContent = S.gFotos.length ? 'Anexar outra parte' : 'Anexar foto ou print do comprovante';
+}
+$('#sgFotoBtn').onclick = () => $('#sgArq').click();
+$('#sgArq').onchange = async e => {
+  $('#sgFotoErro').textContent = '';
+  for (const f of e.target.files) {
+    if (S.gFotos.length >= 6) { $('#sgFotoErro').textContent = 'No máximo 6 partes.'; break; }
+    try { S.gFotos.push(f.type === 'application/pdf' || /\.pdf$/i.test(f.name) ? await lePdf(f) : await reduzFoto(f)); } catch (er) { $('#sgFotoErro').textContent = er; }
+  }
+  e.target.value = ''; pintaGFotos();
+};
 function difSep(){ const v = num($('#sgValor').value), x = S.sepPg; if (!x || !(v > 0)) { $('#sgDif').textContent = ''; return; }
   const d = x.valor - v; $('#sgDif').innerHTML = d > .005 ? `Sobram <b>${brl(d)}</b>, que ${x.origem === 'Saldo do mês' ? 'voltam para o disponível' : 'ficam em ' + esc(x.origem)}.` : d < -.005 ? `Passou <b>${brl(-d)}</b> da estimativa. A diferença sai do disponível.` : 'Exatamente o separado.';
   $('#sgDif').className = 'dia' + (d < -.005 ? ' ruim' : ''); }
@@ -2395,10 +2420,14 @@ $('#sgSalvar').onclick = async () => {
   const x = S.sepPg, v = num($('#sgValor').value), conta = $('#sgConta').value, data = hoje();
   if (!(v > 0)) { $('#sgErro').textContent = 'Digite quanto custou.'; return; }
   if (!conta || conta === '__nova') { $('#sgErro').textContent = 'Escolha a conta.'; return; }
+  const dono = S.sgDono === 'Guardado' || S.sgDono === 'Sam' ? S.sgDono : 'Ken', metaG = x.origem !== 'Saldo do mês' ? x.origem : dono === 'Guardado' ? $('#sgMeta').value : '';
+  if (dono === 'Guardado' && !metaG) { $('#sgErro').textContent = 'Escolha de qual guardado saiu.'; return; }
   const b = $('#sgSalvar'); b.disabled = true; b.textContent = 'Salvando...';
   try {
-    await api('salvar', { tipo: 'Despesa', data, conta, valor: v, forma: 'Única', obs: x.nome, cartao: $('#sgCartao').checked });
-    if (x.origem !== 'Saldo do mês') await api('salvar', { tipo: 'Retirada', data, conta: x.origem, valor: v, meta: x.origem, obs: 'Para: ' + conta + ' - ' + x.nome });
+    const dsp = { tipo: 'Despesa', data, conta, valor: v, forma: 'Única', obs: x.nome, cartao: $('#sgCartao').checked, dono };
+    if (S.gFotos.length) dsp.fotos = S.gFotos.map(f => ({ mime: f.mime, b64: f.b64 }));
+    await api('salvar', dsp);
+    if (metaG) await api('salvar', { tipo: 'Retirada', data, conta: metaG, valor: v, meta: metaG, dono, obs: 'Para: ' + conta + ' - ' + x.nome });
     S.separados = await api('fecharSeparado', x.id, 'Pago', v);
     $('#dlgSepPg').close(); const d = x.valor - v;
     toast(d > .005 ? 'Lançado. ' + brl(d) + (x.origem === 'Saldo do mês' ? ' voltaram para o disponível' : ' ficaram em ' + x.origem) : d < -.005 ? 'Lançado. Passou ' + brl(-d) + ' da estimativa' : 'Lançado');
@@ -2742,9 +2771,12 @@ function renderForm(){
   $$('.seg button').forEach(b => b.classList.toggle('on', b.dataset.tipo === tp));
   $('#f-in').classList.toggle('hide', tp !== 'Entrada'); $('#f-out').classList.toggle('hide', tp !== 'Despesa'); $('#f-inv').classList.toggle('hide', tp !== 'Investimento');
   $('#f-valor').classList.toggle('hide', tp === 'Investimento');
-  if (S.dono !== 'Ken' && S.dono !== 'Sam') S.dono = S.quem === 'Sam' ? 'Sam' : 'Ken';
+  if (S.dono !== 'Ken' && S.dono !== 'Sam' && !(S.dono === 'Guardado' && tp === 'Despesa')) S.dono = S.quem === 'Sam' ? 'Sam' : 'Ken';
+  $('#aDonoG').classList.toggle('hide', tp !== 'Despesa');
   chipGroup('#aDono', S.dono, v => { S.dono = v; renderForm(); });
-  $('#aDonoLbl').textContent = tp === 'Transferência' ? 'Sai da conta de' : tp === 'Entrada' ? 'Entrou na conta de' : 'De qual conta';
+  $('#aDonoLbl').textContent = tp === 'Transferência' ? 'Sai da conta de' : tp === 'Entrada' ? 'Entrou na conta de' : tp === 'Despesa' ? 'De onde saiu o dinheiro' : 'De qual conta';
+  { const g = tp === 'Despesa' && S.dono === 'Guardado'; $('#aDaMetaLbl').classList.toggle('hide', g); $('#aDaMetaVBox').classList.toggle('hide', g);
+    if (g !== !!S.gAuto) { S.gAuto = g; $('#aDaMeta').checked = g; $('#aDaMeta').onchange(); } }
   { const para = S.dono === 'Sam' ? 'Ken' : 'Sam'; $('#f-trf').classList.toggle('hide', tp !== 'Transferência');
     $('#f-trf').innerHTML = `Vai para a conta ${para === 'Sam' ? 'da Sam' : 'do Ken'}. Não conta como gasto, só muda de conta.`; }
   if (!S.origem || !S.origens.includes(S.origem)) S.origem = S.origens[0];
@@ -2828,12 +2860,12 @@ $('#aSalvar').onclick = async () => {
   $('#aErro').textContent = '';
   const tp = S.tipo, data = $('#aData').value;
   const r = { tipo: tp, data, obs: $('#aObs').value.trim() };
-  r.dono = S.dono === 'Sam' ? 'Sam' : 'Ken';
+  r.dono = tp === 'Despesa' && S.dono === 'Guardado' ? 'Guardado' : S.dono === 'Sam' ? 'Sam' : 'Ken';
   if (tp === 'Despesa' && S.aFotos.length) r.fotos = S.aFotos.map(f => ({ mime: f.mime, b64: f.b64 }));
   if (tp === 'Entrada') { r.valor = num($('#aValor').value); r.conta = S.origem; }
   if (tp === 'Transferência') { r.valor = num($('#aValor').value); r.conta = r.dono === 'Sam' ? 'Ken' : 'Sam'; }
   if (tp === 'Despesa') { r.valor = num($('#aValor').value); r.conta = $('#aConta').value; r.forma = S.forma; r.vezes = parseInt($('#aVezes').value) || 1; r.valorEhTotal = S.ehTotal === '1'; r.cartao = $('#aCartao').checked; }
-  const daMeta = tp === 'Despesa' && $('#aDaMeta').checked ? { meta: $('#aDaMetaQual').value, v: num($('#aDaMetaV').value) } : null;
+  const daMeta = tp === 'Despesa' && $('#aDaMeta').checked ? { meta: $('#aDaMetaQual').value, v: r.dono === 'Guardado' ? r.valor : num($('#aDaMetaV').value) } : null;
   if (daMeta && (!daMeta.meta || !(daMeta.v > 0))) { $('#aErro').textContent = 'Diga de qual meta e quanto saiu de lá.'; return; }
   if (daMeta && daMeta.v > r.valor + .01) { $('#aErro').textContent = 'O valor tirado da meta não pode ser maior que a despesa.'; return; }
   if (daMeta && !confirm(`Tirar ${brl(daMeta.v)} de ${daMeta.meta} para pagar isso? É mesmo necessário?`)) return;
@@ -2847,10 +2879,10 @@ $('#aSalvar').onclick = async () => {
     if (r.tipo === 'Despesa') lsGrava('fin_ultConta', r.conta);
     const ja = n === 1 && !daMeta;
     if (ja) { S.regs.push(Object.assign({ id: 'tmp' + Date.now(), forma: 'Única' }, r)); renderMes(); }
-    if (daMeta) await api('salvar', { tipo: 'Retirada', data, conta: daMeta.meta, valor: daMeta.v, meta: daMeta.meta, obs: 'Para: ' + r.conta + (r.obs ? ' - ' + r.obs : '') });
+    if (daMeta) await api('salvar', { tipo: 'Retirada', data, conta: daMeta.meta, valor: daMeta.v, meta: daMeta.meta, dono: r.dono, obs: 'Para: ' + r.conta + (r.obs ? ' - ' + r.obs : '') });
     const c0 = ciclo(r.data), ex0 = r.tipo === 'Entrada' ? entradaExtra(c0) : 0;
     const fimBom = () => { const sd = saldoTela(); toast((n > 1 ? `Salvo em ${n} meses. ` : 'Salvo! ') + (sd >= 0 ? `Ainda sobram ${brl0(sd)} em ${nomeCiclo(c0).toLowerCase()}.` : `${nomeCiclo(c0)} está ${brl0(-sd)} no vermelho.`)); };
-    ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); $('#aCartao').checked = false; S.aFotos = []; pintaAFotos(); $('#aDaMeta').checked = false; $('#aDaMetaV').value = ''; $('#aDaMetaBox').classList.add('hide');
+    ['#aValor', '#aObs', '#aInvValor', '#aPct'].forEach(s => $(s).value = ''); $('#aCartao').checked = false; S.aFotos = []; pintaAFotos(); $('#aDaMeta').checked = false; S.gAuto = false; $('#aDaMetaV').value = ''; $('#aDaMetaBox').classList.add('hide');
     if (ja) fimBom();
     carregar().then(() => { renderForm(); if (!ja) fimBom();
     if (r.tipo === 'Entrada') { const ex = entradaExtra(c0) - ex0; if (ex > 50) toast('Entrou ' + brl0(ex) + ' a mais que o normal. Guardar a metade?', 'Guardar ' + brl0(ex / 2), () => { const m = metaDaSemana(); guardarPara(m ? m.nome : '', ex / 2); }); } });
@@ -3322,6 +3354,8 @@ $('#dBtn').onclick = async () => {
 const MANUAL = [
   // Início
   { id: 'saldo', nome: 'Saldo do mês', el: '.card.saldo', para: 'Quanto dinheiro tem na conta no mês, quanto dá para gastar por dia, dinheiro separado para gastar e o próximo pagamento.', pal: ['saldo', 'quanto tenho', 'quanto sobra', 'sobrou', 'gastar por dia', 'dinheiro na conta', 'separar para gastar', 'separado', 'banco', 'livre', 'livre para gastar', 'na conta'] },
+  { id: 'deonde', nome: 'De onde saiu o dinheiro', el: '#aDono', para: 'Ao lançar uma despesa (ou no Paguei do separado), diga de onde saiu: conta do Ken, conta da Sam ou Guardado (meta ou reserva). Guardado tira da meta e não mexe nas contas do Ken e da Sam.', pal: ['de onde saiu', 'de onde veio o dinheiro', 'saiu do guardado', 'paguei com o guardado', 'tirei da reserva', 'qual conta pagou', 'conta errada', 'guardado'] },
+  { id: 'comprovsep', nome: 'Comprovante do Paguei', el: '#cSeparado', para: 'No Paguei do separado para gastar, anexe a foto ou print do comprovante. Vai para o Drive junto com o gasto.', pal: ['comprovante do separado', 'print do pagamento', 'foto do comprovante', 'paguei o separado', 'anexar comprovante'] },
   { id: 'notafoto', nome: 'Foto da nota fiscal', el: '#aNotaBox', para: 'Ao lançar uma despesa, anexe a foto ou print da nota. Ela vai para a pasta Notas fiscais no Drive (uma pasta por mês) e o lançamento ganha um clipe para abrir a foto.', pal: ['foto da nota', 'nota fiscal', 'anexar nota', 'print da nota', 'comprovante', 'cupom', 'guardar nota', 'drive', 'pasta de notas', 'clipe'] },
   { id: 'donos', nome: 'Conta do Ken e conta da Sam', el: '#iDonos', para: 'Quanto tem agora em cada conta: Ken (Banco do Brasil) e Sam (Mercado Pago), mais o guardado. Pix entre vocês se lança como Transferir.', pal: ['conta do ken', 'conta da sam', 'quanto tem em cada', 'cada conta', 'banco do brasil', 'mercado pago', 'separar contas', 'transferencia', 'transferir', 'pix pra sam', 'pix pro ken', 'de quem'] },
   { id: 'totais', nome: 'Entradas, despesas e investido', el: '#cTotais', para: 'Total que entrou, que saiu e que foi investido no mês.', pal: ['entradas', 'entrou', 'despesas', 'quanto gastei', 'gastei', 'investido', 'investi', 'total do mes', 'recebi'] },
